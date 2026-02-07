@@ -1,40 +1,37 @@
 {
-  "name": "am-i-being-pwned",
+  "name": "create-t3-turbo",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "preview": "vite preview"
+  "engines": {
+    "node": "^22.21.0",
+    "pnpm": "^10.19.0"
   },
-  "dependencies": {
-    "@tailwindcss/vite": "^4.1.18",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+  "packageManager": "pnpm@10.19.0",
+  "scripts": {
+    "build": "turbo run build",
+    "clean": "git clean -xdf node_modules",
+    "clean:workspaces": "turbo run clean",
+    "auth:generate": "pnpm -F @acme/auth generate",
+    "db:push": "turbo -F @acme/db push",
+    "db:studio": "turbo -F @acme/db studio",
+    "dev": "turbo watch dev --continue",
+    "dev:ext": "turbo watch dev -F @acme/ext...",
+    "format": "turbo run format --continue -- --cache --cache-location .cache/.prettiercache",
+    "format:fix": "turbo run format --continue -- --write --cache --cache-location .cache/.prettiercache",
+    "lint": "turbo run lint --continue -- --cache --cache-location .cache/.eslintcache",
+    "lint:fix": "turbo run lint --continue -- --fix --cache --cache-location .cache/.eslintcache",
+    "lint:ws": "pnpm dlx sherif@latest",
+    "postinstall": "pnpm lint:ws",
+    "typecheck": "turbo run typecheck",
+    "ui-add": "turbo run ui-add",
+    "ext:zip": "turbo -F @acme/ext zip"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
-    "@types/node": "^24.10.1",
-    "@types/react": "^19.2.5",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.1.1",
-    "autoprefixer": "^10.4.24",
-    "babel-plugin-react-compiler": "^1.0.0",
-    "eslint": "^9.39.1",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.5",
-    "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-react-refresh": "^0.4.24",
-    "globals": "^16.5.0",
-    "postcss": "^8.5.6",
-    "prettier": "^3.8.1",
-    "tailwindcss": "^4.1.18",
-    "typescript": "~5.9.3",
-    "typescript-eslint": "^8.46.4",
-    "vite": "^7.2.4"
-  }
+    "@acme/prettier-config": "workspace:*",
+    "@turbo/gen": "^2.5.8",
+    "dotenv-cli": "^10.0.0",
+    "prettier": "catalog:",
+    "turbo": "^2.5.8",
+    "typescript": "catalog:"
+  },
+  "prettier": "@acme/prettier-config"
 }
