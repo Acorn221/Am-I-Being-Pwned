@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@acme/types": "workspace:*",
     "@acme/ui": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19"

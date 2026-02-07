@@ -1,3 +1,4 @@
+import type { ExtensionDatabase, RiskLevel } from "@acme/types";
 import { Badge } from "@acme/ui/badge";
 import { Button } from "@acme/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@acme/ui/card";
@@ -10,83 +11,30 @@ import {
   TableRow,
 } from "@acme/ui/table";
 
+import db from "../../ext/data/extensions.json";
+
 import "./App.css";
 
-type Status = "dangerous" | "suspicious" | "safe";
+const extensionDb = db as ExtensionDatabase;
 
-const sampleExtensions: {
-  name: string;
-  id: string;
-  users: string;
-  status: Status;
-  issues: string[];
-}[] = [
-  {
-    name: "PDF Toolbox",
-    id: "mhjfbmdgcfjbbpaeojofohoefgiehjai",
-    users: "2M+",
-    status: "dangerous",
-    issues: ["Exfiltrates browsing data", "Phones home to C2 server"],
-  },
-  {
-    name: "Autoskip for YouTube",
-    id: "hmbnhhcgiecenbbkgdoeclkelmmklhgn",
-    users: "9M+",
-    status: "dangerous",
-    issues: ["Injects affiliate codes", "Tracks all page visits"],
-  },
-  {
-    name: "Crystal Ad Block",
-    id: "lklmhefoneoahhcghgapcbdpmjlbfbfj",
-    users: "120k+",
-    status: "dangerous",
-    issues: ["Fake ad blocker", "Harvests cookies & session tokens"],
-  },
-  {
-    name: "HoverZoom+",
-    id: "pccckmaobkjjboncdfnnofkonhgpceea",
-    users: "800k+",
-    status: "suspicious",
-    issues: ["Excessive permissions", "Sends data to analytics endpoint"],
-  },
-  {
-    name: "The Great Suspender",
-    id: "klbibkeccnjlkjkiokjodocebajanakg",
-    users: "2M+",
-    status: "dangerous",
-    issues: ["Sold to malicious actor", "Executes remote code"],
-  },
-  {
-    name: "uBlock Origin",
-    id: "cjpalhdlnbpafiamejdnhcphjbkeiagm",
-    users: "40M+",
-    status: "safe",
-    issues: [],
-  },
-  {
-    name: "Honey",
-    id: "bmnlcjabgnpnenekpadlanbbkooimhnj",
-    users: "17M+",
-    status: "suspicious",
-    issues: ["Replaces affiliate codes", "Tracks purchase history"],
-  },
-  {
-    name: "Bitwarden",
-    id: "nngceckbapebfimnlniiiahkandclblb",
-    users: "3M+",
-    status: "safe",
-    issues: [],
-  },
-];
-
-const statusConfig: Record<
-  Status,
+const riskConfig: Record<
+  RiskLevel,
   { label: string; variant: "destructive" | "outline" | "secondary" }
 > = {
-  dangerous: { label: "Dangerous", variant: "destructive" },
-  suspicious: { label: "Suspicious", variant: "outline" },
-  safe: { label: "Safe", variant: "secondary" },
+  critical: { label: "Critical", variant: "destructive" },
+  high: { label: "High", variant: "destructive" },
+  medium: { label: "Medium", variant: "outline" },
+  low: { label: "Low", variant: "outline" },
+  clean: { label: "Clean", variant: "secondary" },
 };
+
+function formatUsers(count: number): string {
+  if (count >= 1_000_000) return `${Math.round(count / 1_000_000)}M+`;
+  if (count >= 1_000) return `${Math.round(count / 1_000)}k+`;
+  return `${count}`;
+}
+
+const entries = Object.entries(extensionDb);
 
 const threats = [
   {
@@ -217,38 +165,36 @@ function App() {
               <TableRow>
                 <TableHead>Extension</TableHead>
                 <TableHead>Users</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Issues</TableHead>
+                <TableHead>Risk</TableHead>
+                <TableHead>Summary</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sampleExtensions.map((ext) => {
-                const cfg = statusConfig[ext.status];
+              {entries.map(([id, ext]) => {
+                const cfg = riskConfig[ext.risk];
                 return (
-                  <TableRow key={ext.id}>
+                  <TableRow key={id}>
                     <TableCell>
                       <div>
                         <div className="text-foreground font-medium">
                           {ext.name}
                         </div>
                         <div className="text-muted-foreground font-mono text-xs">
-                          {ext.id}
+                          {id}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {ext.users}
+                      {formatUsers(ext.userCount)}
                     </TableCell>
                     <TableCell>
                       <Badge variant={cfg.variant}>{cfg.label}</Badge>
                     </TableCell>
                     <TableCell className="max-w-xs">
-                      {ext.issues.length > 0 ? (
-                        <ul className="text-muted-foreground list-inside list-disc text-sm">
-                          {ext.issues.map((issue) => (
-                            <li key={issue}>{issue}</li>
-                          ))}
-                        </ul>
+                      {ext.risk !== "clean" ? (
+                        <span className="text-muted-foreground text-sm">
+                          {ext.summary}
+                        </span>
                       ) : (
                         <span className="text-sm text-green-500">
                           No issues found

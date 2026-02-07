@@ -1,0 +1,224 @@
+{
+  "mhjfbmdgcfjbbpaeojofohoefgiehjai": {
+    "name": "PDF Toolbox",
+    "risk": "critical",
+    "userCount": 2000000,
+    "rating": 4.1,
+    "permissions": ["<all_urls>", "tabs", "storage", "webRequest"],
+    "summary": "Exfiltrates browsing data to C2 server; part of coordinated malicious campaign affecting 32+ extensions.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "critical",
+        "title": "Data Exfiltration to Command & Control Server",
+        "description": "Extension sends full browsing history, page titles, and referrer data to attacker-controlled endpoint every 15 minutes."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "high",
+        "title": "Remote Code Execution via Dynamic Script Injection",
+        "description": "Background script fetches and executes arbitrary JavaScript from remote server without integrity checks."
+      }
+    ],
+    "flags": [
+      { "tier": 1, "category": "data_exfiltration", "description": "Sends browsing data to serasearchtop[.]com" },
+      { "tier": 1, "category": "dynamic_eval", "description": "eval() on remote-fetched payload in background.js" },
+      { "tier": 2, "category": "remote_config", "description": "Fetches configuration from C2 server on startup" }
+    ],
+    "endpoints": ["serasearchtop.com", "api.pdftoolbox-ext.com"],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "hmbnhhcgiecenbbkgdoeclkelmmklhgn": {
+    "name": "Autoskip for YouTube",
+    "risk": "high",
+    "userCount": 9000000,
+    "rating": 3.8,
+    "permissions": ["<all_urls>", "tabs", "storage", "cookies"],
+    "summary": "Injects affiliate codes on shopping sites and tracks all page visits via analytics SDK.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "high",
+        "title": "Affiliate Code Injection on E-Commerce Sites",
+        "description": "Content script replaces existing affiliate parameters with attacker-controlled codes on 50+ shopping domains."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "high",
+        "title": "Full Browsing History Tracking",
+        "description": "Every page navigation is logged with URL, title, timestamp and sent to third-party analytics endpoint."
+      }
+    ],
+    "flags": [
+      { "tier": 2, "category": "affiliate_fraud", "description": "Replaces affiliate codes on amazon.com, ebay.com, and 48 other domains" },
+      { "tier": 2, "category": "data_exfiltration", "description": "Sends page visit data to analytics.autoskip[.]io" }
+    ],
+    "endpoints": ["analytics.autoskip.io", "api.autoskip.io"],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "lklmhefoneoahhcghgapcbdpmjlbfbfj": {
+    "name": "Crystal Ad Block",
+    "risk": "critical",
+    "userCount": 120000,
+    "rating": 3.2,
+    "permissions": ["<all_urls>", "webRequest", "webRequestBlocking", "cookies", "tabs"],
+    "summary": "Fake ad blocker that harvests cookies and session tokens; sends credentials to attacker server.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "critical",
+        "title": "Session Token Harvesting",
+        "description": "Intercepts all HTTP requests via webRequest API, extracts authentication cookies and session tokens from headers."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "critical",
+        "title": "Credential Exfiltration",
+        "description": "Harvested session data is base64-encoded and exfiltrated to attacker-controlled server every 5 minutes."
+      }
+    ],
+    "flags": [
+      { "tier": 1, "category": "cookie_harvesting", "description": "Extracts auth cookies from all domains via webRequest listener" },
+      { "tier": 1, "category": "data_exfiltration", "description": "Exfiltrates session tokens to crystalblock-cdn[.]com" },
+      { "tier": 2, "category": "xhr_hooking", "description": "Hooks XMLHttpRequest to intercept auth headers" }
+    ],
+    "endpoints": ["crystalblock-cdn.com", "api.crystalblock.io"],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "pccckmaobkjjboncdfnnofkonhgpceea": {
+    "name": "HoverZoom+",
+    "risk": "medium",
+    "userCount": 800000,
+    "rating": 4.3,
+    "permissions": ["<all_urls>", "tabs", "storage", "contextMenus"],
+    "summary": "Excessive permissions for image zoom functionality; sends usage data to analytics endpoint without disclosure.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "medium",
+        "title": "Undisclosed Analytics Data Collection",
+        "description": "Sends page URLs, image URLs, and interaction events to third-party analytics without user consent or privacy policy mention."
+      }
+    ],
+    "flags": [
+      { "tier": 3, "category": "data_exfiltration", "description": "Sends browsing data to analytics.hoverzoom[.]net" }
+    ],
+    "endpoints": ["analytics.hoverzoom.net"],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "klbibkeccnjlkjkiokjodocebajanakg": {
+    "name": "The Great Suspender",
+    "risk": "critical",
+    "userCount": 2000000,
+    "rating": 2.1,
+    "permissions": ["<all_urls>", "tabs", "webNavigation", "history"],
+    "summary": "Sold to unknown entity; now executes remote code and tracks browsing. Removed from Chrome Web Store.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "critical",
+        "title": "Remote Code Execution After Ownership Transfer",
+        "description": "After acquisition by unknown party, extension loads and executes arbitrary scripts from remote server."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "high",
+        "title": "Browsing History Exfiltration",
+        "description": "All tab navigations are sent to third-party tracking server with full URL, referrer, and timestamp."
+      }
+    ],
+    "flags": [
+      { "tier": 1, "category": "dynamic_eval", "description": "Fetches and eval()s remote script on every page load" },
+      { "tier": 1, "category": "data_exfiltration", "description": "Sends complete browsing history to tracking endpoint" }
+    ],
+    "endpoints": ["onesignal.com", "the-great-suspender.analytics.com"],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "cjpalhdlnbpafiamejdnhcphjbkeiagm": {
+    "name": "uBlock Origin",
+    "risk": "clean",
+    "userCount": 40000000,
+    "rating": 4.9,
+    "permissions": ["<all_urls>", "contextMenus", "privacy", "storage", "tabs", "webNavigation", "webRequest", "webRequestBlocking"],
+    "summary": "Open-source ad blocker with transparent codebase. No data collection, no remote code execution.",
+    "vulnerabilities": [],
+    "flags": [],
+    "endpoints": [],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "bmnlcjabgnpnenekpadlanbbkooimhnj": {
+    "name": "Honey",
+    "risk": "medium",
+    "userCount": 17000000,
+    "rating": 4.4,
+    "permissions": ["<all_urls>", "tabs", "storage", "cookies"],
+    "summary": "Replaces creator affiliate codes with PayPal's own codes; tracks complete purchase history across all shopping sites.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "medium",
+        "title": "Affiliate Code Replacement",
+        "description": "Overwrites existing affiliate/referral parameters with Honey's own tracking codes, diverting revenue from content creators."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "medium",
+        "title": "Purchase History Tracking",
+        "description": "Records all e-commerce transactions including product names, prices, and order details across all shopping sites."
+      }
+    ],
+    "flags": [
+      { "tier": 2, "category": "affiliate_fraud", "description": "Replaces affiliate codes at checkout on 30,000+ domains" },
+      { "tier": 3, "category": "data_exfiltration", "description": "Sends purchase data to d.joinhoney.com" }
+    ],
+    "endpoints": ["d.joinhoney.com", "api.joinhoney.com"],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "nngceckbapebfimnlniiiahkandclblb": {
+    "name": "Bitwarden",
+    "risk": "clean",
+    "userCount": 3000000,
+    "rating": 4.7,
+    "permissions": ["<all_urls>", "tabs", "storage", "clipboardRead", "clipboardWrite", "contextMenus", "idle", "webRequest"],
+    "summary": "Open-source password manager with audited codebase. All data encrypted client-side.",
+    "vulnerabilities": [],
+    "flags": [],
+    "endpoints": ["vault.bitwarden.com"],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "elfaihghhjjoknimpccccmkioofjjfkf": {
+    "name": "StayFree",
+    "risk": "high",
+    "userCount": 200000,
+    "rating": 3.5,
+    "permissions": ["<all_urls>", "tabs", "alarms", "storage", "webNavigation"],
+    "summary": "Sensor Tower Pathmatics SDK intercepts all HTTP traffic; scrapes AI conversations from ChatGPT, Gemini, Claude.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "high",
+        "title": "Full Traffic Interception via Pathmatics SDK",
+        "description": "Sensor Tower market intelligence SDK intercepts all HTTP requests and responses for competitive analysis data."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "high",
+        "title": "AI Conversation Scraping",
+        "description": "Specifically targets and extracts conversation content from ChatGPT, Gemini, Claude, DeepSeek, and Perplexity."
+      },
+      {
+        "id": "VULN-03",
+        "severity": "medium",
+        "title": "Pre-Checked Data Sharing Consent",
+        "description": "Data sharing opt-in is pre-checked during onboarding, effectively enrolling users without informed consent."
+      }
+    ],
+    "flags": [
+      { "tier": 1, "category": "residential_proxy_vendor", "description": "Sensor Tower / Pathmatics market intelligence SDK" },
+      { "tier": 2, "category": "xhr_hooking", "description": "Intercepts XMLHttpRequest and fetch for all domains" },
+      { "tier": 2, "category": "data_exfiltration", "description": "Sends browsing data to api.stayfreeapps.com" }
+    ],
+    "endpoints": ["api.stayfreeapps.com", "pathmatics.com", "sensortower.com"],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  }
+}
