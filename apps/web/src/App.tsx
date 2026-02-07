@@ -23,7 +23,9 @@ const riskConfig: Record<
 > = {
   critical: { label: "Critical", variant: "destructive" },
   high: { label: "High", variant: "destructive" },
+  "medium-high": { label: "Med-High", variant: "destructive" },
   medium: { label: "Medium", variant: "outline" },
+  "medium-low": { label: "Med-Low", variant: "outline" },
   low: { label: "Low", variant: "outline" },
   clean: { label: "Clean", variant: "secondary" },
 };

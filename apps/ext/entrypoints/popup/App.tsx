@@ -29,9 +29,11 @@ type ScanResult =
 const riskOrder: Record<RiskLevel, number> = {
   critical: 0,
   high: 1,
-  medium: 2,
-  low: 3,
-  clean: 4,
+  "medium-high": 2,
+  medium: 3,
+  "medium-low": 4,
+  low: 5,
+  clean: 6,
 };
 
 const riskBadge: Record<
@@ -40,7 +42,9 @@ const riskBadge: Record<
 > = {
   critical: { label: "Critical", variant: "destructive" },
   high: { label: "High", variant: "destructive" },
+  "medium-high": { label: "Med-High", variant: "destructive" },
   medium: { label: "Medium", variant: "outline" },
+  "medium-low": { label: "Med-Low", variant: "outline" },
   low: { label: "Low", variant: "outline" },
   clean: { label: "Clean", variant: "secondary" },
 };

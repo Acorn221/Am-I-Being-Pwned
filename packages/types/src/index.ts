@@ -1,5 +1,12 @@
 /** Risk level assigned to an extension after analysis */
-export type RiskLevel = "clean" | "low" | "medium" | "high" | "critical";
+export type RiskLevel =
+  | "clean"
+  | "low"
+  | "medium-low"
+  | "medium"
+  | "medium-high"
+  | "high"
+  | "critical";
 
 /**
  * Triage flag severity tiers:
@@ -24,7 +31,14 @@ export type FlagCategory =
   | "ad_injection"
   | "affiliate_fraud"
   | "data_exfiltration"
-  | "extension_enumeration";
+  | "extension_enumeration"
+  | "war_js_html_all_urls"
+  | "csp_unsafe_inline"
+  | "dynamic_tab_url"
+  | "postmessage_no_origin"
+  | "dynamic_window_open"
+  | "wasm_binary"
+  | "document_write";
 
 /** A specific vulnerability found during deep analysis */
 export interface Vulnerability {
@@ -33,6 +47,8 @@ export interface Vulnerability {
   severity: RiskLevel;
   title: string;
   description: string;
+  /** CVSS score if available, e.g. "7.5" */
+  cvssScore?: string;
 }
 
 /** A triage flag — a pattern detected during automated scanning */
@@ -40,15 +56,28 @@ export interface Flag {
   tier: FlagTier;
   category: FlagCategory;
   description: string;
+  /** Source file where the pattern was detected */
+  file?: string;
+  /** Line number in the source file */
+  line?: number;
+  /** Code snippet showing the flagged pattern */
+  snippet?: string;
 }
 
 /** Full security report for a single Chrome extension */
 export interface ExtensionReport {
   name: string;
   risk: RiskLevel;
+  version?: string;
+  publisher?: string;
   userCount: number;
   rating: number;
+  /** Chrome API permissions (e.g. "tabs", "storage") */
   permissions: string[];
+  /** Host permissions (e.g. "<all_urls>", "https://*.example.com/*") */
+  hostPermissions?: string[];
+  /** Permissions that can be granted post-install */
+  optionalPermissions?: string[];
   /** One-line human-readable summary of the risk */
   summary: string;
   vulnerabilities: Vulnerability[];
