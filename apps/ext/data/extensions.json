@@ -1,224 +1,1437 @@
 {
-  "mhjfbmdgcfjbbpaeojofohoefgiehjai": {
-    "name": "PDF Toolbox",
-    "risk": "critical",
-    "userCount": 2000000,
-    "rating": 4.1,
-    "permissions": ["<all_urls>", "tabs", "storage", "webRequest"],
-    "summary": "Exfiltrates browsing data to C2 server; part of coordinated malicious campaign affecting 32+ extensions.",
-    "vulnerabilities": [
-      {
-        "id": "VULN-01",
-        "severity": "critical",
-        "title": "Data Exfiltration to Command & Control Server",
-        "description": "Extension sends full browsing history, page titles, and referrer data to attacker-controlled endpoint every 15 minutes."
-      },
-      {
-        "id": "VULN-02",
-        "severity": "high",
-        "title": "Remote Code Execution via Dynamic Script Injection",
-        "description": "Background script fetches and executes arbitrary JavaScript from remote server without integrity checks."
-      }
-    ],
-    "flags": [
-      { "tier": 1, "category": "data_exfiltration", "description": "Sends browsing data to serasearchtop[.]com" },
-      { "tier": 1, "category": "dynamic_eval", "description": "eval() on remote-fetched payload in background.js" },
-      { "tier": 2, "category": "remote_config", "description": "Fetches configuration from C2 server on startup" }
-    ],
-    "endpoints": ["serasearchtop.com", "api.pdftoolbox-ext.com"],
-    "updatedAt": "2026-02-06T00:00:00Z"
-  },
-  "hmbnhhcgiecenbbkgdoeclkelmmklhgn": {
-    "name": "Autoskip for YouTube",
-    "risk": "high",
-    "userCount": 9000000,
-    "rating": 3.8,
-    "permissions": ["<all_urls>", "tabs", "storage", "cookies"],
-    "summary": "Injects affiliate codes on shopping sites and tracks all page visits via analytics SDK.",
-    "vulnerabilities": [
-      {
-        "id": "VULN-01",
-        "severity": "high",
-        "title": "Affiliate Code Injection on E-Commerce Sites",
-        "description": "Content script replaces existing affiliate parameters with attacker-controlled codes on 50+ shopping domains."
-      },
-      {
-        "id": "VULN-02",
-        "severity": "high",
-        "title": "Full Browsing History Tracking",
-        "description": "Every page navigation is logged with URL, title, timestamp and sent to third-party analytics endpoint."
-      }
-    ],
-    "flags": [
-      { "tier": 2, "category": "affiliate_fraud", "description": "Replaces affiliate codes on amazon.com, ebay.com, and 48 other domains" },
-      { "tier": 2, "category": "data_exfiltration", "description": "Sends page visit data to analytics.autoskip[.]io" }
-    ],
-    "endpoints": ["analytics.autoskip.io", "api.autoskip.io"],
-    "updatedAt": "2026-02-06T00:00:00Z"
-  },
-  "lklmhefoneoahhcghgapcbdpmjlbfbfj": {
-    "name": "Crystal Ad Block",
-    "risk": "critical",
-    "userCount": 120000,
-    "rating": 3.2,
-    "permissions": ["<all_urls>", "webRequest", "webRequestBlocking", "cookies", "tabs"],
-    "summary": "Fake ad blocker that harvests cookies and session tokens; sends credentials to attacker server.",
-    "vulnerabilities": [
-      {
-        "id": "VULN-01",
-        "severity": "critical",
-        "title": "Session Token Harvesting",
-        "description": "Intercepts all HTTP requests via webRequest API, extracts authentication cookies and session tokens from headers."
-      },
-      {
-        "id": "VULN-02",
-        "severity": "critical",
-        "title": "Credential Exfiltration",
-        "description": "Harvested session data is base64-encoded and exfiltrated to attacker-controlled server every 5 minutes."
-      }
-    ],
-    "flags": [
-      { "tier": 1, "category": "cookie_harvesting", "description": "Extracts auth cookies from all domains via webRequest listener" },
-      { "tier": 1, "category": "data_exfiltration", "description": "Exfiltrates session tokens to crystalblock-cdn[.]com" },
-      { "tier": 2, "category": "xhr_hooking", "description": "Hooks XMLHttpRequest to intercept auth headers" }
-    ],
-    "endpoints": ["crystalblock-cdn.com", "api.crystalblock.io"],
-    "updatedAt": "2026-02-06T00:00:00Z"
-  },
-  "pccckmaobkjjboncdfnnofkonhgpceea": {
-    "name": "HoverZoom+",
+  "agplbamogoflhammoccnkehefjgkcncl": {
+    "name": "Gener8",
     "risk": "medium",
-    "userCount": 800000,
-    "rating": 4.3,
-    "permissions": ["<all_urls>", "tabs", "storage", "contextMenus"],
-    "summary": "Excessive permissions for image zoom functionality; sends usage data to analytics endpoint without disclosure.",
-    "vulnerabilities": [
+    "version": "3.7.3",
+    "userCount": 0,
+    "rating": 0,
+    "permissions": [],
+    "summary": "Gener8 actively scrapes AI conversations from ChatGPT, Claude, Gemini, Perplexity, Grok, DeepSeek, and Google AI Mode, plus server-configured targets via JSONata expressions. Also scrapes customer support chatbot widgets. Data including conversation content, model names, tools used, and timestamps is sent to apollo.gener8ads.com.",
+    "vulnerabilities": [],
+    "flags": [
       {
-        "id": "VULN-01",
-        "severity": "medium",
-        "title": "Undisclosed Analytics Data Collection",
-        "description": "Sends page URLs, image URLs, and interaction events to third-party analytics without user consent or privacy policy mention."
+        "tier": 1,
+        "category": "data_exfiltration",
+        "description": "Scrapes AI chat conversations from 7+ AI platforms (ChatGPT, Claude, Gemini, Perplexity, Grok, DeepSeek, Google AI) and sends data to apollo.gener8ads.com"
+      },
+      {
+        "tier": 2,
+        "category": "remote_config",
+        "description": "Server-configured targets via JSONata expressions allow remote expansion of data collection without extension update"
       }
     ],
-    "flags": [
-      { "tier": 3, "category": "data_exfiltration", "description": "Sends browsing data to analytics.hoverzoom[.]net" }
+    "endpoints": [
+      "apollo.gener8ads.com"
     ],
-    "endpoints": ["analytics.hoverzoom.net"],
     "updatedAt": "2026-02-06T00:00:00Z"
   },
-  "klbibkeccnjlkjkiokjodocebajanakg": {
-    "name": "The Great Suspender",
-    "risk": "critical",
-    "userCount": 2000000,
-    "rating": 2.1,
-    "permissions": ["<all_urls>", "tabs", "webNavigation", "history"],
-    "summary": "Sold to unknown entity; now executes remote code and tracks browsing. Removed from Chrome Web Store.",
+  "ahdfccamgdjdlkedlodkogiecdggbkpa": {
+    "name": "HaiYao Accelerator (Ai ChatGPT free proxy)",
+    "risk": "medium-high",
+    "version": "3.1.2",
+    "publisher": "haiyaoappsups@gmail.com",
+    "userCount": 0,
+    "rating": 0,
+    "permissions": [
+      "notifications",
+      "storage",
+      "alarms",
+      "management",
+      "proxy",
+      "webRequest",
+      "webNavigation",
+      "activeTab",
+      "idle"
+    ],
+    "hostPermissions": [
+      "*://*/*"
+    ],
+    "summary": "Chinese VPN/proxy extension that forcibly disables competing proxy extensions and explicitly targets Tampermonkey by name. Injects remote tracking script from speed.ilink-tk.com on every page visit. Server-controlled extension whitelist allows operator to remotely control which user extensions get disabled.",
     "vulnerabilities": [
       {
         "id": "VULN-01",
         "severity": "critical",
-        "title": "Remote Code Execution After Ownership Transfer",
-        "description": "After acquisition by unknown party, extension loads and executes arbitrary scripts from remote server."
+        "title": "Extension Enumeration and Forcible Disabling",
+        "description": "Enumerates ALL installed extensions via chrome.management.getAll() and disables any with proxy permission. Explicitly targets Tampermonkey by name for disabling."
       },
       {
         "id": "VULN-02",
         "severity": "high",
-        "title": "Browsing History Exfiltration",
-        "description": "All tab navigations are sent to third-party tracking server with full URL, referrer, and timestamp."
-      }
-    ],
-    "flags": [
-      { "tier": 1, "category": "dynamic_eval", "description": "Fetches and eval()s remote script on every page load" },
-      { "tier": 1, "category": "data_exfiltration", "description": "Sends complete browsing history to tracking endpoint" }
-    ],
-    "endpoints": ["onesignal.com", "the-great-suspender.analytics.com"],
-    "updatedAt": "2026-02-06T00:00:00Z"
-  },
-  "cjpalhdlnbpafiamejdnhcphjbkeiagm": {
-    "name": "uBlock Origin",
-    "risk": "clean",
-    "userCount": 40000000,
-    "rating": 4.9,
-    "permissions": ["<all_urls>", "contextMenus", "privacy", "storage", "tabs", "webNavigation", "webRequest", "webRequestBlocking"],
-    "summary": "Open-source ad blocker with transparent codebase. No data collection, no remote code execution.",
-    "vulnerabilities": [],
-    "flags": [],
-    "endpoints": [],
-    "updatedAt": "2026-02-06T00:00:00Z"
-  },
-  "bmnlcjabgnpnenekpadlanbbkooimhnj": {
-    "name": "Honey",
-    "risk": "medium",
-    "userCount": 17000000,
-    "rating": 4.4,
-    "permissions": ["<all_urls>", "tabs", "storage", "cookies"],
-    "summary": "Replaces creator affiliate codes with PayPal's own codes; tracks complete purchase history across all shopping sites.",
-    "vulnerabilities": [
-      {
-        "id": "VULN-01",
-        "severity": "medium",
-        "title": "Affiliate Code Replacement",
-        "description": "Overwrites existing affiliate/referral parameters with Honey's own tracking codes, diverting revenue from content creators."
+        "title": "Remote Script Injection on Every Page",
+        "description": "Injects remote JavaScript from speed.ilink-tk.com on every non-LAN page visit. Server operator could serve arbitrary JS through this endpoint."
       },
       {
-        "id": "VULN-02",
-        "severity": "medium",
-        "title": "Purchase History Tracking",
-        "description": "Records all e-commerce transactions including product names, prices, and order details across all shopping sites."
+        "id": "VULN-03",
+        "severity": "high",
+        "title": "Server-Controlled Extension Whitelist",
+        "description": "Server can dynamically update which extensions are allowed to remain enabled, giving operator remote control over which user extensions get killed."
       }
     ],
     "flags": [
-      { "tier": 2, "category": "affiliate_fraud", "description": "Replaces affiliate codes at checkout on 30,000+ domains" },
-      { "tier": 3, "category": "data_exfiltration", "description": "Sends purchase data to d.joinhoney.com" }
+      {
+        "tier": 1,
+        "category": "extension_enumeration",
+        "description": "Uses chrome.management.getAll() to enumerate all extensions, disables competing proxy extensions and Tampermonkey"
+      },
+      {
+        "tier": 1,
+        "category": "remote_config",
+        "description": "Server-controlled whitelist determines which user extensions survive; API servers can be dynamically updated"
+      },
+      {
+        "tier": 2,
+        "category": "data_exfiltration",
+        "description": "Sends user IP, full user agent, extension runtime ID, and connection metadata to backend servers on every API call"
+      }
     ],
-    "endpoints": ["d.joinhoney.com", "api.joinhoney.com"],
-    "updatedAt": "2026-02-06T00:00:00Z"
-  },
-  "nngceckbapebfimnlniiiahkandclblb": {
-    "name": "Bitwarden",
-    "risk": "clean",
-    "userCount": 3000000,
-    "rating": 4.7,
-    "permissions": ["<all_urls>", "tabs", "storage", "clipboardRead", "clipboardWrite", "contextMenus", "idle", "webRequest"],
-    "summary": "Open-source password manager with audited codebase. All data encrypted client-side.",
-    "vulnerabilities": [],
-    "flags": [],
-    "endpoints": ["vault.bitwarden.com"],
+    "endpoints": [
+      "rest.vofasts.xyz",
+      "nt.vonodebit.xyz",
+      "ns.vonodefly.vip",
+      "tips.ilink-a.com",
+      "speed.ilink-tk.com"
+    ],
     "updatedAt": "2026-02-06T00:00:00Z"
   },
   "elfaihghhjjoknimpccccmkioofjjfkf": {
-    "name": "StayFree",
-    "risk": "high",
-    "userCount": 200000,
-    "rating": 3.5,
-    "permissions": ["<all_urls>", "tabs", "alarms", "storage", "webNavigation"],
-    "summary": "Sensor Tower Pathmatics SDK intercepts all HTTP traffic; scrapes AI conversations from ChatGPT, Gemini, Claude.",
+    "name": "StayFree - Website Blocker & Screen Time Tracker",
+    "risk": "medium-high",
+    "version": "2.5.6",
+    "userCount": 0,
+    "rating": 0,
+    "permissions": [
+      "alarms",
+      "tabs",
+      "storage",
+      "notifications",
+      "webNavigation",
+      "scripting",
+      "favicon",
+      "search"
+    ],
+    "hostPermissions": [
+      "*://*/*"
+    ],
+    "optionalPermissions": [
+      "history",
+      "downloads"
+    ],
+    "summary": "Owned by Sensor Tower. Embeds Pathmatics ad intelligence SDK that hooks XHR/fetch to intercept ALL HTTP responses for ad scraping. Collects AI conversation metadata from ChatGPT, Gemini, Claude, Copilot, DeepSeek, Perplexity, Grok. Scrapes 30+ customer service chatbot widgets. Uploads browsing data, page views, URL query parameters, and retail ad data to stayfreeapps.com. Pre-checked consent checkboxes.",
     "vulnerabilities": [
       {
         "id": "VULN-01",
         "severity": "high",
-        "title": "Full Traffic Interception via Pathmatics SDK",
-        "description": "Sensor Tower market intelligence SDK intercepts all HTTP requests and responses for competitive analysis data."
+        "title": "XHR/Fetch Interception for Ad Intelligence Scraping",
+        "description": "Sensor Tower Pathmatics SDK hooks XMLHttpRequest.prototype.send and window.fetch to intercept ALL HTTP responses on pages for ad creative harvesting.",
+        "cvssScore": "7.5"
       },
       {
         "id": "VULN-02",
         "severity": "high",
-        "title": "AI Conversation Scraping",
-        "description": "Specifically targets and extracts conversation content from ChatGPT, Gemini, Claude, DeepSeek, and Perplexity."
+        "title": "AI Conversation Metadata and Content Exfiltration",
+        "description": "Scrapes ChatGPT, Gemini, Claude, Copilot, DeepSeek, Perplexity, Grok conversations. Uploads metadata, URLs from AI responses, and interaction card content to stayfreeapps.com.",
+        "cvssScore": "7.1"
+      },
+      {
+        "id": "VULN-03",
+        "severity": "medium-high",
+        "title": "Customer Service Chatbot Content Scraping",
+        "description": "Detects and scrapes conversations from 30+ chatbot widgets (Intercom, Zendesk, Drift, etc.) including actual chat content.",
+        "cvssScore": "6.5"
+      },
+      {
+        "id": "VULN-04",
+        "severity": "medium",
+        "title": "Browsing History and Search Query Collection",
+        "description": "Uploads per-website session durations, page view timestamps, referrers, ad network attribution, and URL search parameters.",
+        "cvssScore": "5.3"
+      },
+      {
+        "id": "VULN-05",
+        "severity": "medium",
+        "title": "Remote Configuration Enables Server-Controlled Behavior",
+        "description": "Server can remotely toggle browsing data uploads, update AI chat scraping selectors, modify collection targets without extension update.",
+        "cvssScore": "5.0"
+      }
+    ],
+    "flags": [
+      {
+        "tier": 1,
+        "category": "xhr_hooking",
+        "description": "Pathmatics SDK hooks XMLHttpRequest.prototype.send and window.fetch globally to intercept all HTTP responses"
+      },
+      {
+        "tier": 1,
+        "category": "fetch_hooking",
+        "description": "window.fetch replaced to clone and read all responses with text/JSON/XML content types"
+      },
+      {
+        "tier": 1,
+        "category": "data_exfiltration",
+        "description": "Uploads browsing data, AI conversation metadata, chatbot conversations, page views, and URL query parameters to stayfreeapps.com"
+      },
+      {
+        "tier": 2,
+        "category": "remote_config",
+        "description": "Remote config from stayfreeapps.com can toggle data uploads, update AI scraping selectors, and modify collection behavior"
+      }
+    ],
+    "endpoints": [
+      "api.stayfreeapps.com"
+    ],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "laankejkbhbdhmipfmgcngdelahlfoji": {
+    "name": "StayFocusd",
+    "risk": "medium-high",
+    "version": "4.4.3",
+    "userCount": 4000000,
+    "rating": 0,
+    "permissions": [
+      "alarms",
+      "tabs",
+      "storage",
+      "notifications",
+      "webNavigation",
+      "scripting"
+    ],
+    "hostPermissions": [
+      "*://*/*"
+    ],
+    "summary": "Owned by Sensor Tower. Shares identical codebase with StayFree. Embeds Pathmatics ad intelligence SDK with XHR/fetch hooking to scrape ads. Collects Gen-AI prompts/responses from ChatGPT, Gemini, DeepSeek, Perplexity, Copilot. Scrapes chatbot interactions from 30+ widgets. Uploads browsing data, page views, and URL query parameters to stayfocusd.st-panel-api.com.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "high",
+        "title": "XHR/Fetch Interception for Ad Intelligence Scraping",
+        "description": "Pathmatics SDK hooks XHR and fetch to intercept all HTTP responses for ad creative harvesting from YouTube, Hulu, Netflix, TikTok, Twitter."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "high",
+        "title": "Gen-AI Conversation Collection",
+        "description": "Scrapes AI conversations from ChatGPT, Gemini, DeepSeek, Perplexity, and Copilot. Uploads metadata and content to server."
       },
       {
         "id": "VULN-03",
         "severity": "medium",
-        "title": "Pre-Checked Data Sharing Consent",
-        "description": "Data sharing opt-in is pre-checked during onboarding, effectively enrolling users without informed consent."
+        "title": "Browsing Data Upload Pipeline",
+        "description": "Uploads per-site session durations, page view counts, URL query parameters, and chatbot interaction data."
       }
     ],
     "flags": [
-      { "tier": 1, "category": "residential_proxy_vendor", "description": "Sensor Tower / Pathmatics market intelligence SDK" },
-      { "tier": 2, "category": "xhr_hooking", "description": "Intercepts XMLHttpRequest and fetch for all domains" },
-      { "tier": 2, "category": "data_exfiltration", "description": "Sends browsing data to api.stayfreeapps.com" }
+      {
+        "tier": 1,
+        "category": "xhr_hooking",
+        "description": "Pathmatics SDK hooks XMLHttpRequest.prototype.send globally for ad response interception"
+      },
+      {
+        "tier": 1,
+        "category": "fetch_hooking",
+        "description": "window.fetch replaced to intercept all HTTP responses"
+      },
+      {
+        "tier": 1,
+        "category": "data_exfiltration",
+        "description": "Uploads browsing data, AI conversation data, chatbot conversations, and URL query parameters to stayfocusd.st-panel-api.com"
+      },
+      {
+        "tier": 2,
+        "category": "remote_config",
+        "description": "Remote config system allows server-controlled behavior changes without extension update"
+      }
     ],
-    "endpoints": ["api.stayfreeapps.com", "pathmatics.com", "sensortower.com"],
+    "endpoints": [
+      "stayfocusd.st-panel-api.com"
+    ],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "necpbmbhhdiplmfhmjicabdeighkndkn": {
+    "name": "Similar Sites - Discover Related Websites",
+    "risk": "high",
+    "version": "0",
+    "userCount": 300000,
+    "rating": 0,
+    "permissions": [
+      "tabs",
+      "webRequest",
+      "webNavigation",
+      "storage",
+      "scripting",
+      "contextMenus"
+    ],
+    "hostPermissions": [
+      "*://*/*"
+    ],
+    "summary": "Comprehensive surveillance platform disguised as a website discovery tool. Deploys XHR/fetch/WebSocket hooks to intercept ALL HTTP traffic. Forwards uploaded files to server-controlled domains. Scrapes VAST ad creatives and prebid.js auction data. Tracks mouse movements, link clicks, and page navigations. Uses RSA+AES encrypted telemetry. Remote config enables silent expansion of collection targets.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "critical",
+        "title": "XHR/Fetch/WebSocket Interception Infrastructure",
+        "description": "Patches native fetch, XMLHttpRequest.prototype.send, and WebSocket to intercept ALL HTTP traffic including request/response bodies, credentials, and authorization headers."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "critical",
+        "title": "File Upload Interception and Forwarding",
+        "description": "Intercepts all File objects uploaded via fetch/XHR, creates blob URLs, and forwards files to alternate domains specified in remote config."
+      },
+      {
+        "id": "VULN-03",
+        "severity": "critical",
+        "title": "Remote Configuration System",
+        "description": "Server at data-api.similarsites.com can dynamically expand collection targets, add new parsing rules, and specify file exfiltration domains without extension update."
+      }
+    ],
+    "flags": [
+      {
+        "tier": 1,
+        "category": "xhr_hooking",
+        "description": "Patches XMLHttpRequest.prototype.send to intercept all HTTP responses"
+      },
+      {
+        "tier": 1,
+        "category": "fetch_hooking",
+        "description": "Replaces window.fetch to intercept all fetch responses and File uploads"
+      },
+      {
+        "tier": 1,
+        "category": "data_exfiltration",
+        "description": "Exfiltrates intercepted HTTP traffic, file uploads, ad data, click tracking, and mouse movements via RSA+AES encrypted payloads"
+      },
+      {
+        "tier": 1,
+        "category": "remote_config",
+        "description": "Polls data-api.similarsites.com every 60 seconds for collection rules that can expand surveillance scope"
+      }
+    ],
+    "endpoints": [
+      "data-api.similarsites.com",
+      "serving-api.similarsites.com"
+    ],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "iohcojnlgnfbmjfjfkbhahhmppcggdog": {
+    "name": "EverSync - Sync bookmarks, backup favorites",
+    "risk": "high",
+    "version": "23.3.7",
+    "userCount": 200000,
+    "rating": 0,
+    "permissions": [
+      "storage",
+      "bookmarks",
+      "tabs",
+      "management",
+      "unlimitedStorage",
+      "cookies"
+    ],
+    "hostPermissions": [
+      "https://everhelper.pro/*"
+    ],
+    "summary": "Bookmark sync extension with wildcard externally_connectable allowing ANY Chrome extension to message it and invoke privileged functionality. Uses chrome.management.getAll() to enumerate all installed extensions. PostMessage bridge uses wildcard origin. Any installed extension can interact with EverSync's privileged APIs.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "critical",
+        "title": "Wildcard externally_connectable",
+        "description": "Declares externally_connectable with ids: ['*'], allowing ANY Chrome extension to send messages and invoke privileged functionality."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "high",
+        "title": "Extension Enumeration via chrome.management.getAll",
+        "description": "Enumerates all installed extensions to find companion extension, exposing complete extension inventory."
+      }
+    ],
+    "flags": [
+      {
+        "tier": 1,
+        "category": "extension_enumeration",
+        "description": "Uses chrome.management.getAll() revealing user's complete extension list to any extension that can message it"
+      },
+      {
+        "tier": 2,
+        "category": "postmessage_no_origin",
+        "description": "Content script postMessage bridge uses wildcard origin '*' allowing compromised vendor site to send arbitrary messages"
+      }
+    ],
+    "endpoints": [
+      "sync.everhelper.pro",
+      "everhelper.pro"
+    ],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "klokphhomfboclhpijjcgbpdjoccaagc": {
+    "name": "Flash Copilot",
+    "risk": "medium-high",
+    "version": "11.5.0",
+    "userCount": 0,
+    "rating": 0,
+    "permissions": [
+      "history",
+      "tabs",
+      "bookmarks",
+      "scripting",
+      "storage"
+    ],
+    "hostPermissions": [
+      "*://*/*"
+    ],
+    "summary": "Chinese productivity extension that harvests 10,000 browsing history entries spanning one year. Steals ChatGPT session tokens by fetching chatgpt.com/api/auth/session with credentials. Sends telemetry with device fingerprint to kjeek.com. Uses HTTP (not HTTPS) for some API calls. Captures page screenshots via html2canvas. Syncs bookmarks and annotations with full page URLs to kjeek.com.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "medium",
+        "title": "Excessive Browsing History Harvesting",
+        "description": "Pulls 10,000 browsing history entries spanning one full year into memory for search feature.",
+        "cvssScore": "5.3"
+      },
+      {
+        "id": "VULN-02",
+        "severity": "high",
+        "title": "Cross-Origin ChatGPT Session Token Theft",
+        "description": "Fetches user's ChatGPT accessToken from chatgpt.com/api/auth/session using credentials, then uses it to read, list, and delete conversations.",
+        "cvssScore": "7.5"
+      },
+      {
+        "id": "VULN-03",
+        "severity": "medium",
+        "title": "Telemetry Beacon with Device Fingerprint",
+        "description": "Transmits device fingerprint, OS, browser, install age, usage statistics, login status, and VIP status to kjeek.com."
+      },
+      {
+        "id": "VULN-04",
+        "severity": "medium",
+        "title": "HTTP API Endpoint Vulnerable to MITM",
+        "description": "Uses unencrypted HTTP (not HTTPS) for switcher.kjeek.com API endpoint."
+      }
+    ],
+    "flags": [
+      {
+        "tier": 1,
+        "category": "cookie_harvesting",
+        "description": "Fetches ChatGPT session token from chatgpt.com/api/auth/session using credentials include"
+      },
+      {
+        "tier": 2,
+        "category": "data_exfiltration",
+        "description": "Uploads annotations, page URLs, screenshots, bookmarks, and browsing history metadata to kjeek.com"
+      }
+    ],
+    "endpoints": [
+      "kjeek.com",
+      "switcher.kjeek.com"
+    ],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "hklhhkchffegjfojbofhfkckjidfbjhe": {
+    "name": "Free VPN for Chrome: Secure VPN Proxy in One Click",
+    "risk": "medium-high",
+    "version": "1.0.1",
+    "userCount": 6000,
+    "rating": 0,
+    "permissions": [
+      "proxy",
+      "storage",
+      "tabs",
+      "activeTab",
+      "scripting",
+      "webRequest",
+      "declarativeNetRequest"
+    ],
+    "hostPermissions": [
+      "*://*/*"
+    ],
+    "summary": "Routes ALL user traffic through 9 hardcoded suspicious proxy domains on disposable TLDs (.space, .club, .site). Blocks Google Analytics, Amplitude, PostHog, Mixpanel, and Chrome update/SafeBrowsing infrastructure via declarativeNetRequest. Makes false AES-256 encryption claims. Injects SweetAlert2 on all pages with no apparent usage.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "high",
+        "title": "Suspicious Proxy Infrastructure",
+        "description": "Routes all traffic through 9 unverified proxy servers on disposable TLDs enabling potential full MITM on user traffic."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "high",
+        "title": "Chrome Safety Infrastructure Blocking",
+        "description": "Blocks clients*.google.com (Chrome update/SafeBrowsing), Google Analytics, Amplitude, PostHog, and Mixpanel via declarativeNetRequest rules."
+      }
+    ],
+    "flags": [
+      {
+        "tier": 1,
+        "category": "residential_proxy_vendor",
+        "description": "Routes all traffic through 9 suspicious unverified proxy domains on disposable TLDs"
+      },
+      {
+        "tier": 2,
+        "category": "ad_injection",
+        "description": "Injects SweetAlert2 library on all pages at document_start with no clear usage -- potential placeholder for future injection"
+      }
+    ],
+    "endpoints": [
+      "goldenearsvccc.space",
+      "pagecloud.space",
+      "projectorpoint.website",
+      "precisiontruck.space",
+      "maureenesther.website",
+      "marjifx.club",
+      "jjs-bbq.space",
+      "haringinsuranc.website",
+      "bst2200.site"
+    ],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "nbcojefnccbanplpoffopkoepjmhgdgh": {
+    "name": "Hoxx VPN Proxy",
+    "risk": "medium-high",
+    "version": "3.50.6",
+    "userCount": 0,
+    "rating": 0,
+    "permissions": [
+      "proxy",
+      "storage",
+      "tabs",
+      "management",
+      "webRequest"
+    ],
+    "hostPermissions": [
+      "*://*/*"
+    ],
+    "summary": "VPN extension with extension enumeration via chrome.management.getAll(), overly broad externally_connectable allowing ANY web page to message the extension and dispatch Redux actions, error telemetry that collects visited URLs, and opaque WASM-based API client that makes it impossible to fully audit what data is sent to servers.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "medium",
+        "title": "Extension Enumeration",
+        "description": "Uses chrome.management.getAll() to enumerate all extensions with proxy permission, storing names in Redux state exposed to UI and external web pages."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "high",
+        "title": "Wildcard externally_connectable",
+        "description": "Declares externally_connectable with matches: ['<all_urls>'], allowing ANY web page to send messages and dispatch Redux actions to the extension."
+      }
+    ],
+    "flags": [
+      {
+        "tier": 1,
+        "category": "extension_enumeration",
+        "description": "Uses chrome.management.getAll() to enumerate all extensions with proxy permission"
+      },
+      {
+        "tier": 2,
+        "category": "data_exfiltration",
+        "description": "Error telemetry collects URLs of pages where network errors occur and sends to Hoxx servers"
+      },
+      {
+        "tier": 2,
+        "category": "wasm_binary",
+        "description": "WASM-based opaque API client handles all request construction/encryption, impossible to fully audit"
+      }
+    ],
+    "endpoints": [
+      "hoxx.com"
+    ],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "ndnjhdibigaajocbimcalfpncnniaogo": {
+    "name": "Free VPN Next Pro",
+    "risk": "medium-high",
+    "version": "1.7.126",
+    "publisher": "Marcode Ltd",
+    "userCount": 2000,
+    "rating": 0,
+    "permissions": [
+      "proxy",
+      "storage",
+      "tabs",
+      "cookies",
+      "webRequest",
+      "declarativeNetRequest",
+      "alarms"
+    ],
+    "hostPermissions": [
+      "*://*/*"
+    ],
+    "summary": "VPN extension with P2P Unblocking Cloud feature that silently enrolls users as residential proxy exit nodes. Google Analytics proxy bypass leaks real user IPs. Server-controlled 308 redirect mechanism enables arbitrary request routing. Full error/response body exfiltration to server-controlled reporting endpoint.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "high",
+        "title": "P2P Residential Proxy Exit Node",
+        "description": "P2P Unblocking Cloud feature makes users' browsers fetch arbitrary URLs for other users via the backend, turning them into residential proxy exit nodes."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "medium",
+        "title": "Google Analytics Proxy Bypass",
+        "description": "google-analytics.com is in the proxy bypass list, leaking real user IP to Google even while VPN is active."
+      },
+      {
+        "id": "VULN-03",
+        "severity": "medium",
+        "title": "Server-Controlled Redirect Mechanism",
+        "description": "308 redirect with server-supplied URLs enables arbitrary request routing from authenticated API calls."
+      }
+    ],
+    "flags": [
+      {
+        "tier": 1,
+        "category": "residential_proxy_vendor",
+        "description": "P2P Unblocking Cloud enrolls users as residential proxy exit nodes without clear informed consent"
+      },
+      {
+        "tier": 2,
+        "category": "remote_config",
+        "description": "Server-controlled 308 redirect and x-delay response header enable remote behavior modification"
+      }
+    ],
+    "endpoints": [
+      "freevpnext.com",
+      "vpn.freevpnext.com"
+    ],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "nmbgmmidnmpoebaopgafhmomioefilof": {
+    "name": "VPN Proxy Master",
+    "risk": "medium-high",
+    "version": "2.3",
+    "userCount": 10000,
+    "rating": 0,
+    "permissions": [
+      "proxy",
+      "webRequest",
+      "webRequestAuthProvider",
+      "storage",
+      "tabs",
+      "alarms",
+      "declarativeNetRequestWithHostAccess"
+    ],
+    "hostPermissions": [
+      "*://*/*"
+    ],
+    "summary": "Free VPN with affiliate ad injection system that hijacks user link clicks across all websites. When clicked links match server-side advertising domain list, extension intercepts and redirects through affiliate links via trendcampaign.com. Spoofs Origin header to impersonate a different extension. VPN bypass for own infrastructure exposes user's real IP.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "high",
+        "title": "Affiliate Link Hijacking via Content Script",
+        "description": "Content script ads.js runs on all pages, intercepts link clicks matching server-side ad domain list, queries trendcampaign.com, and redirects through affiliate URLs."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "medium",
+        "title": "Origin Header Spoofing",
+        "description": "Spoofs Origin header via declarativeNetRequest to impersonate extension pphgdbgldlmicfdkhondlafkiomnelnk when making API requests."
+      }
+    ],
+    "flags": [
+      {
+        "tier": 1,
+        "category": "affiliate_fraud",
+        "description": "Hijacks user link clicks matching server-side ad domain list and redirects through affiliate links"
+      },
+      {
+        "tier": 2,
+        "category": "ad_injection",
+        "description": "Content script injects affiliate redirect interception on all websites"
+      }
+    ],
+    "endpoints": [
+      "1clickvpn.com",
+      "data.trendcampaign.com",
+      "info.vpnbreeze.com"
+    ],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "fmhbdohlogekfmknbhfpbeiphcldcfji": {
+    "name": "Red Shield VPN",
+    "risk": "medium",
+    "version": "0",
+    "userCount": 20000,
+    "rating": 0,
+    "permissions": [
+      "proxy",
+      "storage",
+      "management",
+      "alarms"
+    ],
+    "summary": "VPN extension that actively disables competing proxy extensions via browser.management.setEnabled(). Uses encrypted DNS-over-HTTPS domain resolution with AES-256 encrypted DNS TXT records to discover API server. Uses externally_connectable with <all_urls> for subscription confirmations.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "high",
+        "title": "Proxy Extension Killing",
+        "description": "Enumerates all extensions via management.getAll(), filters for proxy permission, and forcibly disables all competing proxy extensions."
+      }
+    ],
+    "flags": [
+      {
+        "tier": 1,
+        "category": "extension_enumeration",
+        "description": "Uses management.getAll() to enumerate and disable all extensions with proxy permission"
+      }
+    ],
+    "endpoints": [
+      "pl.metgo4u5yhre.org"
+    ],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "jcbiifklmgnkppebelchllpdbnibihel": {
+    "name": "Free VPN",
+    "risk": "medium",
+    "version": "3.2.2",
+    "userCount": 100000,
+    "rating": 0,
+    "permissions": [
+      "proxy",
+      "storage",
+      "tabs",
+      "management",
+      "webRequest"
+    ],
+    "hostPermissions": [
+      "*://*/*"
+    ],
+    "summary": "Free VPN that enumerates and disables competing proxy extensions. Proxy server list fetched from Google Drive URL allowing operator to redirect all traffic without update. Ad network bypass list ensures ads served directly. Contains unused but initialized RSA encryption key, phishing URL set, and form state tracking.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "medium",
+        "title": "Extension Enumeration and Disabling",
+        "description": "Uses chrome.management.getAll() to enumerate all extensions with proxy permission and chrome.management.setEnabled() to disable them."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "medium",
+        "title": "Dynamic Server Configuration from Google Drive",
+        "description": "Proxy server list fetched from Google Drive URL, allowing operator to redirect all user traffic at any time without extension update."
+      }
+    ],
+    "flags": [
+      {
+        "tier": 1,
+        "category": "extension_enumeration",
+        "description": "Enumerates and disables competing proxy extensions via chrome.management API"
+      },
+      {
+        "tier": 2,
+        "category": "remote_config",
+        "description": "Proxy server list fetched from Google Drive allowing dynamic traffic redirection"
+      }
+    ],
+    "endpoints": [
+      "freevpn.one",
+      "logonless.com"
+    ],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "epkcfhiniijndongcpclcfogmbpphfga": {
+    "name": "StreamTube Proxy",
+    "risk": "medium",
+    "version": "3.1",
+    "userCount": 70000,
+    "rating": 0,
+    "permissions": [
+      "proxy",
+      "storage",
+      "tabs"
+    ],
+    "summary": "YouTube unblocking extension targeting Russian users. Contains dormant C2-style mechanism that fetches remote config from GitHub, collects device UUID and real IP, and POSTs to dynamic API for proxy instructions. Injects GEMERA VPN advertising into YouTube pages. Proxies Google Search traffic through untrusted infrastructure.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "medium",
+        "title": "Dormant C2 Remote Configuration",
+        "description": "Fully functional but currently disabled loadThirdServer function fetches config from GitHub, resolves dynamic API at uubb.website, collects device ID and real IP."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "medium",
+        "title": "Ad Injection on YouTube",
+        "description": "Injects GEMERA VPN advertising banner into YouTube watch pages promoting Telegram VPN bot."
+      }
+    ],
+    "flags": [
+      {
+        "tier": 2,
+        "category": "ad_injection",
+        "description": "Injects GEMERA VPN advertising banner into YouTube watch pages"
+      },
+      {
+        "tier": 2,
+        "category": "remote_config",
+        "description": "Dormant C2 mechanism fetches remote config from GitHub for dynamic proxy server instructions"
+      }
+    ],
+    "endpoints": [
+      "uubb.website",
+      "raw.githubusercontent.com/vpn-naruzhu/public/main/uboost-extension"
+    ],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "oahegmgcjlpcachkhdngcjopmflnobci": {
+    "name": "IPchanger VPN",
+    "risk": "medium",
+    "version": "0.0.4",
+    "userCount": 301,
+    "rating": 0,
+    "permissions": [
+      "proxy",
+      "storage",
+      "nativeMessaging",
+      "tabs"
+    ],
+    "hostPermissions": [
+      "*://*/*",
+      "file://*/*"
+    ],
+    "summary": "Chinese residential proxy provider (Zhimadaili/roxlabs.io) extension using Chrome Native Messaging as C2 channel from desktop app. Sends behavioral telemetry over unencrypted HTTP. Server-controlled proxy bypass list. Injects jQuery 1.8.3 into every page including file:// URLs. Baidu and Google websites can message the extension via externally_connectable.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "medium",
+        "title": "Unencrypted Telemetry Transmission",
+        "description": "Detailed user behavior tracking sent to rz.ipchanger.net and rz.ipchanger.321174.com over plain HTTP."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "medium",
+        "title": "Server-Controlled Proxy Bypass List",
+        "description": "Bypass list fetched from server controls which domains bypass the proxy, potentially excluding surveillance traffic."
+      }
+    ],
+    "flags": [
+      {
+        "tier": 2,
+        "category": "data_exfiltration",
+        "description": "Behavioral telemetry sent over unencrypted HTTP to Chinese residential proxy infrastructure"
+      },
+      {
+        "tier": 2,
+        "category": "remote_config",
+        "description": "Server-controlled bypass list and native messaging C2 channel from mandatory desktop app"
+      }
+    ],
+    "endpoints": [
+      "rz.ipchanger.net",
+      "rz.ipchanger.321174.com",
+      "roxlabs.io"
+    ],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "bnompdfnhdbgdaoanapncknhmckenfog": {
+    "name": "Email Tracker + Pixelblock Detector and Blocker",
+    "risk": "medium",
+    "version": "5.0.52",
+    "userCount": 300000,
+    "rating": 0,
+    "permissions": [
+      "tabs",
+      "storage",
+      "unlimitedStorage",
+      "cookies",
+      "declarativeNetRequest",
+      "declarativeNetRequestWithHostAccess",
+      "declarativeNetRequestFeedback",
+      "gcm",
+      "notifications",
+      "scripting",
+      "offscreen",
+      "alarms",
+      "webNavigation"
+    ],
+    "hostPermissions": [
+      "<all_urls>"
+    ],
+    "summary": "Email tracking extension with aggressive XHR/fetch hooking on Gmail, Outlook, and Yahoo Mail. Strips CSP headers on Outlook domains. Captures Outlook OAuth Bearer tokens and stores them in window-accessible variables. Rewrites all links in outgoing emails through tracking redirects. Injects tracking code into Web Workers via Blob URLs.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "high",
+        "title": "Authorization Token Harvesting",
+        "description": "Captures Outlook OAuth Bearer tokens from fetch requests and stores them in window-accessible JavaScript variables."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "high",
+        "title": "CSP Bypass on Outlook Domains",
+        "description": "Strips Content Security Policy headers on outlook.live.com, outlook.office.com, mail.live.com, and outlook.office365.com."
+      },
+      {
+        "id": "VULN-03",
+        "severity": "medium",
+        "title": "Global XHR/Fetch Monkey-Patching",
+        "description": "Completely replaces window.fetch and patches XMLHttpRequest.prototype on Gmail, Outlook, and Yahoo Mail to intercept all API responses."
+      }
+    ],
+    "flags": [
+      {
+        "tier": 1,
+        "category": "xhr_hooking",
+        "description": "Monkey-patches XMLHttpRequest.prototype on Gmail and Yahoo Mail to intercept API responses"
+      },
+      {
+        "tier": 1,
+        "category": "fetch_hooking",
+        "description": "Completely replaces global fetch function on Outlook to intercept and modify email send operations"
+      },
+      {
+        "tier": 2,
+        "category": "cookie_harvesting",
+        "description": "Captures Outlook OAuth Bearer tokens and stores in window-accessible variables"
+      },
+      {
+        "tier": 2,
+        "category": "csp_unsafe_inline",
+        "description": "Strips CSP headers on Outlook domains via declarativeNetRequest"
+      }
+    ],
+    "endpoints": [
+      "emailtracker.website",
+      "my-email-signature.link",
+      "email-signature-image.com",
+      "bitli.pro",
+      "shortened-link.com"
+    ],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "goficmpcgcnombioohjcgdhbaloknabb": {
+    "name": "Note Board - Sticky Notes App",
+    "risk": "medium",
+    "version": "9.0.33",
+    "publisher": "Oscar de Dios",
+    "userCount": 200000,
+    "rating": 0,
+    "permissions": [
+      "storage",
+      "identity",
+      "tabs"
+    ],
+    "summary": "Sticky notes extension with undisclosed Amazon affiliate link injection. Automatically modifies user-created Amazon links to include developer's affiliate tags (notboa-20, notboa-21, wwwnoteboarda-21) for US, Spain, and UK Amazon domains.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "medium",
+        "title": "Amazon Affiliate Link Injection",
+        "description": "Silently injects affiliate tags into Amazon links created by users in their notes for amazon.com, amazon.es, and amazon.co.uk."
+      }
+    ],
+    "flags": [
+      {
+        "tier": 2,
+        "category": "affiliate_fraud",
+        "description": "Undisclosed Amazon affiliate tag injection on user-created links for amazon.com (notboa-20), amazon.es (notboa-21), amazon.co.uk (wwwnoteboarda-21)"
+      }
+    ],
+    "endpoints": [
+      "noteboardapp.com"
+    ],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "hldjnlbobkdkghfidgoecgmklcemanhm": {
+    "name": "Web Highlights - PDF & Web Highlighter",
+    "risk": "medium",
+    "version": "12.0.2",
+    "userCount": 200000,
+    "rating": 0,
+    "permissions": [
+      "tabs",
+      "contextMenus",
+      "storage",
+      "webRequest",
+      "scripting"
+    ],
+    "hostPermissions": [
+      "<all_urls>"
+    ],
+    "summary": "Web highlighting extension that integrates GiveFreely affiliate platform to track browsing across 2000+ merchant domains. Performs geolocation tracking via MaxMind API with hardcoded credentials. Server-controlled configuration allows remote updates to tracked merchant list. Feature only enabled for Chrome users, not Firefox.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "medium",
+        "title": "GiveFreely Affiliate Behavioral Tracking",
+        "description": "Tracks browsing activity across thousands of e-commerce sites and generates affiliate URLs for cashback/charity purposes."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "medium",
+        "title": "Geolocation Tracking with Hardcoded Credentials",
+        "description": "Tracks user's country via MaxMind GeoIP API using hardcoded authorization credentials."
+      }
+    ],
+    "flags": [
+      {
+        "tier": 2,
+        "category": "affiliate_fraud",
+        "description": "GiveFreely affiliate SDK tracks browsing across 2000+ merchant domains and generates affiliate URLs"
+      },
+      {
+        "tier": 2,
+        "category": "remote_config",
+        "description": "Remote config from cdn.givefreely.com allows dynamic update of tracked merchants without CWS review"
+      }
+    ],
+    "endpoints": [
+      "api.web-highlights.com",
+      "cdn.givefreely.com",
+      "geoip.maxmind.com"
+    ],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "lnbmbgocenenhhhdojdielgnmeflbnfb": {
+    "name": "SellerSprite - Amazon Research Tool",
+    "risk": "medium",
+    "version": "5.0.1",
+    "userCount": 400000,
+    "rating": 0,
+    "permissions": [
+      "storage",
+      "tabs",
+      "scripting",
+      "webRequest"
+    ],
+    "hostPermissions": [
+      "*://*.amazon.com/*",
+      "*://*.tiktok.com/*"
+    ],
+    "summary": "Amazon seller research tool that performs TikTok data harvesting via fetch hooking and AI platform prompt injection across 6 AI platforms (ChatGPT, Claude, Gemini, DeepSeek, Grok, Doubao). Hooks window.fetch on TikTok to intercept all API responses for influencer marketing analysis.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "medium",
+        "title": "TikTok Data Harvesting via Fetch Hooking",
+        "description": "Hooks window.fetch in TikTok's MAIN world context to intercept all TikTok API responses including video lists, search results, shop data, and user profiles."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "medium",
+        "title": "AI Platform Prompt Injection",
+        "description": "Injects prompts into ChatGPT, Claude, Gemini, DeepSeek, Grok, and Doubao for market research purposes."
+      }
+    ],
+    "flags": [
+      {
+        "tier": 1,
+        "category": "fetch_hooking",
+        "description": "Hooks window.fetch on TikTok to intercept all API responses for influencer/creator marketing data"
+      },
+      {
+        "tier": 2,
+        "category": "data_exfiltration",
+        "description": "Harvests TikTok video lists, search results, shop data and forwards to SellerSprite servers"
+      }
+    ],
+    "endpoints": [
+      "sellersprite.com"
+    ],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "einnffiilpmgldkapbikhkeicohlaapj": {
+    "name": "Email Finder by Snov.io",
+    "risk": "medium",
+    "version": "2.3.24",
+    "userCount": 400000,
+    "rating": 0,
+    "permissions": [
+      "storage",
+      "tabs",
+      "cookies",
+      "activeTab",
+      "scripting"
+    ],
+    "hostPermissions": [
+      "http://*/",
+      "https://*/"
+    ],
+    "summary": "B2B sales intelligence tool with full HTML extraction on all websites, hardcoded Twitter API bearer token for unauthorized profile scraping, and cookie manipulation. Broad host permissions enable significant data collection capabilities across all sites.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "medium",
+        "title": "Full HTML Extraction on All Websites",
+        "description": "Content script responds to getInnerHTML messages by returning complete page HTML to the background script."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "medium-high",
+        "title": "Hardcoded Twitter API Bearer Token",
+        "description": "Contains hardcoded Twitter/X API bearer token for unauthorized profile scraping via GraphQL API."
+      }
+    ],
+    "flags": [
+      {
+        "tier": 2,
+        "category": "data_exfiltration",
+        "description": "Extracts full HTML from all websites for contact information scraping"
+      },
+      {
+        "tier": 2,
+        "category": "cookie_harvesting",
+        "description": "Creates and reads authentication cookies across domains"
+      }
+    ],
+    "endpoints": [
+      "snov.io",
+      "api.twitter.com"
+    ],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "fggkaccpbmombhnjkjokndojfgagejfb": {
+    "name": "Tactiq - AI note taker for Google Meet, Zoom and MS Teams",
+    "risk": "medium",
+    "version": "3.1.4849",
+    "userCount": 1000000,
+    "rating": 0,
+    "permissions": [
+      "sidePanel",
+      "identity",
+      "cookies",
+      "tabs",
+      "webRequest",
+      "storage",
+      "desktopCapture",
+      "downloads",
+      "windows",
+      "scripting"
+    ],
+    "summary": "Meeting transcription extension with invasive WebRTC hooking that patches native RTCPeerConnection on Google Meet, Zoom, and MS Teams. Intercepts XHR/fetch on Google Meet for session data. Extensive analytics via Mixpanel and Datadog. Can capture tab screenshots.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "high",
+        "title": "RTCPeerConnection Hooking",
+        "description": "Overrides native window.RTCPeerConnection API on Google Meet, Zoom, and MS Teams to intercept WebRTC data channels containing captions and transcripts."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "medium",
+        "title": "XHR/Fetch Interception on Google Meet",
+        "description": "Intercepts network requests on Google Meet to extract session IDs and language settings."
+      }
+    ],
+    "flags": [
+      {
+        "tier": 1,
+        "category": "xhr_hooking",
+        "description": "Intercepts XHR/fetch on Google Meet for session data extraction"
+      },
+      {
+        "tier": 2,
+        "category": "data_exfiltration",
+        "description": "Captures meeting transcripts via WebRTC hooking and sends to Tactiq servers"
+      }
+    ],
+    "endpoints": [
+      "tactiq.io",
+      "api.mixpanel.com"
+    ],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "oofgbpoabipfcfjapgnbbjjaenockbdp": {
+    "name": "SetupVPN - Lifetime Free VPN",
+    "risk": "medium-high",
+    "version": "4.0.9",
+    "userCount": 0,
+    "rating": 0,
+    "permissions": [
+      "proxy",
+      "storage",
+      "tabs",
+      "management",
+      "webRequest",
+      "webRequestAuthProvider"
+    ],
+    "hostPermissions": [
+      "*://*/*"
+    ],
+    "summary": "Free VPN extension with opaque Go-compiled WASM binary that collects browser fingerprints (Selenium detection, incognito detection, DevTools detection, mouse movement, screen fingerprint) and encrypts all API communications with AES. Enumerates all installed proxy extensions via chrome.management.getAll(). Collects browsing activity via error-URL telemetry batched to /api2/m/debug. Uses rotating suspicious domains (scanners.fun, talked.run, pointed.cc) with XOR+AES encrypted communications making traffic unauditable.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "medium-high",
+        "title": "Browser Fingerprinting via Opaque WASM Binary",
+        "description": "Go-compiled WASM binary collects Selenium detection, incognito mode, DevTools state, timezone mismatch, mouse movement patterns, screen fingerprint, and entropy values. All data encrypted with AES before transmission."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "medium",
+        "title": "Error-URL Browsing Activity Collection",
+        "description": "Monitors all webRequest errors across all URLs, collects failed request URLs, referrer URLs, and user ID, batches and sends to /api2/m/debug endpoint."
+      },
+      {
+        "id": "VULN-03",
+        "severity": "medium",
+        "title": "Extension Enumeration",
+        "description": "Uses chrome.management.getAll() to enumerate all installed extensions with proxy permission, storing names in Redux state."
+      }
+    ],
+    "flags": [
+      {
+        "tier": 1,
+        "category": "data_exfiltration",
+        "description": "WASM binary collects browser fingerprints and error-URL telemetry reveals browsing patterns, all encrypted to prevent auditing"
+      },
+      {
+        "tier": 1,
+        "category": "extension_enumeration",
+        "description": "Enumerates all installed proxy/VPN extensions via chrome.management.getAll()"
+      },
+      {
+        "tier": 2,
+        "category": "wasm_binary",
+        "description": "Opaque Go-compiled WASM handles all API requests with AES encryption, making traffic completely unauditable"
+      }
+    ],
+    "endpoints": [
+      "lllm.scanners.fun",
+      "uabh.talked.run",
+      "xcxx.pointed.cc",
+      "1.foreground.work",
+      "1.awakened.work"
+    ],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "hipncndjamdcmphkgngojegjblibadbe": {
+    "name": "Planet VPN - Free VPN Proxy and ad blocker",
+    "risk": "medium",
+    "version": "2.5.0",
+    "userCount": 1000000,
+    "rating": 0,
+    "permissions": [
+      "proxy",
+      "storage",
+      "tabs",
+      "management",
+      "history",
+      "webRequest",
+      "webRequestAuthProvider",
+      "declarativeNetRequest",
+      "declarativeNetRequestFeedback",
+      "privacy",
+      "scripting",
+      "offscreen",
+      "notifications",
+      "unlimitedStorage"
+    ],
+    "hostPermissions": [
+      "*://*/*"
+    ],
+    "summary": "VPN extension with 1M+ users that enumerates and forcibly disables competing proxy extensions via chrome.management.setEnabled(). Uses Telegraph API (Telegram publishing platform) as dead-drop for AES-encrypted backend domain resolution, a C2-resilience technique allowing the operator to change API servers at any time without extension updates. Backend domain refreshed every 5 minutes.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "medium",
+        "title": "Competing Extension Enumeration and Disabling",
+        "description": "Popup script calls chrome.management.getAll() to find extensions with proxy permission, then chrome.management.setEnabled(id, false) to disable them on every popup open."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "medium",
+        "title": "Telegraph-Based C2 Domain Resolution",
+        "description": "Fetches AES-encrypted payload from api.telegra.ph, decrypts with hardcoded key to obtain actual backend API domain. Allows operator to silently redirect all extension traffic to new servers."
+      }
+    ],
+    "flags": [
+      {
+        "tier": 1,
+        "category": "extension_enumeration",
+        "description": "Enumerates all proxy extensions and forcibly disables them via chrome.management.setEnabled()"
+      },
+      {
+        "tier": 2,
+        "category": "remote_config",
+        "description": "AES-encrypted dead-drop on Telegram's Telegraph platform resolves actual API backend domain, refreshed every 5 minutes"
+      }
+    ],
+    "endpoints": [
+      "api.telegra.ph",
+      "sola55.online",
+      "gapi.sola55.online",
+      "cdn.freevpnplanet.com"
+    ],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "ljdobmomdgdljniojadhoplhkpialdid": {
+    "name": "Katalon Recorder (Selenium tests generator)",
+    "risk": "medium",
+    "version": "7.1.0",
+    "publisher": "Katalon LLC",
+    "userCount": 0,
+    "rating": 0,
+    "permissions": [
+      "tabs",
+      "activeTab",
+      "contextMenus",
+      "downloads",
+      "webNavigation",
+      "notifications",
+      "cookies",
+      "storage",
+      "unlimitedStorage",
+      "debugger",
+      "scripting",
+      "offscreen"
+    ],
+    "hostPermissions": [
+      "<all_urls>"
+    ],
+    "summary": "Selenium test recorder that bundles FingerprintJS Pro v3.9.3 for commercial-grade browser fingerprinting (canvas, WebGL, audio, fonts, 30+ signals). Stores persistent tracking IDs in triple-redundant storage (localStorage, sync storage, and cookie on fictitious katalon-persistent-domain.com with year 9999 expiry). Fingerprint ID sent with every analytics event to backend.katalon.com. Install event bypasses user tracking consent toggle.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "medium",
+        "title": "FingerprintJS Pro Browser Fingerprinting",
+        "description": "Bundles FingerprintJS Pro v3.9.3 that generates persistent visitorId using canvas, WebGL, audio, font fingerprinting and 30+ other signals. Sent as browser_id_2 with every Segment tracking event."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "medium",
+        "title": "Persistent Cross-Domain Tracking Supercookie",
+        "description": "Stores tracking IDs in localStorage, storage.sync (follows across devices), AND cookie on fictitious katalon-persistent-domain.com with year 9999 expiry. Triple-persistence survives any single storage clear."
+      },
+      {
+        "id": "VULN-03",
+        "severity": "medium",
+        "title": "Overly Permissive externally_connectable",
+        "description": "Declares externally_connectable.ids: ['*'] allowing ANY Chrome extension to send messages and register capabilities."
+      }
+    ],
+    "flags": [
+      {
+        "tier": 1,
+        "category": "data_exfiltration",
+        "description": "FingerprintJS Pro generates cross-session browser fingerprint sent to Katalon analytics backend; triple-persistence supercookie ensures tracking survives data clears"
+      },
+      {
+        "tier": 2,
+        "category": "cookie_harvesting",
+        "description": "Creates persistent tracking cookie on fictitious katalon-persistent-domain.com with year 9999 expiry for supercookie tracking"
+      }
+    ],
+    "endpoints": [
+      "backend.katalon.com",
+      "web-api.katalon.com"
+    ],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "kkfocohhekldeddhkllgofalggnlhhae": {
+    "name": "BigSeller Product Scraper",
+    "risk": "medium",
+    "version": "3.44.2",
+    "publisher": "BigSeller / Meiyunji",
+    "userCount": 0,
+    "rating": 0,
+    "permissions": [
+      "storage",
+      "tabs",
+      "webRequest"
+    ],
+    "hostPermissions": [
+      "http://*/*",
+      "https://*/*"
+    ],
+    "summary": "E-commerce product scraping tool that XHR/fetch monkey-patches 20+ marketplace sites (Shopee, Lazada, TikTok Shop, Taobao, 1688, AliExpress, Facebook Marketplace). Intercepts Shopee anti-fraud headers (af-ac-enc-dat) via webRequest.onBeforeSendHeaders. Enumerates ALL window global objects on every page navigation and sends via postMessage('*'). Suppresses Taobao/Tmall anti-bot CAPTCHAs. Broad host_permissions to all URLs with proxyRequest handler enabling arbitrary cross-origin requests.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "medium",
+        "title": "XHR/Fetch Response Interception on 20+ Marketplaces",
+        "description": "Replaces window.XMLHttpRequest with proxy class and wraps window.fetch on targeted marketplace pages to intercept all API responses, even when not actively scraping."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "medium",
+        "title": "Shopee Anti-Fraud Header Interception",
+        "description": "Captures Shopee af-ac-enc-dat anti-bot encryption token via webRequest.onBeforeSendHeaders to bypass bot detection."
+      },
+      {
+        "id": "VULN-03",
+        "severity": "low",
+        "title": "Window Global Object Enumeration",
+        "description": "Enumerates ALL keys on window object on every page load, serializes all plain objects found, and sends via postMessage('*')."
+      }
+    ],
+    "flags": [
+      {
+        "tier": 1,
+        "category": "xhr_hooking",
+        "description": "Replaces XMLHttpRequest prototype on 20+ marketplace sites to intercept all API responses continuously"
+      },
+      {
+        "tier": 1,
+        "category": "fetch_hooking",
+        "description": "Wraps window.fetch on Shopee to intercept product detail API responses"
+      },
+      {
+        "tier": 2,
+        "category": "data_exfiltration",
+        "description": "Intercepted product data, Shopee anti-fraud tokens, and window globals forwarded to bigseller.com"
+      }
+    ],
+    "endpoints": [
+      "bigseller.com",
+      "bigseller.pro",
+      "events.sellfox.com"
+    ],
+    "updatedAt": "2026-02-06T00:00:00Z"
+  },
+  "likadllkkidlligfcdhfnnbkjigdkmci": {
+    "name": "QR Code Reader",
+    "risk": "medium",
+    "version": "2.0.3",
+    "userCount": 200000,
+    "rating": 0,
+    "permissions": [
+      "tabs",
+      "activeTab",
+      "unlimitedStorage",
+      "storage",
+      "contextMenus",
+      "scripting"
+    ],
+    "summary": "QR code extension with server-controlled remote message/notification system that can display arbitrary HTML content to users. Sends user URLs to unknown third-party shortening services (hybridapps.net, amazonspot.net) without disclosure. Messages filtered to display only between 7am-10pm (evasion-like timing). Hardcoded secp256k1 private key and API token in client code. Optional online QR decode uploads tab screenshots to qrcd.org.",
+    "vulnerabilities": [
+      {
+        "id": "VULN-01",
+        "severity": "medium",
+        "title": "Remote Message/Notification System",
+        "description": "Fetches unsigned JSON from dsnetx.web.app and dsnet.bitbucket.io to display arbitrary notifications/HTML content. Can target by extension version. Messages only shown between hours 7-22."
+      },
+      {
+        "id": "VULN-02",
+        "severity": "medium",
+        "title": "Undisclosed URL Data Transmission",
+        "description": "When creating QR codes for links, sends user URLs, QR names, and extension ID to third-party shortening services hybridapps.net and amazonspot.net without clear disclosure."
+      },
+      {
+        "id": "VULN-03",
+        "severity": "low-medium",
+        "title": "Hardcoded Cryptographic Credentials",
+        "description": "Embeds secp256k1 private key and API token in plaintext for qrcd.org API authentication."
+      }
+    ],
+    "flags": [
+      {
+        "tier": 2,
+        "category": "remote_config",
+        "description": "Server-controlled notification system fetches unsigned JSON to display arbitrary content, with time-based evasion filtering (7am-10pm only)"
+      },
+      {
+        "tier": 2,
+        "category": "data_exfiltration",
+        "description": "User URLs and QR code data sent to unknown third-party shortening services without disclosure"
+      }
+    ],
+    "endpoints": [
+      "dsnetx.web.app",
+      "dsnet.bitbucket.io",
+      "hybridapps.net",
+      "amazonspot.net",
+      "qrcd.org"
+    ],
     "updatedAt": "2026-02-06T00:00:00Z"
   }
 }
