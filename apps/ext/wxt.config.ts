@@ -10,4 +10,7 @@ export default defineConfig({
   vite: () => ({
     plugins: [tailwindcss()],
   }),
+  runner: {
+    disabled: true,
+  },
 });
