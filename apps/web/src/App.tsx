@@ -50,9 +50,9 @@ function App() {
           working against you?
         </h1>
         <p className="text-muted-foreground mb-8 max-w-xl text-lg">
-          We analyse browser extensions for data harvesting, session hijacking,
-          network tampering, and other threats. Install our extension to scan
-          what you have installed — or browse the database below.
+          We use AI tools to analyse browser extensions for data harvesting, session hijacking,
+          network tampering, and other threats, manually verifying the worst offenders. 
+          Install our extension to scan what you have installed or browse the database below.
         </p>
         <div className="flex gap-3">
           {status === "connected" ? (

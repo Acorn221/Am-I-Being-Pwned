@@ -84,6 +84,8 @@ export interface ExtensionReport {
   flags: Flag[];
   /** External domains/endpoints the extension communicates with */
   endpoints: string[];
+  /** Web-accessible resource paths that can be probed to detect installation */
+  webAccessibleResources?: string[];
   /** ISO 8601 timestamp of when this report was last updated */
   updatedAt: string;
 }
