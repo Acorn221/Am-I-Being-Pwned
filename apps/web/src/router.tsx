@@ -19,7 +19,7 @@ function useHash() {
 
 export function Router() {
   const hash = useHash();
-  const { reports, loading: dbLoading } = useExtensionDatabase();
+  const { reports } = useExtensionDatabase();
 
   const reportMatch = hash.match(/^#\/report\/([a-p]{32})$/);
   if (reportMatch?.[1]) {
@@ -31,5 +31,5 @@ export function Router() {
     );
   }
 
-  return <App reports={reports} dbLoading={dbLoading} />;
+  return <App reports={reports} />;
 }

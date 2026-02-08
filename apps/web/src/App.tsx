@@ -1,15 +1,13 @@
 import { useMemo } from "react";
+import { Eye, Globe, ShieldAlert, Syringe, Wifi } from "lucide-react";
 
 import { Button } from "@amibeingpwned/ui/button";
 
-import { useExtension } from "~/hooks/use-extension";
 import type { ReportMap } from "~/hooks/use-extension-database";
 import { formatUsers } from "~/lib/risk";
 import { DatabaseSection } from "~/components/database-section";
-import { ScanSection } from "~/components/scan-section";
 
-function App({ reports, dbLoading }: { reports: ReportMap; dbLoading: boolean }) {
-  const { status, extensions, scan, scanning, error: scanError } = useExtension();
+function App({ reports }: { reports: ReportMap }) {
 
   const stats = useMemo(() => {
     const entries = [...reports.values()];
@@ -49,7 +47,7 @@ function App({ reports, dbLoading }: { reports: ReportMap; dbLoading: boolean })
           Install our Chrome extension to scan what you have installed or browse the database below.
         </p>
         <div className="flex gap-3">
-          <Button size="lg" disabled>
+          <Button size="lg" disabled className="hidden sm:inline-flex">
             Install Extension (Coming Soon)
           </Button>
           <Button size="lg" variant="outline" asChild>
@@ -88,69 +86,34 @@ function App({ reports, dbLoading }: { reports: ReportMap; dbLoading: boolean })
         </div>
       </div>
 
-      {/* Scan */}
-      <ScanSection
-        status={status}
-        extensions={extensions}
-        scan={scan}
-        scanning={scanning}
-        scanError={scanError}
-        reports={reports}
-        dbLoading={dbLoading}
-      />
-
-      {/* How it works */}
+      {/* What we detect */}
       <section className="mx-auto max-w-6xl px-6 py-16">
         <h2 className="text-foreground mb-8 text-xl font-semibold">
-          How it works
+          What we detect
         </h2>
-        <div className="grid gap-8 sm:grid-cols-3">
-          <div>
-            <div className="text-muted-foreground mb-2 text-sm font-medium">01</div>
-            <h3 className="text-foreground mb-1 font-medium">Install</h3>
-            <p className="text-muted-foreground text-sm">
-              Add the extension to your browser. It only needs the{" "}
-              <code className="rounded bg-zinc-800 px-1 py-0.5 text-xs">management</code>{" "}
-              permission to list your extensions.
-            </p>
-          </div>
-          <div>
-            <div className="text-muted-foreground mb-2 text-sm font-medium">02</div>
-            <h3 className="text-foreground mb-1 font-medium">Scan</h3>
-            <p className="text-muted-foreground text-sm">
-              Visit this page and your extensions are automatically checked
-              against our threat database.
-            </p>
-          </div>
-          <div>
-            <div className="text-muted-foreground mb-2 text-sm font-medium">03</div>
-            <h3 className="text-foreground mb-1 font-medium">Review</h3>
-            <p className="text-muted-foreground text-sm">
-              See which extensions are flagged, why they were flagged, and what
-              endpoints they communicate with.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* What we detect */}
-      <section className="border-border/50 border-y">
-        <div className="mx-auto max-w-6xl px-6 py-16">
-          <h2 className="text-foreground mb-8 text-xl font-semibold">
-            What we detect
-          </h2>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="flex flex-col items-center gap-4">
+          <div className="grid w-full gap-4 sm:grid-cols-3">
             {[
-              { title: "Data Harvesting", desc: "Extensions silently collecting browsing history, keystrokes, and personal data." },
-              { title: "Session Hijacking", desc: "Stealing authentication tokens and cookies to impersonate you on websites." },
-              { title: "Code Injection", desc: "Injecting scripts into pages to modify content, redirect traffic, or insert ads." },
-              { title: "Network Tampering", desc: "Intercepting requests to inject malware, alter DNS, or proxy through malicious servers." },
-              { title: "Vulnerabilities", desc: "Extensions that have poor security hygiene or vulnerabilities." },
-
+              { icon: Eye, title: "Data Harvesting", desc: "Silently collecting browsing history, keystrokes, and personal data." },
+              { icon: Globe, title: "Session Hijacking", desc: "Stealing auth tokens and cookies to impersonate you on websites." },
+              { icon: Syringe, title: "Code Injection", desc: "Injecting scripts into pages to modify content or insert ads." },
             ].map((threat) => (
-              <div key={threat.title}>
+              <div key={threat.title} className="border-border rounded-lg border p-4">
+                <threat.icon className="text-muted-foreground mb-3 h-5 w-5" />
                 <h3 className="text-foreground mb-1 text-sm font-medium">{threat.title}</h3>
-                <p className="text-muted-foreground text-sm">{threat.desc}</p>
+                <p className="text-muted-foreground text-xs leading-relaxed">{threat.desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="grid w-full gap-4 sm:grid-cols-2 sm:max-w-[66.666%]">
+            {[
+              { icon: Wifi, title: "Network Tampering", desc: "Intercepting requests to inject malware or proxy through malicious servers." },
+              { icon: ShieldAlert, title: "Vulnerabilities", desc: "Poor security hygiene, outdated dependencies, or known CVEs." },
+            ].map((threat) => (
+              <div key={threat.title} className="border-border rounded-lg border p-4">
+                <threat.icon className="text-muted-foreground mb-3 h-5 w-5" />
+                <h3 className="text-foreground mb-1 text-sm font-medium">{threat.title}</h3>
+                <p className="text-muted-foreground text-xs leading-relaxed">{threat.desc}</p>
               </div>
             ))}
           </div>
