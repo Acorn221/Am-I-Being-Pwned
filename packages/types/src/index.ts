@@ -8,14 +8,6 @@ export type RiskLevel =
   | "high"
   | "critical";
 
-/**
- * Triage flag severity tiers:
- * - 1: Critical (RCE, dynamic eval with external input)
- * - 2: Dangerous patterns (proxy SDKs, XHR hooking)
- * - 3: Suspicious (excessive permissions, analytics)
- */
-export type FlagTier = 1 | 2 | 3;
-
 /** Categories of suspicious behaviour detected during triage */
 export type FlagCategory =
   | "residential_proxy_vendor"
@@ -40,28 +32,12 @@ export type FlagCategory =
   | "wasm_binary"
   | "document_write";
 
-/** A specific vulnerability found during deep analysis */
-export interface Vulnerability {
-  /** e.g. "VULN-01" */
-  id: string;
-  severity: RiskLevel;
-  title: string;
-  description: string;
-  /** CVSS score if available, e.g. "7.5" */
-  cvssScore?: string;
-}
-
-/** A triage flag — a pattern detected during automated scanning */
-export interface Flag {
-  tier: FlagTier;
-  category: FlagCategory;
-  description: string;
-  /** Source file where the pattern was detected */
-  file?: string;
-  /** Line number in the source file */
-  line?: number;
-  /** Code snippet showing the flagged pattern */
-  snippet?: string;
+/** Vulnerability counts by severity */
+export interface VulnerabilityCount {
+  critical: number;
+  high: number;
+  medium: number;
+  low: number;
 }
 
 /** Whether this report was AI-generated or manually reviewed by a human */
@@ -70,27 +46,30 @@ export type ReviewSource = "ai" | "manual";
 /** Full security report for a single Chrome extension */
 export interface ExtensionReport {
   name: string;
+  extensionId: string;
   risk: RiskLevel;
   /** How this report was produced — "ai" or "manual" (human-reviewed) */
-  reviewedBy: ReviewSource;
-  version?: string;
-  publisher?: string;
+  reviewedBy?: ReviewSource;
+  version: string;
+  publisher: string;
   userCount: number;
   rating: number;
   /** Chrome API permissions (e.g. "tabs", "storage") */
   permissions: string[];
   /** Host permissions (e.g. "<all_urls>", "https://*.example.com/*") */
-  hostPermissions?: string[];
+  hostPermissions: string[];
   /** Permissions that can be granted post-install */
-  optionalPermissions?: string[];
+  optionalPermissions: string[];
   /** One-line human-readable summary of the risk */
   summary: string;
-  vulnerabilities: Vulnerability[];
-  flags: Flag[];
+  /** Flag categories detected during triage */
+  flagCategories: string[];
+  /** Vulnerability counts by severity */
+  vulnerabilityCount: VulnerabilityCount;
   /** External domains/endpoints the extension communicates with */
   endpoints: string[];
   /** Web-accessible resource paths that can be probed to detect installation */
-  webAccessibleResources?: string[];
+  webAccessibleResources: string[];
   /** ISO 8601 timestamp of when this report was last updated */
   updatedAt: string;
 }

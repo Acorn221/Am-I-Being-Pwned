@@ -16,6 +16,11 @@ export function DatabaseRow({
   onToggle: () => void;
 }) {
   const cfg = riskConfig[ext.risk];
+  const totalVulns =
+    ext.vulnerabilityCount.critical +
+    ext.vulnerabilityCount.high +
+    ext.vulnerabilityCount.medium +
+    ext.vulnerabilityCount.low;
 
   return (
     <TableRow className="cursor-pointer" onClick={onToggle}>
@@ -33,37 +38,50 @@ export function DatabaseRow({
             <div className="text-muted-foreground text-xs">
               {ext.summary}
             </div>
-            {ext.vulnerabilities.length > 0 && (
+            {totalVulns > 0 && (
               <div>
                 <div className="text-foreground mb-1 text-xs font-semibold">
                   Vulnerabilities
                 </div>
-                <ul className="space-y-1">
-                  {ext.vulnerabilities.map((v) => (
-                    <li
-                      key={v.id}
-                      className="text-muted-foreground text-xs"
+                <div className="flex flex-wrap gap-1.5">
+                  {ext.vulnerabilityCount.critical > 0 && (
+                    <Badge variant="destructive" className="text-[10px]">
+                      {ext.vulnerabilityCount.critical} Critical
+                    </Badge>
+                  )}
+                  {ext.vulnerabilityCount.high > 0 && (
+                    <Badge variant="destructive" className="text-[10px]">
+                      {ext.vulnerabilityCount.high} High
+                    </Badge>
+                  )}
+                  {ext.vulnerabilityCount.medium > 0 && (
+                    <Badge variant="outline" className="text-[10px]">
+                      {ext.vulnerabilityCount.medium} Medium
+                    </Badge>
+                  )}
+                  {ext.vulnerabilityCount.low > 0 && (
+                    <Badge variant="secondary" className="text-[10px]">
+                      {ext.vulnerabilityCount.low} Low
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+            {ext.flagCategories.length > 0 && (
+              <div>
+                <div className="text-foreground mb-1 text-xs font-semibold">
+                  Flags
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {ext.flagCategories.map((flag) => (
+                    <code
+                      key={flag}
+                      className="rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] text-zinc-300"
                     >
-                      <Badge
-                        variant={
-                          v.severity === "critical" ||
-                          v.severity === "high"
-                            ? "destructive"
-                            : "outline"
-                        }
-                        className="mr-1.5 text-[10px]"
-                      >
-                        {v.severity}
-                      </Badge>
-                      {v.title}
-                      {v.cvssScore && (
-                        <span className="text-muted-foreground ml-1">
-                          (CVSS {v.cvssScore})
-                        </span>
-                      )}
-                    </li>
+                      {flag}
+                    </code>
                   ))}
-                </ul>
+                </div>
               </div>
             )}
             {ext.endpoints.length > 0 && (
@@ -115,7 +133,16 @@ export function DatabaseRow({
                 className="text-blue-400 hover:underline"
                 onClick={(e) => e.stopPropagation()}
               >
-                View in Chrome Web Store
+                Chrome Web Store
+              </a>
+              <a
+                href={`/website-reports/${id}.md`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-blue-400 hover:underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Full Report
               </a>
             </div>
           </div>

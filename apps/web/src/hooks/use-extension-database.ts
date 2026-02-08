@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import type { ExtensionReport } from "@amibeingpwned/types";
+import type { ExtensionDatabase, ExtensionReport, RiskLevel } from "@amibeingpwned/types";
 
 export type ReportMap = Map<string, ExtensionReport>;
 
@@ -12,20 +12,17 @@ export function useExtensionDatabase() {
     let cancelled = false;
     async function load() {
       try {
-        const res = await fetch("/extensions/index.json");
-        const ids = await res.json() as string[];
-        const entries = await Promise.all(
-          ids.map(async (id) => {
-            const r = await fetch(`/extensions/${id}.json`);
-            const data = await r.json() as ExtensionReport;
-            return [id, data] as const;
-          }),
-        );
+        const res = await fetch("/extensions.json");
+        const data = (await res.json()) as ExtensionDatabase;
         if (!cancelled) {
+          const entries = Object.entries(data).map(
+            ([id, ext]) =>
+              [id, { ...ext, risk: ext.risk.toLowerCase() as RiskLevel }] as const,
+          );
           setReports(new Map(entries));
         }
       } catch {
-        // Static files — if they fail the site is down anyway
+        // Static file — if it fails the site is down anyway
       } finally {
         if (!cancelled) setLoading(false);
       }

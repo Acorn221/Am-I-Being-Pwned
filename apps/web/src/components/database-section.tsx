@@ -19,7 +19,11 @@ export function DatabaseSection({ reports }: { reports: ReportMap }) {
 
   const dbEntries = useMemo(() => {
     const entries = [...reports.entries()] as [string, ExtensionReport][];
-    entries.sort((a, b) => riskOrder[a[1].risk] - riskOrder[b[1].risk]);
+    entries.sort((a, b) => {
+      const riskDiff = riskOrder[a[1].risk] - riskOrder[b[1].risk];
+      if (riskDiff !== 0) return riskDiff;
+      return b[1].userCount - a[1].userCount;
+    });
     return entries;
   }, [reports]);
 
