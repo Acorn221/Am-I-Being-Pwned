@@ -31,12 +31,6 @@ function App({ reports, dbLoading }: { reports: ReportMap; dbLoading: boolean })
           <span className="text-foreground text-sm font-semibold tracking-tight">
             Am I Being Pwned?
           </span>
-          <a
-            href="https://github.com/AcornPublishing/Am-I-Being-Pwned"
-            className="text-muted-foreground hover:text-foreground text-sm transition-colors"
-          >
-            GitHub
-          </a>
         </div>
       </nav>
 
@@ -168,11 +162,10 @@ function App({ reports, dbLoading }: { reports: ReportMap; dbLoading: boolean })
 
       {/* Footer */}
       <footer className="border-border/50 border-t">
-        <div className="mx-auto max-w-6xl px-6 py-8">
-          <div className="text-muted-foreground flex items-center justify-between text-sm">
-            <span>Am I Being Pwned?</span>
-            <span>Open source browser extension security scanner</span>
-          </div>
+        <div className="mx-auto max-w-6xl px-6 py-8 text-center">
+          <p className="text-muted-foreground text-sm">
+            Made with ❤️ by James Arnott
+          </p>
         </div>
       </footer>
     </div>
