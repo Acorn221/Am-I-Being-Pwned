@@ -17,7 +17,9 @@ function App({ reports, dbLoading }: { reports: ReportMap; dbLoading: boolean })
     const critical = entries.filter(
       (e) => e.risk === "critical" || e.risk === "high",
     ).length;
-    const totalUsers = entries.reduce((sum, e) => sum + e.userCount, 0);
+    const totalUsers = entries
+      .filter((e) => e.risk === "critical" || e.risk === "high" || e.risk === "medium")
+      .reduce((sum, e) => sum + e.userCount, 0);
     return { total, critical, totalUsers };
   }, [reports]);
 
@@ -53,21 +55,9 @@ function App({ reports, dbLoading }: { reports: ReportMap; dbLoading: boolean })
           Install our Chrome extension to scan what you have installed or browse the database below.
         </p>
         <div className="flex gap-3">
-          {status === "connected" ? (
-            <Button size="lg" onClick={() => void scan()} disabled={scanning}>
-              {scanning ? "Scanning..." : extensions ? "Rescan" : "Scan My Extensions"}
-            </Button>
-          ) : status === "not_installed" ? (
-            <Button size="lg" asChild>
-              <a href="https://chromewebstore.google.com" target="_blank" rel="noreferrer">
-                Install Extension
-              </a>
-            </Button>
-          ) : (
-            <Button size="lg" disabled>
-              Detecting extension...
-            </Button>
-          )}
+          <Button size="lg" disabled>
+            Install Extension (Coming Soon)
+          </Button>
           <Button size="lg" variant="outline" asChild>
             <a href="#database">Browse Database</a>
           </Button>
