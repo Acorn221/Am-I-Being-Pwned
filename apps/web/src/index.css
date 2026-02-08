@@ -2,6 +2,8 @@
 @import "@amibeingpwned/tailwind-config/theme";
 @import "tw-animate-css";
 
+@plugin "@tailwindcss/typography";
+
 @source "../../../packages/ui/src/*.{ts,tsx}";
 
 @custom-variant dark (&:where(.dark, .dark *));

@@ -14,13 +14,16 @@
     "@amibeingpwned/ui": "workspace:*",
     "@amibeingpwned/validators": "workspace:*",
     "react": "catalog:react19",
-    "react-dom": "catalog:react19"
+    "react-dom": "catalog:react19",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@amibeingpwned/eslint-config": "workspace:*",
     "@amibeingpwned/prettier-config": "workspace:*",
     "@amibeingpwned/tailwind-config": "workspace:*",
     "@amibeingpwned/tsconfig": "workspace:*",
+    "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "catalog:",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",

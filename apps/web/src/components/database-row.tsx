@@ -136,9 +136,7 @@ export function DatabaseRow({
                 Chrome Web Store
               </a>
               <a
-                href={`/website-reports/${id}.md`}
-                target="_blank"
-                rel="noreferrer"
+                href={`#/report/${id}`}
                 className="text-blue-400 hover:underline"
                 onClick={(e) => e.stopPropagation()}
               >
