@@ -49,11 +49,11 @@
   --spacing: 0.25rem;
 
   @variant dark {
-    --background: oklch(0.1836 0.0111 311.9111);
+    --background: oklch(0 0 0);
     --foreground: oklch(0.9788 0.0057 308.3962);
-    --card: oklch(0.1836 0.0111 311.9111);
+    --card: oklch(0.0736 0.005 311.91);
     --card-foreground: oklch(0.9788 0.0057 308.3962);
-    --popover: oklch(0.1836 0.0111 311.9111);
+    --popover: oklch(0.0736 0.005 311.91);
     --popover-foreground: oklch(0.9788 0.0057 308.3962);
     --primary: oklch(0.6747 0.1492 345.9482);
     --primary-foreground: oklch(0.1836 0.0111 311.9111);

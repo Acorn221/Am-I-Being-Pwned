@@ -64,10 +64,15 @@ export interface Flag {
   snippet?: string;
 }
 
+/** Whether this report was AI-generated or manually reviewed by a human */
+export type ReviewSource = "ai" | "manual";
+
 /** Full security report for a single Chrome extension */
 export interface ExtensionReport {
   name: string;
   risk: RiskLevel;
+  /** How this report was produced — "ai" or "manual" (human-reviewed) */
+  reviewedBy: ReviewSource;
   version?: string;
   publisher?: string;
   userCount: number;

@@ -42,17 +42,16 @@ function App() {
       {/* Hero */}
       <header className="mx-auto max-w-6xl px-6 pt-20 pb-16">
         <p className="text-muted-foreground mb-3 text-sm font-medium uppercase tracking-wider">
-          Browser Extension Security
+          Chrome Extension Security
         </p>
         <h1 className="text-foreground mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
-          Are your extensions
-          <br />
-          working against you?
+          Am I Being{" "}
+          <span className="bg-linear-to-t from-red-300 to-white bg-clip-text text-transparent">Pwned?</span>
         </h1>
         <p className="text-muted-foreground mb-8 max-w-xl text-lg">
-          We use AI tools to analyse browser extensions for data harvesting, session hijacking,
-          network tampering, and other threats, manually verifying the worst offenders. 
-          Install our extension to scan what you have installed or browse the database below.
+          We use AI tools to analyse Chrome extensions for data harvesting, session hijacking,
+          network tampering, and other threats, manually verifying the worst offenders.
+          Install our Chrome extension to scan what you have installed or browse the database below.
         </p>
         <div className="flex gap-3">
           {status === "connected" ? (
