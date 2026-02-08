@@ -13,6 +13,7 @@
     "@amibeingpwned/types": "workspace:*",
     "@amibeingpwned/ui": "workspace:*",
     "@amibeingpwned/validators": "workspace:*",
+    "lucide-react": "^0.563.0",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "react-markdown": "^10.1.0",

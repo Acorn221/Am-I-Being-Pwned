@@ -2,9 +2,19 @@ import { useEffect, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import type { ExtensionReport } from "@amibeingpwned/types";
+import { Badge } from "@amibeingpwned/ui/badge";
 import { Button } from "@amibeingpwned/ui/button";
 
-export function ReportPage({ extensionId }: { extensionId: string }) {
+import { formatUsers, riskConfig } from "~/lib/risk";
+
+export function ReportPage({
+  extensionId,
+  ext,
+}: {
+  extensionId: string;
+  ext?: ExtensionReport;
+}) {
   const [content, setContent] = useState<string | null>(null);
   const [error, setError] = useState(false);
 
@@ -26,22 +36,47 @@ export function ReportPage({ extensionId }: { extensionId: string }) {
     };
   }, [extensionId]);
 
+  const cfg = ext ? riskConfig[ext.risk] : null;
+
   return (
     <div className="bg-background min-h-screen">
-      <nav className="border-border/50 border-b">
-        <div className="mx-auto flex max-w-4xl items-center gap-4 px-6 py-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              window.location.hash = "";
-            }}
+      <nav className="bg-background/80 border-border/50 sticky top-0 z-50 border-b backdrop-blur-sm">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-6 py-3">
+          <div className="flex items-center gap-3 overflow-hidden">
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={() => {
+                window.location.hash = "";
+              }}
+            >
+              Back
+            </Button>
+            {ext ? (
+              <div className="flex items-center gap-2 overflow-hidden">
+                <span className="text-foreground truncate text-sm font-semibold">
+                  {ext.name}
+                </span>
+                {cfg && <Badge variant={cfg.variant} className="shrink-0">{cfg.label}</Badge>}
+                <span className="text-muted-foreground shrink-0 text-xs">
+                  {formatUsers(ext.userCount)} users
+                </span>
+              </div>
+            ) : (
+              <span className="text-foreground text-sm font-semibold tracking-tight">
+                Am I Being Pwned?
+              </span>
+            )}
+          </div>
+          <a
+            href={`https://chromewebstore.google.com/detail/${extensionId}`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-muted-foreground hover:text-foreground shrink-0 text-sm transition-colors"
           >
-            Back
-          </Button>
-          <span className="text-foreground text-sm font-semibold tracking-tight">
-            Am I Being Pwned?
-          </span>
+            Chrome Web Store
+          </a>
         </div>
       </nav>
 

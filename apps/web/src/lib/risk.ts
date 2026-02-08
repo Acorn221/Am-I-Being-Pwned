@@ -11,6 +11,7 @@ export const riskConfig: Record<
   "medium-low": { label: "Med-Low", variant: "outline" },
   low: { label: "Low", variant: "outline" },
   clean: { label: "Clean", variant: "secondary" },
+  unavailable: { label: "N/A", variant: "secondary" },
 };
 
 export const riskOrder: Record<RiskLevel, number> = {
@@ -21,6 +22,7 @@ export const riskOrder: Record<RiskLevel, number> = {
   "medium-low": 4,
   low: 5,
   clean: 6,
+  unavailable: 7,
 };
 
 export function formatUsers(count: number): string {

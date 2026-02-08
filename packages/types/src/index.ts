@@ -6,7 +6,8 @@ export type RiskLevel =
   | "medium"
   | "medium-high"
   | "high"
-  | "critical";
+  | "critical"
+  | "unavailable";
 
 /** Categories of suspicious behaviour detected during triage */
 export type FlagCategory =

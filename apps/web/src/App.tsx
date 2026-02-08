@@ -3,13 +3,12 @@ import { useMemo } from "react";
 import { Button } from "@amibeingpwned/ui/button";
 
 import { useExtension } from "~/hooks/use-extension";
-import { useExtensionDatabase } from "~/hooks/use-extension-database";
+import type { ReportMap } from "~/hooks/use-extension-database";
 import { formatUsers } from "~/lib/risk";
 import { DatabaseSection } from "~/components/database-section";
 import { ScanSection } from "~/components/scan-section";
 
-function App() {
-  const { reports, loading: dbLoading } = useExtensionDatabase();
+function App({ reports, dbLoading }: { reports: ReportMap; dbLoading: boolean }) {
   const { status, extensions, scan, scanning, error: scanError } = useExtension();
 
   const stats = useMemo(() => {
