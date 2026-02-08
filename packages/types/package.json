@@ -1,5 +1,5 @@
 {
-  "name": "@acme/types",
+  "name": "@amibeingpwned/types",
   "private": true,
   "type": "module",
   "exports": {
@@ -13,12 +13,12 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
+    "@amibeingpwned/eslint-config": "workspace:*",
+    "@amibeingpwned/prettier-config": "workspace:*",
+    "@amibeingpwned/tsconfig": "workspace:*",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"
   },
-  "prettier": "@acme/prettier-config"
+  "prettier": "@amibeingpwned/prettier-config"
 }

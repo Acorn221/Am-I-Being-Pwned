@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 
-import type { ExtensionReport, RiskLevel } from "@acme/types";
-import { Badge } from "@acme/ui/badge";
-import { Button } from "@acme/ui/button";
+import type { ExtensionReport, RiskLevel } from "@amibeingpwned/types";
+import { Badge } from "@amibeingpwned/ui/badge";
+import { Button } from "@amibeingpwned/ui/button";
 import {
   Table,
   TableBody,
@@ -10,7 +10,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@acme/ui/table";
+} from "@amibeingpwned/ui/table";
 
 import { useExtension } from "~/hooks/use-extension";
 

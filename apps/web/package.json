@@ -1,5 +1,5 @@
 {
-  "name": "@acme/web",
+  "name": "@amibeingpwned/web",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,17 +10,17 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@acme/types": "workspace:*",
-    "@acme/ui": "workspace:*",
-    "@acme/validators": "workspace:*",
+    "@amibeingpwned/types": "workspace:*",
+    "@amibeingpwned/ui": "workspace:*",
+    "@amibeingpwned/validators": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
-    "@acme/tailwind-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
+    "@amibeingpwned/eslint-config": "workspace:*",
+    "@amibeingpwned/prettier-config": "workspace:*",
+    "@amibeingpwned/tailwind-config": "workspace:*",
+    "@amibeingpwned/tsconfig": "workspace:*",
     "@tailwindcss/vite": "catalog:",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
@@ -34,5 +34,5 @@
     "vite": "catalog:",
     "vite-tsconfig-paths": "^5.1.4"
   },
-  "prettier": "@acme/prettier-config"
+  "prettier": "@amibeingpwned/prettier-config"
 }

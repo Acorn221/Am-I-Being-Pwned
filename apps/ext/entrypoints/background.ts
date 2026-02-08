@@ -1,5 +1,5 @@
-import type { ExtResponse, InstalledExtensionInfo } from "@acme/types";
-import { ExtRequestSchema } from "@acme/validators";
+import type { ExtResponse, InstalledExtensionInfo } from "@amibeingpwned/types";
+import { ExtRequestSchema } from "@amibeingpwned/validators";
 
 const WEB_URL = import.meta.env.DEV
   ? "http://localhost:3000"

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { InstalledExtensionInfo } from "@acme/types";
+import type { InstalledExtensionInfo } from "@amibeingpwned/types";
 
 import { detectExtension, sendToExtension } from "~/lib/extension-client";
 

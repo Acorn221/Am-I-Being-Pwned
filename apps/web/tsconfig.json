@@ -1,5 +1,5 @@
 {
-  "extends": "@acme/tsconfig/base.json",
+  "extends": "@amibeingpwned/tsconfig/base.json",
   "compilerOptions": {
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",

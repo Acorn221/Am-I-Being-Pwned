@@ -1,7 +1,7 @@
 import { defineConfig } from "eslint/config";
 
-import { baseConfig } from "@acme/eslint-config/base";
-import { reactConfig } from "@acme/eslint-config/react";
+import { baseConfig } from "@amibeingpwned/eslint-config/base";
+import { reactConfig } from "@amibeingpwned/eslint-config/react";
 
 export default defineConfig(
   {
