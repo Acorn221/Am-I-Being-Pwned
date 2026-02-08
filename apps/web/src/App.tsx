@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
-import type { ExtensionReport, RiskLevel } from "@amibeingpwned/types";
+import type { ExtensionReport, InstalledExtensionInfo, RiskLevel } from "@amibeingpwned/types";
 import { Badge } from "@amibeingpwned/ui/badge";
 import { Button } from "@amibeingpwned/ui/button";
 import {
@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@amibeingpwned/ui/table";
 
+import { useExtensionDatabase } from "~/hooks/use-extension-database";
 import { useExtension } from "~/hooks/use-extension";
 
 const riskConfig: Record<
@@ -44,72 +45,64 @@ function formatUsers(count: number): string {
   return `${count}`;
 }
 
-type ExtEntry = [string, ExtensionReport];
+interface ScanRow {
+  ext: InstalledExtensionInfo;
+  report: ExtensionReport | null;
+  dbLoading: boolean;
+}
 
 function App() {
-  const [entries, setEntries] = useState<ExtEntry[]>([]);
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  const { reports, loading: dbLoading } = useExtensionDatabase();
   const { status, extensions, scan, scanning, error: scanError } = useExtension();
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch("/extensions/index.json");
-        const ids: string[] = await res.json();
-        const reports = await Promise.all(
-          ids.map(async (id) => {
-            const r = await fetch(`/extensions/${id}.json`);
-            const data: ExtensionReport = await r.json();
-            return [id, data] as ExtEntry;
-          }),
-        );
-        reports.sort(
-          (a, b) => riskOrder[a[1].risk] - riskOrder[b[1].risk],
-        );
-        setEntries(reports);
-      } catch {
-        // Static files — if they fail the site is down anyway
-      }
-    }
-    void load();
-  }, []);
+  // Database as sorted entries for the browse table
+  const dbEntries = useMemo(() => {
+    const entries = [...reports.entries()] as [string, ExtensionReport][];
+    entries.sort((a, b) => riskOrder[a[1].risk] - riskOrder[b[1].risk]);
+    return entries;
+  }, [reports]);
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return entries;
+    if (!search.trim()) return dbEntries;
     const q = search.toLowerCase();
-    return entries.filter(
+    return dbEntries.filter(
       ([id, ext]) =>
         ext.name.toLowerCase().includes(q) ||
         id.toLowerCase().includes(q) ||
         ext.summary.toLowerCase().includes(q),
     );
-  }, [entries, search]);
+  }, [dbEntries, search]);
 
   const stats = useMemo(() => {
-    const total = entries.length;
-    const critical = entries.filter(
+    const total = dbEntries.length;
+    const critical = dbEntries.filter(
       ([, e]) => e.risk === "critical" || e.risk === "high",
     ).length;
-    const totalUsers = entries.reduce((sum, [, e]) => sum + e.userCount, 0);
+    const totalUsers = dbEntries.reduce((sum, [, e]) => sum + e.userCount, 0);
     return { total, critical, totalUsers };
-  }, [entries]);
+  }, [dbEntries]);
 
-  // Cross-reference scanned extensions with our database
-  const scanResults = useMemo(() => {
+  // Cross-reference scanned extensions with database, show immediately
+  const scanRows: ScanRow[] | null = useMemo(() => {
     if (!extensions) return null;
-    const db = new Map(entries);
     return extensions
-      .map((ext) => ({ ext, report: db.get(ext.id) ?? null }))
+      .map((ext) => ({
+        ext,
+        report: reports.get(ext.id) ?? null,
+        dbLoading,
+      }))
       .sort((a, b) => {
-        const aRisk = a.report ? riskOrder[a.report.risk] : 7;
-        const bRisk = b.report ? riskOrder[b.report.risk] : 7;
+        // Known threats first, then loading, then unknown
+        const aRisk = a.report ? riskOrder[a.report.risk] : a.dbLoading ? 6.5 : 7;
+        const bRisk = b.report ? riskOrder[b.report.risk] : b.dbLoading ? 6.5 : 7;
         return aRisk - bRisk;
       });
-  }, [extensions, entries]);
+  }, [extensions, reports, dbLoading]);
 
-  const threatCount = scanResults?.filter(
+  const threatCount = scanRows?.filter(
     (r) => r.report && r.report.risk !== "clean",
   ).length;
 
@@ -148,13 +141,17 @@ function App() {
         <div className="flex gap-3">
           {status === "connected" ? (
             <Button size="lg" onClick={() => void scan()} disabled={scanning}>
-              {scanning ? "Scanning..." : "Scan My Extensions"}
+              {scanning ? "Scanning..." : extensions ? "Rescan" : "Scan My Extensions"}
             </Button>
-          ) : (
+          ) : status === "not_installed" ? (
             <Button size="lg" asChild>
               <a href="https://chromewebstore.google.com" target="_blank" rel="noreferrer">
                 Install Extension
               </a>
+            </Button>
+          ) : (
+            <Button size="lg" disabled>
+              Detecting extension...
             </Button>
           )}
           <Button size="lg" variant="outline" asChild>
@@ -193,116 +190,99 @@ function App() {
         </div>
       </div>
 
-      {/* Scan Results */}
-      {status !== "detecting" && (
-        <section id="scan" className="mx-auto max-w-6xl px-6 py-16">
-          <h2 className="text-foreground mb-2 text-xl font-semibold">
-            Your Extensions
-          </h2>
+      {/* Scan Results — Your Extensions */}
+      <section id="scan" className="mx-auto max-w-6xl px-6 py-16">
+        <h2 className="text-foreground mb-2 text-xl font-semibold">
+          Your Extensions
+        </h2>
 
-          {status === "not_installed" && (
-            <div className="border-border rounded-lg border p-8 text-center">
-              <p className="text-foreground mb-2 font-medium">
-                Extension not detected
-              </p>
-              <p className="text-muted-foreground mb-4 text-sm">
-                Install the Am I Being Pwned? Chrome extension to scan your
-                installed extensions against our threat database.
-              </p>
-              <Button asChild>
-                <a href="https://chromewebstore.google.com" target="_blank" rel="noreferrer">
-                  Install from Chrome Web Store
-                </a>
-              </Button>
-            </div>
-          )}
+        {status === "detecting" && (
+          <div className="border-border rounded-lg border p-8 text-center">
+            <p className="text-muted-foreground text-sm">
+              Looking for the Am I Being Pwned? extension...
+            </p>
+          </div>
+        )}
 
-          {status === "connected" && !scanResults && (
-            <div className="border-border rounded-lg border p-8 text-center">
-              <p className="text-muted-foreground mb-4 text-sm">
-                Extension connected. Click scan to check your installed extensions.
-              </p>
-              <Button onClick={() => void scan()} disabled={scanning}>
-                {scanning ? "Scanning..." : "Scan My Extensions"}
-              </Button>
-            </div>
-          )}
+        {status === "not_installed" && (
+          <div className="border-border rounded-lg border p-8 text-center">
+            <p className="text-foreground mb-2 font-medium">
+              Extension not detected
+            </p>
+            <p className="text-muted-foreground mb-4 text-sm">
+              Install the Am I Being Pwned? Chrome extension to scan your
+              installed extensions against our threat database.
+            </p>
+            <Button asChild>
+              <a href="https://chromewebstore.google.com" target="_blank" rel="noreferrer">
+                Install from Chrome Web Store
+              </a>
+            </Button>
+          </div>
+        )}
 
-          {scanError && (
-            <div className="mt-4 rounded-lg bg-red-950/50 p-4 text-sm text-red-400">
-              {scanError}
-            </div>
-          )}
+        {status === "connected" && scanning && !extensions && (
+          <div className="border-border rounded-lg border p-8 text-center">
+            <p className="text-muted-foreground text-sm">
+              Scanning your extensions...
+            </p>
+          </div>
+        )}
 
-          {scanResults && (
-            <div className="mt-4">
-              <div className="mb-4 flex items-center gap-3">
-                <p className="text-muted-foreground text-sm">
-                  Scanned {scanResults.length} extension
-                  {scanResults.length !== 1 ? "s" : ""}
-                  {threatCount
+        {scanError && (
+          <div className="mt-4 rounded-lg bg-red-950/50 p-4 text-sm text-red-400">
+            {scanError}
+          </div>
+        )}
+
+        {scanRows && (
+          <div className="mt-4">
+            <div className="mb-4 flex items-center gap-3">
+              <p className="text-muted-foreground text-sm">
+                {scanRows.length} extension{scanRows.length !== 1 ? "s" : ""} found
+                {dbLoading
+                  ? " — checking against database..."
+                  : threatCount
                     ? ` — ${threatCount} threat${threatCount > 1 ? "s" : ""} found`
                     : " — no known threats"}
-                </p>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => void scan()}
-                  disabled={scanning}
-                >
-                  {scanning ? "Scanning..." : "Rescan"}
-                </Button>
-              </div>
-
-              <div className="border-border rounded-lg border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Extension</TableHead>
-                      <TableHead className="w-24">Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {scanResults.map(({ ext, report }) => {
-                      const cfg = report ? riskConfig[report.risk] : null;
-                      return (
-                        <TableRow key={ext.id}>
-                          <TableCell>
-                            <div className="text-foreground text-sm font-medium">
-                              {ext.name}
-                              {!ext.enabled && (
-                                <span className="text-muted-foreground ml-2 text-xs">
-                                  (disabled)
-                                </span>
-                              )}
-                            </div>
-                            {report && report.risk !== "clean" && (
-                              <div className="text-muted-foreground mt-0.5 text-xs">
-                                {report.summary}
-                              </div>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {cfg ? (
-                              <Badge variant={cfg.variant}>{cfg.label}</Badge>
-                            ) : (
-                              <Badge variant="secondary">Unknown</Badge>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-
-              <p className="text-muted-foreground mt-3 text-xs">
-                Processed entirely in your browser. Your extension list is never sent to any server.
               </p>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => void scan()}
+                disabled={scanning}
+              >
+                {scanning ? "Scanning..." : "Rescan"}
+              </Button>
             </div>
-          )}
-        </section>
-      )}
+
+            <div className="border-border rounded-lg border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Extension</TableHead>
+                    <TableHead className="w-24">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {scanRows.map(({ ext, report, dbLoading: loading }) => (
+                    <ScanResultRow
+                      key={ext.id}
+                      ext={ext}
+                      report={report}
+                      loading={loading}
+                    />
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            <p className="text-muted-foreground mt-3 text-xs">
+              Processed entirely in your browser. Your extension list is never sent to any server.
+            </p>
+          </div>
+        )}
+      </section>
 
       {/* How it works */}
       <section className="mx-auto max-w-6xl px-6 py-16">
@@ -329,8 +309,8 @@ function App() {
             </div>
             <h3 className="text-foreground mb-1 font-medium">Scan</h3>
             <p className="text-muted-foreground text-sm">
-              Visit this page and click &quot;Scan My Extensions&quot; to check
-              your installed extensions against our threat database.
+              Visit this page and your extensions are automatically checked
+              against our threat database.
             </p>
           </div>
           <div>
@@ -533,6 +513,49 @@ function App() {
         </div>
       </footer>
     </div>
+  );
+}
+
+function ScanResultRow({
+  ext,
+  report,
+  loading,
+}: {
+  ext: InstalledExtensionInfo;
+  report: ExtensionReport | null;
+  loading: boolean;
+}) {
+  const cfg = report ? riskConfig[report.risk] : null;
+
+  return (
+    <TableRow>
+      <TableCell>
+        <div className="text-foreground text-sm font-medium">
+          {ext.name}
+          {!ext.enabled && (
+            <span className="text-muted-foreground ml-2 text-xs">
+              (disabled)
+            </span>
+          )}
+        </div>
+        {report && report.risk !== "clean" && (
+          <div className="text-muted-foreground mt-0.5 text-xs">
+            {report.summary}
+          </div>
+        )}
+      </TableCell>
+      <TableCell>
+        {loading ? (
+          <Badge variant="secondary" className="animate-pulse">
+            Checking...
+          </Badge>
+        ) : cfg ? (
+          <Badge variant={cfg.variant}>{cfg.label}</Badge>
+        ) : (
+          <Badge variant="secondary">Unknown</Badge>
+        )}
+      </TableCell>
+    </TableRow>
   );
 }
 

@@ -6,6 +6,8 @@ export default defineConfig({
   modules: ["@wxt-dev/module-react"],
   manifest: ({ mode }) => ({
     name: "Am I Being Pwned",
+    short_name: "Am I Pwned?",
+    description: "Scan your installed extensions for data harvesting, session hijacking, and other threats.",
     action: {},
     permissions: ["management"],
     externally_connectable: {
@@ -19,6 +21,7 @@ export default defineConfig({
   }),
   vite: () => ({
     plugins: [tailwindcss()],
+    server: { port: 3002 },
   }),
   dev: {
     server: {

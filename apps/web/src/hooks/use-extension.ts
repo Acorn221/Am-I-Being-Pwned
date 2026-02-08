@@ -15,22 +15,6 @@ export function useExtension() {
   const [error, setError] = useState<string | null>(null);
   const extensionIdRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    detectExtension().then((id) => {
-      if (cancelled) return;
-      if (id) {
-        extensionIdRef.current = id;
-        setStatus("connected");
-      } else {
-        setStatus("not_installed");
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   const scan = useCallback(async () => {
     const id = extensionIdRef.current;
     if (!id) return;
@@ -55,6 +39,24 @@ export function useExtension() {
       setScanning(false);
     }
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void detectExtension().then((id) => {
+      if (cancelled) return;
+      if (id) {
+        extensionIdRef.current = id;
+        setStatus("connected");
+        // Auto-scan as soon as the extension is detected
+        void scan();
+      } else {
+        setStatus("not_installed");
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [scan]);
 
   return { status, extensions, scan, scanning, error } as const;
 }
