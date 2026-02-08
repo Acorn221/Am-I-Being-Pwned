@@ -162,6 +162,8 @@ function App() {
               { title: "Session Hijacking", desc: "Stealing authentication tokens and cookies to impersonate you on websites." },
               { title: "Code Injection", desc: "Injecting scripts into pages to modify content, redirect traffic, or insert ads." },
               { title: "Network Tampering", desc: "Intercepting requests to inject malware, alter DNS, or proxy through malicious servers." },
+              { title: "Vulnerabilities", desc: "Extensions that have poor security hygiene or vulnerabilities." },
+
             ].map((threat) => (
               <div key={threat.title}>
                 <h3 className="text-foreground mb-1 text-sm font-medium">{threat.title}</h3>
