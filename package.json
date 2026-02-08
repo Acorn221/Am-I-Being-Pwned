@@ -14,7 +14,7 @@
     "db:push": "turbo -F @acme/db push",
     "db:studio": "turbo -F @acme/db studio",
     "dev": "turbo watch dev --continue",
-    "dev:ext": "turbo watch dev -F @acme/ext...",
+    "dev:ext": "turbo watch dev -F @amibeingpwned/ext...",
     "format": "turbo run format --continue -- --cache --cache-location .cache/.prettiercache",
     "format:fix": "turbo run format --continue -- --write --cache --cache-location .cache/.prettiercache",
     "lint": "turbo run lint --continue -- --cache --cache-location .cache/.eslintcache",
@@ -23,7 +23,7 @@
     "postinstall": "pnpm lint:ws",
     "typecheck": "turbo run typecheck",
     "ui-add": "turbo run ui-add",
-    "ext:zip": "turbo -F @acme/ext zip"
+    "ext:zip": "turbo -F @amibeingpwned/ext zip"
   },
   "devDependencies": {
     "@acme/prettier-config": "workspace:*",

@@ -1,12 +1,29 @@
 import type { ExtRequest, ExtResponse } from "@acme/types";
 import { ExtResponseSchema } from "@acme/validators";
 
+/** Known extension ID — used for direct connection via externally_connectable */
+const KNOWN_EXTENSION_ID = "ddialdjfnnjlobnkgbfnboaadhghibah";
+
+/**
+ * Try to PING the extension at a known ID. Returns the ID if it responds,
+ * null otherwise.
+ */
+async function pingExtension(id: string): Promise<string | null> {
+  if (!chrome?.runtime?.sendMessage) return null;
+  try {
+    const resp = await sendToExtension(id, { type: "PING", version: 1 }, 1000);
+    return resp.type === "PONG" ? id : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Listen for the content script's AIBP_EXTENSION_READY postMessage
  * to discover the extension's runtime ID. Returns null if not detected
  * within the timeout.
  */
-export function detectExtension(timeoutMs = 2000): Promise<string | null> {
+function listenForContentScript(timeoutMs = 2000): Promise<string | null> {
   return new Promise((resolve) => {
     let settled = false;
 
@@ -37,6 +54,16 @@ export function detectExtension(timeoutMs = 2000): Promise<string | null> {
 
     window.addEventListener("message", handler);
   });
+}
+
+/**
+ * Detect the extension — tries the known ID first (fast), then falls back
+ * to content script discovery (for dev builds with unstable IDs).
+ */
+export async function detectExtension(): Promise<string | null> {
+  const known = await pingExtension(KNOWN_EXTENSION_ID);
+  if (known) return known;
+  return listenForContentScript();
 }
 
 /**
