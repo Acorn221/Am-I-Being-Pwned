@@ -383,8 +383,8 @@ function App() {
           />
         </div>
 
-        <div className="border-border rounded-lg border">
-          <Table>
+        <div className="border-border overflow-hidden rounded-lg border">
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
                 <TableHead>Extension</TableHead>
@@ -402,15 +402,15 @@ function App() {
                     className="cursor-pointer"
                     onClick={() => setExpandedId(isExpanded ? null : id)}
                   >
-                    <TableCell>
-                      <div className="text-foreground text-sm font-medium">
+                    <TableCell className="overflow-hidden whitespace-normal">
+                      <div className="text-foreground truncate text-sm font-medium">
                         {ext.name}
                       </div>
-                      <div className="text-muted-foreground mt-0.5 text-xs">
-                        {ext.summary.length > 120
-                          ? ext.summary.slice(0, 120) + "..."
-                          : ext.summary}
-                      </div>
+                      {!isExpanded && (
+                        <div className="text-muted-foreground mt-0.5 truncate text-xs">
+                          {ext.summary}
+                        </div>
+                      )}
                       {isExpanded && (
                         <div className="mt-3 space-y-3 pb-1">
                           <div className="text-muted-foreground text-xs">
@@ -483,8 +483,23 @@ function App() {
                               </div>
                             </div>
                           )}
-                          <div className="text-muted-foreground pt-1 font-mono text-[10px]">
-                            {id}
+                          <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 text-[10px]">
+                            {ext.version && (
+                              <span>v{ext.version}</span>
+                            )}
+                            <span>
+                              Analysed {new Date(ext.updatedAt).toLocaleDateString()}
+                            </span>
+                            <span className="font-mono">{id}</span>
+                            <a
+                              href={`https://chromewebstore.google.com/detail/${id}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-blue-400 hover:underline"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              View in Chrome Web Store
+                            </a>
                           </div>
                         </div>
                       )}
