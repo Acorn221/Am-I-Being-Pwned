@@ -12,6 +12,8 @@ import {
   TableRow,
 } from "@acme/ui/table";
 
+import { useExtension } from "~/hooks/use-extension";
+
 const riskConfig: Record<
   RiskLevel,
   { label: string; variant: "destructive" | "outline" | "secondary" }
@@ -48,6 +50,8 @@ function App() {
   const [entries, setEntries] = useState<ExtEntry[]>([]);
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const { status, extensions, scan, scanning, error: scanError } = useExtension();
 
   useEffect(() => {
     async function load() {
@@ -92,6 +96,23 @@ function App() {
     return { total, critical, totalUsers };
   }, [entries]);
 
+  // Cross-reference scanned extensions with our database
+  const scanResults = useMemo(() => {
+    if (!extensions) return null;
+    const db = new Map(entries);
+    return extensions
+      .map((ext) => ({ ext, report: db.get(ext.id) ?? null }))
+      .sort((a, b) => {
+        const aRisk = a.report ? riskOrder[a.report.risk] : 7;
+        const bRisk = b.report ? riskOrder[b.report.risk] : 7;
+        return aRisk - bRisk;
+      });
+  }, [extensions, entries]);
+
+  const threatCount = scanResults?.filter(
+    (r) => r.report && r.report.risk !== "clean",
+  ).length;
+
   return (
     <div className="bg-background min-h-screen">
       {/* Nav */}
@@ -125,7 +146,17 @@ function App() {
           what you have installed — or browse the database below.
         </p>
         <div className="flex gap-3">
-          <Button size="lg">Install Extension</Button>
+          {status === "connected" ? (
+            <Button size="lg" onClick={() => void scan()} disabled={scanning}>
+              {scanning ? "Scanning..." : "Scan My Extensions"}
+            </Button>
+          ) : (
+            <Button size="lg" asChild>
+              <a href="https://chromewebstore.google.com" target="_blank" rel="noreferrer">
+                Install Extension
+              </a>
+            </Button>
+          )}
           <Button size="lg" variant="outline" asChild>
             <a href="#database">Browse Database</a>
           </Button>
@@ -162,6 +193,117 @@ function App() {
         </div>
       </div>
 
+      {/* Scan Results */}
+      {status !== "detecting" && (
+        <section id="scan" className="mx-auto max-w-6xl px-6 py-16">
+          <h2 className="text-foreground mb-2 text-xl font-semibold">
+            Your Extensions
+          </h2>
+
+          {status === "not_installed" && (
+            <div className="border-border rounded-lg border p-8 text-center">
+              <p className="text-foreground mb-2 font-medium">
+                Extension not detected
+              </p>
+              <p className="text-muted-foreground mb-4 text-sm">
+                Install the Am I Being Pwned? Chrome extension to scan your
+                installed extensions against our threat database.
+              </p>
+              <Button asChild>
+                <a href="https://chromewebstore.google.com" target="_blank" rel="noreferrer">
+                  Install from Chrome Web Store
+                </a>
+              </Button>
+            </div>
+          )}
+
+          {status === "connected" && !scanResults && (
+            <div className="border-border rounded-lg border p-8 text-center">
+              <p className="text-muted-foreground mb-4 text-sm">
+                Extension connected. Click scan to check your installed extensions.
+              </p>
+              <Button onClick={() => void scan()} disabled={scanning}>
+                {scanning ? "Scanning..." : "Scan My Extensions"}
+              </Button>
+            </div>
+          )}
+
+          {scanError && (
+            <div className="mt-4 rounded-lg bg-red-950/50 p-4 text-sm text-red-400">
+              {scanError}
+            </div>
+          )}
+
+          {scanResults && (
+            <div className="mt-4">
+              <div className="mb-4 flex items-center gap-3">
+                <p className="text-muted-foreground text-sm">
+                  Scanned {scanResults.length} extension
+                  {scanResults.length !== 1 ? "s" : ""}
+                  {threatCount
+                    ? ` — ${threatCount} threat${threatCount > 1 ? "s" : ""} found`
+                    : " — no known threats"}
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => void scan()}
+                  disabled={scanning}
+                >
+                  {scanning ? "Scanning..." : "Rescan"}
+                </Button>
+              </div>
+
+              <div className="border-border rounded-lg border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Extension</TableHead>
+                      <TableHead className="w-24">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {scanResults.map(({ ext, report }) => {
+                      const cfg = report ? riskConfig[report.risk] : null;
+                      return (
+                        <TableRow key={ext.id}>
+                          <TableCell>
+                            <div className="text-foreground text-sm font-medium">
+                              {ext.name}
+                              {!ext.enabled && (
+                                <span className="text-muted-foreground ml-2 text-xs">
+                                  (disabled)
+                                </span>
+                              )}
+                            </div>
+                            {report && report.risk !== "clean" && (
+                              <div className="text-muted-foreground mt-0.5 text-xs">
+                                {report.summary}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {cfg ? (
+                              <Badge variant={cfg.variant}>{cfg.label}</Badge>
+                            ) : (
+                              <Badge variant="secondary">Unknown</Badge>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <p className="text-muted-foreground mt-3 text-xs">
+                Processed entirely in your browser. Your extension list is never sent to any server.
+              </p>
+            </div>
+          )}
+        </section>
+      )}
+
       {/* How it works */}
       <section className="mx-auto max-w-6xl px-6 py-16">
         <h2 className="text-foreground mb-8 text-xl font-semibold">
@@ -187,8 +329,8 @@ function App() {
             </div>
             <h3 className="text-foreground mb-1 font-medium">Scan</h3>
             <p className="text-muted-foreground text-sm">
-              Open the popup and it automatically checks your installed
-              extensions against our database of known threats.
+              Visit this page and click &quot;Scan My Extensions&quot; to check
+              your installed extensions against our threat database.
             </p>
           </div>
           <div>

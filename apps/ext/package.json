@@ -19,6 +19,7 @@
   "dependencies": {
     "@acme/types": "workspace:*",
     "@acme/ui": "workspace:*",
+    "@acme/validators": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19"
   },

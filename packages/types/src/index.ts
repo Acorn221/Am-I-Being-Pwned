@@ -90,3 +90,25 @@ export interface ExtensionReport {
 
 /** The static JSON database — keyed by Chrome Web Store extension ID */
 export type ExtensionDatabase = Record<string, ExtensionReport>;
+
+// ---------------------------------------------------------------------------
+// Extension ↔ Web App messaging protocol (externally_connectable)
+// ---------------------------------------------------------------------------
+
+/** Minimal info about an installed extension — no icons, versions, descriptions */
+export interface InstalledExtensionInfo {
+  id: string;
+  name: string;
+  enabled: boolean;
+}
+
+/** Messages the web page can send to the extension */
+export type ExtRequest =
+  | { type: "PING"; version: 1 }
+  | { type: "GET_EXTENSIONS"; version: 1 };
+
+/** Messages the extension sends back */
+export type ExtResponse =
+  | { type: "PONG"; version: 1 }
+  | { type: "EXTENSIONS_RESULT"; version: 1; extensions: InstalledExtensionInfo[] }
+  | { type: "ERROR"; version: 1; code: string; message: string };
