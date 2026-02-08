@@ -1,0 +1,51 @@
+{
+  "name": "Tactiq - AI note taker for Google Meet, Zoom and MS Teams",
+  "risk": "medium",
+  "version": "3.1.4849",
+  "userCount": 1000000,
+  "rating": 0,
+  "permissions": [
+    "sidePanel",
+    "identity",
+    "cookies",
+    "tabs",
+    "webRequest",
+    "storage",
+    "desktopCapture",
+    "downloads",
+    "windows",
+    "scripting"
+  ],
+  "summary": "Meeting transcription extension with invasive WebRTC hooking that patches native RTCPeerConnection on Google Meet, Zoom, and MS Teams. Intercepts XHR/fetch on Google Meet for session data. Extensive analytics via Mixpanel and Datadog. Can capture tab screenshots.",
+  "vulnerabilities": [
+    {
+      "id": "VULN-01",
+      "severity": "high",
+      "title": "RTCPeerConnection Hooking",
+      "description": "Overrides native window.RTCPeerConnection API on Google Meet, Zoom, and MS Teams to intercept WebRTC data channels containing captions and transcripts."
+    },
+    {
+      "id": "VULN-02",
+      "severity": "medium",
+      "title": "XHR/Fetch Interception on Google Meet",
+      "description": "Intercepts network requests on Google Meet to extract session IDs and language settings."
+    }
+  ],
+  "flags": [
+    {
+      "tier": 1,
+      "category": "xhr_hooking",
+      "description": "Intercepts XHR/fetch on Google Meet for session data extraction"
+    },
+    {
+      "tier": 2,
+      "category": "data_exfiltration",
+      "description": "Captures meeting transcripts via WebRTC hooking and sends to Tactiq servers"
+    }
+  ],
+  "endpoints": [
+    "tactiq.io",
+    "api.mixpanel.com"
+  ],
+  "updatedAt": "2026-02-06T00:00:00Z"
+}

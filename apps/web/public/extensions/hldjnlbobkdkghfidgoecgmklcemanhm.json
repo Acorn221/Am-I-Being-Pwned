@@ -1,0 +1,50 @@
+{
+  "name": "Web Highlights - PDF & Web Highlighter",
+  "risk": "medium",
+  "version": "12.0.2",
+  "userCount": 200000,
+  "rating": 0,
+  "permissions": [
+    "tabs",
+    "contextMenus",
+    "storage",
+    "webRequest",
+    "scripting"
+  ],
+  "hostPermissions": [
+    "<all_urls>"
+  ],
+  "summary": "Web highlighting extension that integrates GiveFreely affiliate platform to track browsing across 2000+ merchant domains. Performs geolocation tracking via MaxMind API with hardcoded credentials. Server-controlled configuration allows remote updates to tracked merchant list. Feature only enabled for Chrome users, not Firefox.",
+  "vulnerabilities": [
+    {
+      "id": "VULN-01",
+      "severity": "medium",
+      "title": "GiveFreely Affiliate Behavioral Tracking",
+      "description": "Tracks browsing activity across thousands of e-commerce sites and generates affiliate URLs for cashback/charity purposes."
+    },
+    {
+      "id": "VULN-02",
+      "severity": "medium",
+      "title": "Geolocation Tracking with Hardcoded Credentials",
+      "description": "Tracks user's country via MaxMind GeoIP API using hardcoded authorization credentials."
+    }
+  ],
+  "flags": [
+    {
+      "tier": 2,
+      "category": "affiliate_fraud",
+      "description": "GiveFreely affiliate SDK tracks browsing across 2000+ merchant domains and generates affiliate URLs"
+    },
+    {
+      "tier": 2,
+      "category": "remote_config",
+      "description": "Remote config from cdn.givefreely.com allows dynamic update of tracked merchants without CWS review"
+    }
+  ],
+  "endpoints": [
+    "api.web-highlights.com",
+    "cdn.givefreely.com",
+    "geoip.maxmind.com"
+  ],
+  "updatedAt": "2026-02-06T00:00:00Z"
+}

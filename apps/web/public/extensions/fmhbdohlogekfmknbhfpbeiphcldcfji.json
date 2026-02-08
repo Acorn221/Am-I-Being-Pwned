@@ -1,0 +1,33 @@
+{
+  "name": "Red Shield VPN",
+  "risk": "medium",
+  "version": "0",
+  "userCount": 20000,
+  "rating": 0,
+  "permissions": [
+    "proxy",
+    "storage",
+    "management",
+    "alarms"
+  ],
+  "summary": "VPN extension that actively disables competing proxy extensions via browser.management.setEnabled(). Uses encrypted DNS-over-HTTPS domain resolution with AES-256 encrypted DNS TXT records to discover API server. Uses externally_connectable with <all_urls> for subscription confirmations.",
+  "vulnerabilities": [
+    {
+      "id": "VULN-01",
+      "severity": "high",
+      "title": "Proxy Extension Killing",
+      "description": "Enumerates all extensions via management.getAll(), filters for proxy permission, and forcibly disables all competing proxy extensions."
+    }
+  ],
+  "flags": [
+    {
+      "tier": 1,
+      "category": "extension_enumeration",
+      "description": "Uses management.getAll() to enumerate and disable all extensions with proxy permission"
+    }
+  ],
+  "endpoints": [
+    "pl.metgo4u5yhre.org"
+  ],
+  "updatedAt": "2026-02-06T00:00:00Z"
+}

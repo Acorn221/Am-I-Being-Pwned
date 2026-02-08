@@ -1,0 +1,58 @@
+{
+  "name": "Free VPN Next Pro",
+  "risk": "medium-high",
+  "version": "1.7.126",
+  "publisher": "Marcode Ltd",
+  "userCount": 2000,
+  "rating": 0,
+  "permissions": [
+    "proxy",
+    "storage",
+    "tabs",
+    "cookies",
+    "webRequest",
+    "declarativeNetRequest",
+    "alarms"
+  ],
+  "hostPermissions": [
+    "*://*/*"
+  ],
+  "summary": "VPN extension with P2P Unblocking Cloud feature that silently enrolls users as residential proxy exit nodes. Google Analytics proxy bypass leaks real user IPs. Server-controlled 308 redirect mechanism enables arbitrary request routing. Full error/response body exfiltration to server-controlled reporting endpoint.",
+  "vulnerabilities": [
+    {
+      "id": "VULN-01",
+      "severity": "high",
+      "title": "P2P Residential Proxy Exit Node",
+      "description": "P2P Unblocking Cloud feature makes users' browsers fetch arbitrary URLs for other users via the backend, turning them into residential proxy exit nodes."
+    },
+    {
+      "id": "VULN-02",
+      "severity": "medium",
+      "title": "Google Analytics Proxy Bypass",
+      "description": "google-analytics.com is in the proxy bypass list, leaking real user IP to Google even while VPN is active."
+    },
+    {
+      "id": "VULN-03",
+      "severity": "medium",
+      "title": "Server-Controlled Redirect Mechanism",
+      "description": "308 redirect with server-supplied URLs enables arbitrary request routing from authenticated API calls."
+    }
+  ],
+  "flags": [
+    {
+      "tier": 1,
+      "category": "residential_proxy_vendor",
+      "description": "P2P Unblocking Cloud enrolls users as residential proxy exit nodes without clear informed consent"
+    },
+    {
+      "tier": 2,
+      "category": "remote_config",
+      "description": "Server-controlled 308 redirect and x-delay response header enable remote behavior modification"
+    }
+  ],
+  "endpoints": [
+    "freevpnext.com",
+    "vpn.freevpnext.com"
+  ],
+  "updatedAt": "2026-02-06T00:00:00Z"
+}

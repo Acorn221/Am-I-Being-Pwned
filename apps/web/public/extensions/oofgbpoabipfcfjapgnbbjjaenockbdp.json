@@ -1,0 +1,64 @@
+{
+  "name": "SetupVPN - Lifetime Free VPN",
+  "risk": "medium-high",
+  "version": "4.0.9",
+  "userCount": 0,
+  "rating": 0,
+  "permissions": [
+    "proxy",
+    "storage",
+    "tabs",
+    "management",
+    "webRequest",
+    "webRequestAuthProvider"
+  ],
+  "hostPermissions": [
+    "*://*/*"
+  ],
+  "summary": "Free VPN extension with opaque Go-compiled WASM binary that collects browser fingerprints (Selenium detection, incognito detection, DevTools detection, mouse movement, screen fingerprint) and encrypts all API communications with AES. Enumerates all installed proxy extensions via chrome.management.getAll(). Collects browsing activity via error-URL telemetry batched to /api2/m/debug. Uses rotating suspicious domains (scanners.fun, talked.run, pointed.cc) with XOR+AES encrypted communications making traffic unauditable.",
+  "vulnerabilities": [
+    {
+      "id": "VULN-01",
+      "severity": "medium-high",
+      "title": "Browser Fingerprinting via Opaque WASM Binary",
+      "description": "Go-compiled WASM binary collects Selenium detection, incognito mode, DevTools state, timezone mismatch, mouse movement patterns, screen fingerprint, and entropy values. All data encrypted with AES before transmission."
+    },
+    {
+      "id": "VULN-02",
+      "severity": "medium",
+      "title": "Error-URL Browsing Activity Collection",
+      "description": "Monitors all webRequest errors across all URLs, collects failed request URLs, referrer URLs, and user ID, batches and sends to /api2/m/debug endpoint."
+    },
+    {
+      "id": "VULN-03",
+      "severity": "medium",
+      "title": "Extension Enumeration",
+      "description": "Uses chrome.management.getAll() to enumerate all installed extensions with proxy permission, storing names in Redux state."
+    }
+  ],
+  "flags": [
+    {
+      "tier": 1,
+      "category": "data_exfiltration",
+      "description": "WASM binary collects browser fingerprints and error-URL telemetry reveals browsing patterns, all encrypted to prevent auditing"
+    },
+    {
+      "tier": 1,
+      "category": "extension_enumeration",
+      "description": "Enumerates all installed proxy/VPN extensions via chrome.management.getAll()"
+    },
+    {
+      "tier": 2,
+      "category": "wasm_binary",
+      "description": "Opaque Go-compiled WASM handles all API requests with AES encryption, making traffic completely unauditable"
+    }
+  ],
+  "endpoints": [
+    "lllm.scanners.fun",
+    "uabh.talked.run",
+    "xcxx.pointed.cc",
+    "1.foreground.work",
+    "1.awakened.work"
+  ],
+  "updatedAt": "2026-02-06T00:00:00Z"
+}

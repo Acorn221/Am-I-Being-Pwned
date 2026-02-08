@@ -1,0 +1,58 @@
+{
+  "name": "Free VPN for Chrome: Secure VPN Proxy in One Click",
+  "risk": "medium-high",
+  "version": "1.0.1",
+  "userCount": 6000,
+  "rating": 0,
+  "permissions": [
+    "proxy",
+    "storage",
+    "tabs",
+    "activeTab",
+    "scripting",
+    "webRequest",
+    "declarativeNetRequest"
+  ],
+  "hostPermissions": [
+    "*://*/*"
+  ],
+  "summary": "Routes ALL user traffic through 9 hardcoded suspicious proxy domains on disposable TLDs (.space, .club, .site). Blocks Google Analytics, Amplitude, PostHog, Mixpanel, and Chrome update/SafeBrowsing infrastructure via declarativeNetRequest. Makes false AES-256 encryption claims. Injects SweetAlert2 on all pages with no apparent usage.",
+  "vulnerabilities": [
+    {
+      "id": "VULN-01",
+      "severity": "high",
+      "title": "Suspicious Proxy Infrastructure",
+      "description": "Routes all traffic through 9 unverified proxy servers on disposable TLDs enabling potential full MITM on user traffic."
+    },
+    {
+      "id": "VULN-02",
+      "severity": "high",
+      "title": "Chrome Safety Infrastructure Blocking",
+      "description": "Blocks clients*.google.com (Chrome update/SafeBrowsing), Google Analytics, Amplitude, PostHog, and Mixpanel via declarativeNetRequest rules."
+    }
+  ],
+  "flags": [
+    {
+      "tier": 1,
+      "category": "residential_proxy_vendor",
+      "description": "Routes all traffic through 9 suspicious unverified proxy domains on disposable TLDs"
+    },
+    {
+      "tier": 2,
+      "category": "ad_injection",
+      "description": "Injects SweetAlert2 library on all pages at document_start with no clear usage -- potential placeholder for future injection"
+    }
+  ],
+  "endpoints": [
+    "goldenearsvccc.space",
+    "pagecloud.space",
+    "projectorpoint.website",
+    "precisiontruck.space",
+    "maureenesther.website",
+    "marjifx.club",
+    "jjs-bbq.space",
+    "haringinsuranc.website",
+    "bst2200.site"
+  ],
+  "updatedAt": "2026-02-06T00:00:00Z"
+}

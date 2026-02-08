@@ -1,0 +1,68 @@
+{
+  "name": "HaiYao Accelerator (Ai ChatGPT free proxy)",
+  "risk": "medium-high",
+  "version": "3.1.2",
+  "publisher": "haiyaoappsups@gmail.com",
+  "userCount": 0,
+  "rating": 0,
+  "permissions": [
+    "notifications",
+    "storage",
+    "alarms",
+    "management",
+    "proxy",
+    "webRequest",
+    "webNavigation",
+    "activeTab",
+    "idle"
+  ],
+  "hostPermissions": [
+    "*://*/*"
+  ],
+  "summary": "Chinese VPN/proxy extension that forcibly disables competing proxy extensions and explicitly targets Tampermonkey by name. Injects remote tracking script from speed.ilink-tk.com on every page visit. Server-controlled extension whitelist allows operator to remotely control which user extensions get disabled.",
+  "vulnerabilities": [
+    {
+      "id": "VULN-01",
+      "severity": "critical",
+      "title": "Extension Enumeration and Forcible Disabling",
+      "description": "Enumerates ALL installed extensions via chrome.management.getAll() and disables any with proxy permission. Explicitly targets Tampermonkey by name for disabling."
+    },
+    {
+      "id": "VULN-02",
+      "severity": "high",
+      "title": "Remote Script Injection on Every Page",
+      "description": "Injects remote JavaScript from speed.ilink-tk.com on every non-LAN page visit. Server operator could serve arbitrary JS through this endpoint."
+    },
+    {
+      "id": "VULN-03",
+      "severity": "high",
+      "title": "Server-Controlled Extension Whitelist",
+      "description": "Server can dynamically update which extensions are allowed to remain enabled, giving operator remote control over which user extensions get killed."
+    }
+  ],
+  "flags": [
+    {
+      "tier": 1,
+      "category": "extension_enumeration",
+      "description": "Uses chrome.management.getAll() to enumerate all extensions, disables competing proxy extensions and Tampermonkey"
+    },
+    {
+      "tier": 1,
+      "category": "remote_config",
+      "description": "Server-controlled whitelist determines which user extensions survive; API servers can be dynamically updated"
+    },
+    {
+      "tier": 2,
+      "category": "data_exfiltration",
+      "description": "Sends user IP, full user agent, extension runtime ID, and connection metadata to backend servers on every API call"
+    }
+  ],
+  "endpoints": [
+    "rest.vofasts.xyz",
+    "nt.vonodebit.xyz",
+    "ns.vonodefly.vip",
+    "tips.ilink-a.com",
+    "speed.ilink-tk.com"
+  ],
+  "updatedAt": "2026-02-06T00:00:00Z"
+}

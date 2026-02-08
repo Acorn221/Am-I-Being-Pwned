@@ -1,0 +1,66 @@
+{
+  "name": "Similar Sites - Discover Related Websites",
+  "risk": "high",
+  "version": "0",
+  "userCount": 300000,
+  "rating": 0,
+  "permissions": [
+    "tabs",
+    "webRequest",
+    "webNavigation",
+    "storage",
+    "scripting",
+    "contextMenus"
+  ],
+  "hostPermissions": [
+    "*://*/*"
+  ],
+  "summary": "Comprehensive surveillance platform disguised as a website discovery tool. Deploys XHR/fetch/WebSocket hooks to intercept ALL HTTP traffic. Forwards uploaded files to server-controlled domains. Scrapes VAST ad creatives and prebid.js auction data. Tracks mouse movements, link clicks, and page navigations. Uses RSA+AES encrypted telemetry. Remote config enables silent expansion of collection targets.",
+  "vulnerabilities": [
+    {
+      "id": "VULN-01",
+      "severity": "critical",
+      "title": "XHR/Fetch/WebSocket Interception Infrastructure",
+      "description": "Patches native fetch, XMLHttpRequest.prototype.send, and WebSocket to intercept ALL HTTP traffic including request/response bodies, credentials, and authorization headers."
+    },
+    {
+      "id": "VULN-02",
+      "severity": "critical",
+      "title": "File Upload Interception and Forwarding",
+      "description": "Intercepts all File objects uploaded via fetch/XHR, creates blob URLs, and forwards files to alternate domains specified in remote config."
+    },
+    {
+      "id": "VULN-03",
+      "severity": "critical",
+      "title": "Remote Configuration System",
+      "description": "Server at data-api.similarsites.com can dynamically expand collection targets, add new parsing rules, and specify file exfiltration domains without extension update."
+    }
+  ],
+  "flags": [
+    {
+      "tier": 1,
+      "category": "xhr_hooking",
+      "description": "Patches XMLHttpRequest.prototype.send to intercept all HTTP responses"
+    },
+    {
+      "tier": 1,
+      "category": "fetch_hooking",
+      "description": "Replaces window.fetch to intercept all fetch responses and File uploads"
+    },
+    {
+      "tier": 1,
+      "category": "data_exfiltration",
+      "description": "Exfiltrates intercepted HTTP traffic, file uploads, ad data, click tracking, and mouse movements via RSA+AES encrypted payloads"
+    },
+    {
+      "tier": 1,
+      "category": "remote_config",
+      "description": "Polls data-api.similarsites.com every 60 seconds for collection rules that can expand surveillance scope"
+    }
+  ],
+  "endpoints": [
+    "data-api.similarsites.com",
+    "serving-api.similarsites.com"
+  ],
+  "updatedAt": "2026-02-06T00:00:00Z"
+}

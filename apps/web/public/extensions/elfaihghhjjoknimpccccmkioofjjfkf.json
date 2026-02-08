@@ -1,0 +1,88 @@
+{
+  "name": "StayFree - Website Blocker & Screen Time Tracker",
+  "risk": "medium-high",
+  "version": "2.5.6",
+  "userCount": 0,
+  "rating": 0,
+  "permissions": [
+    "alarms",
+    "tabs",
+    "storage",
+    "notifications",
+    "webNavigation",
+    "scripting",
+    "favicon",
+    "search"
+  ],
+  "hostPermissions": [
+    "*://*/*"
+  ],
+  "optionalPermissions": [
+    "history",
+    "downloads"
+  ],
+  "summary": "Owned by Sensor Tower. Embeds Pathmatics ad intelligence SDK that hooks XHR/fetch to intercept ALL HTTP responses for ad scraping. Collects AI conversation metadata from ChatGPT, Gemini, Claude, Copilot, DeepSeek, Perplexity, Grok. Scrapes 30+ customer service chatbot widgets. Uploads browsing data, page views, URL query parameters, and retail ad data to stayfreeapps.com. Pre-checked consent checkboxes.",
+  "vulnerabilities": [
+    {
+      "id": "VULN-01",
+      "severity": "high",
+      "title": "XHR/Fetch Interception for Ad Intelligence Scraping",
+      "description": "Sensor Tower Pathmatics SDK hooks XMLHttpRequest.prototype.send and window.fetch to intercept ALL HTTP responses on pages for ad creative harvesting.",
+      "cvssScore": "7.5"
+    },
+    {
+      "id": "VULN-02",
+      "severity": "high",
+      "title": "AI Conversation Metadata and Content Exfiltration",
+      "description": "Scrapes ChatGPT, Gemini, Claude, Copilot, DeepSeek, Perplexity, Grok conversations. Uploads metadata, URLs from AI responses, and interaction card content to stayfreeapps.com.",
+      "cvssScore": "7.1"
+    },
+    {
+      "id": "VULN-03",
+      "severity": "medium-high",
+      "title": "Customer Service Chatbot Content Scraping",
+      "description": "Detects and scrapes conversations from 30+ chatbot widgets (Intercom, Zendesk, Drift, etc.) including actual chat content.",
+      "cvssScore": "6.5"
+    },
+    {
+      "id": "VULN-04",
+      "severity": "medium",
+      "title": "Browsing History and Search Query Collection",
+      "description": "Uploads per-website session durations, page view timestamps, referrers, ad network attribution, and URL search parameters.",
+      "cvssScore": "5.3"
+    },
+    {
+      "id": "VULN-05",
+      "severity": "medium",
+      "title": "Remote Configuration Enables Server-Controlled Behavior",
+      "description": "Server can remotely toggle browsing data uploads, update AI chat scraping selectors, modify collection targets without extension update.",
+      "cvssScore": "5.0"
+    }
+  ],
+  "flags": [
+    {
+      "tier": 1,
+      "category": "xhr_hooking",
+      "description": "Pathmatics SDK hooks XMLHttpRequest.prototype.send and window.fetch globally to intercept all HTTP responses"
+    },
+    {
+      "tier": 1,
+      "category": "fetch_hooking",
+      "description": "window.fetch replaced to clone and read all responses with text/JSON/XML content types"
+    },
+    {
+      "tier": 1,
+      "category": "data_exfiltration",
+      "description": "Uploads browsing data, AI conversation metadata, chatbot conversations, page views, and URL query parameters to stayfreeapps.com"
+    },
+    {
+      "tier": 2,
+      "category": "remote_config",
+      "description": "Remote config from stayfreeapps.com can toggle data uploads, update AI scraping selectors, and modify collection behavior"
+    }
+  ],
+  "endpoints": [
+    "api.stayfreeapps.com"
+  ],
+  "updatedAt": "2026-02-06T00:00:00Z"
+}

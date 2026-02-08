@@ -1,0 +1,48 @@
+{
+  "name": "SellerSprite - Amazon Research Tool",
+  "risk": "medium",
+  "version": "5.0.1",
+  "userCount": 400000,
+  "rating": 0,
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting",
+    "webRequest"
+  ],
+  "hostPermissions": [
+    "*://*.amazon.com/*",
+    "*://*.tiktok.com/*"
+  ],
+  "summary": "Amazon seller research tool that performs TikTok data harvesting via fetch hooking and AI platform prompt injection across 6 AI platforms (ChatGPT, Claude, Gemini, DeepSeek, Grok, Doubao). Hooks window.fetch on TikTok to intercept all API responses for influencer marketing analysis.",
+  "vulnerabilities": [
+    {
+      "id": "VULN-01",
+      "severity": "medium",
+      "title": "TikTok Data Harvesting via Fetch Hooking",
+      "description": "Hooks window.fetch in TikTok's MAIN world context to intercept all TikTok API responses including video lists, search results, shop data, and user profiles."
+    },
+    {
+      "id": "VULN-02",
+      "severity": "medium",
+      "title": "AI Platform Prompt Injection",
+      "description": "Injects prompts into ChatGPT, Claude, Gemini, DeepSeek, Grok, and Doubao for market research purposes."
+    }
+  ],
+  "flags": [
+    {
+      "tier": 1,
+      "category": "fetch_hooking",
+      "description": "Hooks window.fetch on TikTok to intercept all API responses for influencer/creator marketing data"
+    },
+    {
+      "tier": 2,
+      "category": "data_exfiltration",
+      "description": "Harvests TikTok video lists, search results, shop data and forwards to SellerSprite servers"
+    }
+  ],
+  "endpoints": [
+    "sellersprite.com"
+  ],
+  "updatedAt": "2026-02-06T00:00:00Z"
+}

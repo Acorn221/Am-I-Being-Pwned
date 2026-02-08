@@ -1,0 +1,53 @@
+{
+  "name": "Hoxx VPN Proxy",
+  "risk": "medium-high",
+  "version": "3.50.6",
+  "userCount": 0,
+  "rating": 0,
+  "permissions": [
+    "proxy",
+    "storage",
+    "tabs",
+    "management",
+    "webRequest"
+  ],
+  "hostPermissions": [
+    "*://*/*"
+  ],
+  "summary": "VPN extension with extension enumeration via chrome.management.getAll(), overly broad externally_connectable allowing ANY web page to message the extension and dispatch Redux actions, error telemetry that collects visited URLs, and opaque WASM-based API client that makes it impossible to fully audit what data is sent to servers.",
+  "vulnerabilities": [
+    {
+      "id": "VULN-01",
+      "severity": "medium",
+      "title": "Extension Enumeration",
+      "description": "Uses chrome.management.getAll() to enumerate all extensions with proxy permission, storing names in Redux state exposed to UI and external web pages."
+    },
+    {
+      "id": "VULN-02",
+      "severity": "high",
+      "title": "Wildcard externally_connectable",
+      "description": "Declares externally_connectable with matches: ['<all_urls>'], allowing ANY web page to send messages and dispatch Redux actions to the extension."
+    }
+  ],
+  "flags": [
+    {
+      "tier": 1,
+      "category": "extension_enumeration",
+      "description": "Uses chrome.management.getAll() to enumerate all extensions with proxy permission"
+    },
+    {
+      "tier": 2,
+      "category": "data_exfiltration",
+      "description": "Error telemetry collects URLs of pages where network errors occur and sends to Hoxx servers"
+    },
+    {
+      "tier": 2,
+      "category": "wasm_binary",
+      "description": "WASM-based opaque API client handles all request construction/encryption, impossible to fully audit"
+    }
+  ],
+  "endpoints": [
+    "hoxx.com"
+  ],
+  "updatedAt": "2026-02-06T00:00:00Z"
+}

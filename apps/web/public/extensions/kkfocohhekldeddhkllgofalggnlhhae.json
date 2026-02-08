@@ -1,0 +1,61 @@
+{
+  "name": "BigSeller Product Scraper",
+  "risk": "medium",
+  "version": "3.44.2",
+  "publisher": "BigSeller / Meiyunji",
+  "userCount": 0,
+  "rating": 0,
+  "permissions": [
+    "storage",
+    "tabs",
+    "webRequest"
+  ],
+  "hostPermissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "summary": "E-commerce product scraping tool that XHR/fetch monkey-patches 20+ marketplace sites (Shopee, Lazada, TikTok Shop, Taobao, 1688, AliExpress, Facebook Marketplace). Intercepts Shopee anti-fraud headers (af-ac-enc-dat) via webRequest.onBeforeSendHeaders. Enumerates ALL window global objects on every page navigation and sends via postMessage('*'). Suppresses Taobao/Tmall anti-bot CAPTCHAs. Broad host_permissions to all URLs with proxyRequest handler enabling arbitrary cross-origin requests.",
+  "vulnerabilities": [
+    {
+      "id": "VULN-01",
+      "severity": "medium",
+      "title": "XHR/Fetch Response Interception on 20+ Marketplaces",
+      "description": "Replaces window.XMLHttpRequest with proxy class and wraps window.fetch on targeted marketplace pages to intercept all API responses, even when not actively scraping."
+    },
+    {
+      "id": "VULN-02",
+      "severity": "medium",
+      "title": "Shopee Anti-Fraud Header Interception",
+      "description": "Captures Shopee af-ac-enc-dat anti-bot encryption token via webRequest.onBeforeSendHeaders to bypass bot detection."
+    },
+    {
+      "id": "VULN-03",
+      "severity": "low",
+      "title": "Window Global Object Enumeration",
+      "description": "Enumerates ALL keys on window object on every page load, serializes all plain objects found, and sends via postMessage('*')."
+    }
+  ],
+  "flags": [
+    {
+      "tier": 1,
+      "category": "xhr_hooking",
+      "description": "Replaces XMLHttpRequest prototype on 20+ marketplace sites to intercept all API responses continuously"
+    },
+    {
+      "tier": 1,
+      "category": "fetch_hooking",
+      "description": "Wraps window.fetch on Shopee to intercept product detail API responses"
+    },
+    {
+      "tier": 2,
+      "category": "data_exfiltration",
+      "description": "Intercepted product data, Shopee anti-fraud tokens, and window globals forwarded to bigseller.com"
+    }
+  ],
+  "endpoints": [
+    "bigseller.com",
+    "bigseller.pro",
+    "events.sellfox.com"
+  ],
+  "updatedAt": "2026-02-06T00:00:00Z"
+}

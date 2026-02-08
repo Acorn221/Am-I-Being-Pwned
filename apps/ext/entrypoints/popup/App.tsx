@@ -1,19 +1,13 @@
 import { useEffect, useState } from "react";
 
-import type {
-  ExtensionDatabase,
-  ExtensionReport,
-  RiskLevel,
-} from "@acme/types";
+import type { ExtensionReport, RiskLevel } from "@acme/types";
 import { Badge } from "@acme/ui/badge";
 import { Button } from "@acme/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@acme/ui/card";
 
-import db from "../../data/extensions.json";
-
-import "./App.css";
-
-const extensionDb: Partial<ExtensionDatabase> = db;
+const API_BASE = import.meta.env.DEV
+  ? "http://localhost:3000"
+  : "https://amibeingpwned.com";
 
 interface InstalledExtension {
   id: string;
@@ -49,12 +43,35 @@ const riskBadge: Record<
   clean: { label: "Clean", variant: "secondary" },
 };
 
+async function fetchKnownIds(): Promise<Set<string>> {
+  try {
+    const res = await fetch(`${API_BASE}/extensions/index.json`);
+    if (!res.ok) return new Set();
+    const ids: string[] = await res.json();
+    return new Set(ids);
+  } catch {
+    return new Set();
+  }
+}
+
+async function fetchReport(id: string): Promise<ExtensionReport | null> {
+  try {
+    const res = await fetch(`${API_BASE}/extensions/${id}.json`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
 function App() {
   const [results, setResults] = useState<ScanResult[] | null>(null);
   const [scanning, setScanning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function scan() {
     setScanning(true);
+    setError(null);
     try {
       const installed: InstalledExtension[] = await browser.management.getAll();
 
@@ -65,10 +82,22 @@ function App() {
           e.id !== browser.runtime.id,
       );
 
+      // Fetch the index of known bad extension IDs
+      const knownIds = await fetchKnownIds();
+
+      // Only fetch reports for extensions that are in our database
+      const matches = extensions.filter((e) => knownIds.has(e.id));
+      const reports = await Promise.all(
+        matches.map(async (ext) => {
+          const report = await fetchReport(ext.id);
+          return { ext, report };
+        }),
+      );
+
       const mapped: ScanResult[] = extensions.map((ext) => {
-        const report = extensionDb[ext.id];
-        if (report) {
-          return { status: "known", ext, report };
+        const match = reports.find((r) => r.ext.id === ext.id);
+        if (match?.report) {
+          return { status: "known", ext, report: match.report };
         }
         return { status: "unknown", ext };
       });
@@ -81,6 +110,8 @@ function App() {
       });
 
       setResults(mapped);
+    } catch {
+      setError("Could not connect to the database. Try again later.");
     } finally {
       setScanning(false);
     }
@@ -123,7 +154,9 @@ function App() {
       )}
 
       {/* Results list */}
-      {results ? (
+      {error ? (
+        <div className="py-8 text-center text-sm text-red-400">{error}</div>
+      ) : results ? (
         <div className="flex max-h-[400px] flex-col gap-2 overflow-y-auto">
           {results.map((r) => (
             <ExtensionRow key={r.ext.id} result={r} />

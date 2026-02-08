@@ -1,0 +1,50 @@
+{
+  "name": "Email Finder by Snov.io",
+  "risk": "medium",
+  "version": "2.3.24",
+  "userCount": 400000,
+  "rating": 0,
+  "permissions": [
+    "storage",
+    "tabs",
+    "cookies",
+    "activeTab",
+    "scripting"
+  ],
+  "hostPermissions": [
+    "http://*/",
+    "https://*/"
+  ],
+  "summary": "B2B sales intelligence tool with full HTML extraction on all websites, hardcoded Twitter API bearer token for unauthorized profile scraping, and cookie manipulation. Broad host permissions enable significant data collection capabilities across all sites.",
+  "vulnerabilities": [
+    {
+      "id": "VULN-01",
+      "severity": "medium",
+      "title": "Full HTML Extraction on All Websites",
+      "description": "Content script responds to getInnerHTML messages by returning complete page HTML to the background script."
+    },
+    {
+      "id": "VULN-02",
+      "severity": "medium-high",
+      "title": "Hardcoded Twitter API Bearer Token",
+      "description": "Contains hardcoded Twitter/X API bearer token for unauthorized profile scraping via GraphQL API."
+    }
+  ],
+  "flags": [
+    {
+      "tier": 2,
+      "category": "data_exfiltration",
+      "description": "Extracts full HTML from all websites for contact information scraping"
+    },
+    {
+      "tier": 2,
+      "category": "cookie_harvesting",
+      "description": "Creates and reads authentication cookies across domains"
+    }
+  ],
+  "endpoints": [
+    "snov.io",
+    "api.twitter.com"
+  ],
+  "updatedAt": "2026-02-06T00:00:00Z"
+}

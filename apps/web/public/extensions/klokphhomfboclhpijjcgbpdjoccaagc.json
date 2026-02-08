@@ -1,0 +1,63 @@
+{
+  "name": "Flash Copilot",
+  "risk": "medium-high",
+  "version": "11.5.0",
+  "userCount": 0,
+  "rating": 0,
+  "permissions": [
+    "history",
+    "tabs",
+    "bookmarks",
+    "scripting",
+    "storage"
+  ],
+  "hostPermissions": [
+    "*://*/*"
+  ],
+  "summary": "Chinese productivity extension that harvests 10,000 browsing history entries spanning one year. Steals ChatGPT session tokens by fetching chatgpt.com/api/auth/session with credentials. Sends telemetry with device fingerprint to kjeek.com. Uses HTTP (not HTTPS) for some API calls. Captures page screenshots via html2canvas. Syncs bookmarks and annotations with full page URLs to kjeek.com.",
+  "vulnerabilities": [
+    {
+      "id": "VULN-01",
+      "severity": "medium",
+      "title": "Excessive Browsing History Harvesting",
+      "description": "Pulls 10,000 browsing history entries spanning one full year into memory for search feature.",
+      "cvssScore": "5.3"
+    },
+    {
+      "id": "VULN-02",
+      "severity": "high",
+      "title": "Cross-Origin ChatGPT Session Token Theft",
+      "description": "Fetches user's ChatGPT accessToken from chatgpt.com/api/auth/session using credentials, then uses it to read, list, and delete conversations.",
+      "cvssScore": "7.5"
+    },
+    {
+      "id": "VULN-03",
+      "severity": "medium",
+      "title": "Telemetry Beacon with Device Fingerprint",
+      "description": "Transmits device fingerprint, OS, browser, install age, usage statistics, login status, and VIP status to kjeek.com."
+    },
+    {
+      "id": "VULN-04",
+      "severity": "medium",
+      "title": "HTTP API Endpoint Vulnerable to MITM",
+      "description": "Uses unencrypted HTTP (not HTTPS) for switcher.kjeek.com API endpoint."
+    }
+  ],
+  "flags": [
+    {
+      "tier": 1,
+      "category": "cookie_harvesting",
+      "description": "Fetches ChatGPT session token from chatgpt.com/api/auth/session using credentials include"
+    },
+    {
+      "tier": 2,
+      "category": "data_exfiltration",
+      "description": "Uploads annotations, page URLs, screenshots, bookmarks, and browsing history metadata to kjeek.com"
+    }
+  ],
+  "endpoints": [
+    "kjeek.com",
+    "switcher.kjeek.com"
+  ],
+  "updatedAt": "2026-02-06T00:00:00Z"
+}

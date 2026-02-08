@@ -1,0 +1,56 @@
+{
+  "name": "QR Code Reader",
+  "risk": "medium",
+  "version": "2.0.3",
+  "userCount": 200000,
+  "rating": 0,
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "unlimitedStorage",
+    "storage",
+    "contextMenus",
+    "scripting"
+  ],
+  "summary": "QR code extension with server-controlled remote message/notification system that can display arbitrary HTML content to users. Sends user URLs to unknown third-party shortening services (hybridapps.net, amazonspot.net) without disclosure. Messages filtered to display only between 7am-10pm (evasion-like timing). Hardcoded secp256k1 private key and API token in client code. Optional online QR decode uploads tab screenshots to qrcd.org.",
+  "vulnerabilities": [
+    {
+      "id": "VULN-01",
+      "severity": "medium",
+      "title": "Remote Message/Notification System",
+      "description": "Fetches unsigned JSON from dsnetx.web.app and dsnet.bitbucket.io to display arbitrary notifications/HTML content. Can target by extension version. Messages only shown between hours 7-22."
+    },
+    {
+      "id": "VULN-02",
+      "severity": "medium",
+      "title": "Undisclosed URL Data Transmission",
+      "description": "When creating QR codes for links, sends user URLs, QR names, and extension ID to third-party shortening services hybridapps.net and amazonspot.net without clear disclosure."
+    },
+    {
+      "id": "VULN-03",
+      "severity": "low-medium",
+      "title": "Hardcoded Cryptographic Credentials",
+      "description": "Embeds secp256k1 private key and API token in plaintext for qrcd.org API authentication."
+    }
+  ],
+  "flags": [
+    {
+      "tier": 2,
+      "category": "remote_config",
+      "description": "Server-controlled notification system fetches unsigned JSON to display arbitrary content, with time-based evasion filtering (7am-10pm only)"
+    },
+    {
+      "tier": 2,
+      "category": "data_exfiltration",
+      "description": "User URLs and QR code data sent to unknown third-party shortening services without disclosure"
+    }
+  ],
+  "endpoints": [
+    "dsnetx.web.app",
+    "dsnet.bitbucket.io",
+    "hybridapps.net",
+    "amazonspot.net",
+    "qrcd.org"
+  ],
+  "updatedAt": "2026-02-06T00:00:00Z"
+}

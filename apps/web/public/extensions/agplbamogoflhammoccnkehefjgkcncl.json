@@ -1,0 +1,26 @@
+{
+  "name": "Gener8",
+  "risk": "medium",
+  "version": "3.7.3",
+  "userCount": 0,
+  "rating": 0,
+  "permissions": [],
+  "summary": "Gener8 actively scrapes AI conversations from ChatGPT, Claude, Gemini, Perplexity, Grok, DeepSeek, and Google AI Mode, plus server-configured targets via JSONata expressions. Also scrapes customer support chatbot widgets. Data including conversation content, model names, tools used, and timestamps is sent to apollo.gener8ads.com.",
+  "vulnerabilities": [],
+  "flags": [
+    {
+      "tier": 1,
+      "category": "data_exfiltration",
+      "description": "Scrapes AI chat conversations from 7+ AI platforms (ChatGPT, Claude, Gemini, Perplexity, Grok, DeepSeek, Google AI) and sends data to apollo.gener8ads.com"
+    },
+    {
+      "tier": 2,
+      "category": "remote_config",
+      "description": "Server-configured targets via JSONata expressions allow remote expansion of data collection without extension update"
+    }
+  ],
+  "endpoints": [
+    "apollo.gener8ads.com"
+  ],
+  "updatedAt": "2026-02-06T00:00:00Z"
+}

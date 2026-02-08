@@ -1,0 +1,50 @@
+{
+  "name": "IPchanger VPN",
+  "risk": "medium",
+  "version": "0.0.4",
+  "userCount": 301,
+  "rating": 0,
+  "permissions": [
+    "proxy",
+    "storage",
+    "nativeMessaging",
+    "tabs"
+  ],
+  "hostPermissions": [
+    "*://*/*",
+    "file://*/*"
+  ],
+  "summary": "Chinese residential proxy provider (Zhimadaili/roxlabs.io) extension using Chrome Native Messaging as C2 channel from desktop app. Sends behavioral telemetry over unencrypted HTTP. Server-controlled proxy bypass list. Injects jQuery 1.8.3 into every page including file:// URLs. Baidu and Google websites can message the extension via externally_connectable.",
+  "vulnerabilities": [
+    {
+      "id": "VULN-01",
+      "severity": "medium",
+      "title": "Unencrypted Telemetry Transmission",
+      "description": "Detailed user behavior tracking sent to rz.ipchanger.net and rz.ipchanger.321174.com over plain HTTP."
+    },
+    {
+      "id": "VULN-02",
+      "severity": "medium",
+      "title": "Server-Controlled Proxy Bypass List",
+      "description": "Bypass list fetched from server controls which domains bypass the proxy, potentially excluding surveillance traffic."
+    }
+  ],
+  "flags": [
+    {
+      "tier": 2,
+      "category": "data_exfiltration",
+      "description": "Behavioral telemetry sent over unencrypted HTTP to Chinese residential proxy infrastructure"
+    },
+    {
+      "tier": 2,
+      "category": "remote_config",
+      "description": "Server-controlled bypass list and native messaging C2 channel from mandatory desktop app"
+    }
+  ],
+  "endpoints": [
+    "rz.ipchanger.net",
+    "rz.ipchanger.321174.com",
+    "roxlabs.io"
+  ],
+  "updatedAt": "2026-02-06T00:00:00Z"
+}

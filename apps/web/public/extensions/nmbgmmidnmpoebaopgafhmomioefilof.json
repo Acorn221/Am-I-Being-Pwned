@@ -1,0 +1,52 @@
+{
+  "name": "VPN Proxy Master",
+  "risk": "medium-high",
+  "version": "2.3",
+  "userCount": 10000,
+  "rating": 0,
+  "permissions": [
+    "proxy",
+    "webRequest",
+    "webRequestAuthProvider",
+    "storage",
+    "tabs",
+    "alarms",
+    "declarativeNetRequestWithHostAccess"
+  ],
+  "hostPermissions": [
+    "*://*/*"
+  ],
+  "summary": "Free VPN with affiliate ad injection system that hijacks user link clicks across all websites. When clicked links match server-side advertising domain list, extension intercepts and redirects through affiliate links via trendcampaign.com. Spoofs Origin header to impersonate a different extension. VPN bypass for own infrastructure exposes user's real IP.",
+  "vulnerabilities": [
+    {
+      "id": "VULN-01",
+      "severity": "high",
+      "title": "Affiliate Link Hijacking via Content Script",
+      "description": "Content script ads.js runs on all pages, intercepts link clicks matching server-side ad domain list, queries trendcampaign.com, and redirects through affiliate URLs."
+    },
+    {
+      "id": "VULN-02",
+      "severity": "medium",
+      "title": "Origin Header Spoofing",
+      "description": "Spoofs Origin header via declarativeNetRequest to impersonate extension pphgdbgldlmicfdkhondlafkiomnelnk when making API requests."
+    }
+  ],
+  "flags": [
+    {
+      "tier": 1,
+      "category": "affiliate_fraud",
+      "description": "Hijacks user link clicks matching server-side ad domain list and redirects through affiliate links"
+    },
+    {
+      "tier": 2,
+      "category": "ad_injection",
+      "description": "Content script injects affiliate redirect interception on all websites"
+    }
+  ],
+  "endpoints": [
+    "1clickvpn.com",
+    "data.trendcampaign.com",
+    "info.vpnbreeze.com"
+  ],
+  "updatedAt": "2026-02-06T00:00:00Z"
+}

@@ -1,0 +1,33 @@
+{
+  "name": "Note Board - Sticky Notes App",
+  "risk": "medium",
+  "version": "9.0.33",
+  "publisher": "Oscar de Dios",
+  "userCount": 200000,
+  "rating": 0,
+  "permissions": [
+    "storage",
+    "identity",
+    "tabs"
+  ],
+  "summary": "Sticky notes extension with undisclosed Amazon affiliate link injection. Automatically modifies user-created Amazon links to include developer's affiliate tags (notboa-20, notboa-21, wwwnoteboarda-21) for US, Spain, and UK Amazon domains.",
+  "vulnerabilities": [
+    {
+      "id": "VULN-01",
+      "severity": "medium",
+      "title": "Amazon Affiliate Link Injection",
+      "description": "Silently injects affiliate tags into Amazon links created by users in their notes for amazon.com, amazon.es, and amazon.co.uk."
+    }
+  ],
+  "flags": [
+    {
+      "tier": 2,
+      "category": "affiliate_fraud",
+      "description": "Undisclosed Amazon affiliate tag injection on user-created links for amazon.com (notboa-20), amazon.es (notboa-21), amazon.co.uk (wwwnoteboarda-21)"
+    }
+  ],
+  "endpoints": [
+    "noteboardapp.com"
+  ],
+  "updatedAt": "2026-02-06T00:00:00Z"
+}

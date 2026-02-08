@@ -1,7 +1,8 @@
-import type { ExtensionDatabase, RiskLevel } from "@acme/types";
+import { useEffect, useMemo, useState } from "react";
+
+import type { ExtensionReport, RiskLevel } from "@acme/types";
 import { Badge } from "@acme/ui/badge";
 import { Button } from "@acme/ui/button";
-import { Card, CardDescription, CardHeader, CardTitle } from "@acme/ui/card";
 import {
   Table,
   TableBody,
@@ -10,12 +11,6 @@ import {
   TableHeader,
   TableRow,
 } from "@acme/ui/table";
-
-import db from "../../ext/data/extensions.json";
-
-import "./App.css";
-
-const extensionDb = db as ExtensionDatabase;
 
 const riskConfig: Record<
   RiskLevel,
@@ -30,178 +25,353 @@ const riskConfig: Record<
   clean: { label: "Clean", variant: "secondary" },
 };
 
+const riskOrder: Record<RiskLevel, number> = {
+  critical: 0,
+  high: 1,
+  "medium-high": 2,
+  medium: 3,
+  "medium-low": 4,
+  low: 5,
+  clean: 6,
+};
+
 function formatUsers(count: number): string {
-  if (count >= 1_000_000) return `${Math.round(count / 1_000_000)}M+`;
+  if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M+`;
   if (count >= 1_000) return `${Math.round(count / 1_000)}k+`;
+  if (count === 0) return "N/A";
   return `${count}`;
 }
 
-const entries = Object.entries(extensionDb);
-
-const threats = [
-  {
-    title: "Data Harvesting",
-    description:
-      "Extensions silently collecting your browsing history, keystrokes, and personal data to sell to third parties.",
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="size-6"
-      >
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-        <path d="m9 12 2 2 4-4" />
-      </svg>
-    ),
-  },
-  {
-    title: "Session Hijacking",
-    description:
-      "Malicious extensions stealing your authentication tokens and cookies to impersonate you on websites.",
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="size-6"
-      >
-        <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-      </svg>
-    ),
-  },
-  {
-    title: "Code Injection",
-    description:
-      "Extensions injecting scripts into web pages to modify content, redirect traffic, or insert ads and trackers.",
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="size-6"
-      >
-        <polyline points="16 18 22 12 16 6" />
-        <polyline points="8 6 2 12 8 18" />
-      </svg>
-    ),
-  },
-  {
-    title: "Network Tampering",
-    description:
-      "Intercepting and modifying your web requests to inject malware, alter DNS, or proxy traffic through malicious servers.",
-    icon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="size-6"
-      >
-        <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5" />
-        <path d="M8.5 8.5v.01" />
-        <path d="M16 15.5v.01" />
-        <path d="M12 12v.01" />
-        <path d="M11 17v.01" />
-        <path d="M7 14v.01" />
-      </svg>
-    ),
-  },
-];
+type ExtEntry = [string, ExtensionReport];
 
 function App() {
+  const [entries, setEntries] = useState<ExtEntry[]>([]);
+  const [search, setSearch] = useState("");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch("/extensions/index.json");
+        const ids: string[] = await res.json();
+        const reports = await Promise.all(
+          ids.map(async (id) => {
+            const r = await fetch(`/extensions/${id}.json`);
+            const data: ExtensionReport = await r.json();
+            return [id, data] as ExtEntry;
+          }),
+        );
+        reports.sort(
+          (a, b) => riskOrder[a[1].risk] - riskOrder[b[1].risk],
+        );
+        setEntries(reports);
+      } catch {
+        // Static files — if they fail the site is down anyway
+      }
+    }
+    void load();
+  }, []);
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return entries;
+    const q = search.toLowerCase();
+    return entries.filter(
+      ([id, ext]) =>
+        ext.name.toLowerCase().includes(q) ||
+        id.toLowerCase().includes(q) ||
+        ext.summary.toLowerCase().includes(q),
+    );
+  }, [entries, search]);
+
+  const stats = useMemo(() => {
+    const total = entries.length;
+    const critical = entries.filter(
+      ([, e]) => e.risk === "critical" || e.risk === "high",
+    ).length;
+    const totalUsers = entries.reduce((sum, [, e]) => sum + e.userCount, 0);
+    return { total, critical, totalUsers };
+  }, [entries]);
+
   return (
     <div className="bg-background min-h-screen">
+      {/* Nav */}
+      <nav className="border-border/50 border-b">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <span className="text-foreground text-sm font-semibold tracking-tight">
+            Am I Being Pwned?
+          </span>
+          <a
+            href="https://github.com/AcornPublishing/Am-I-Being-Pwned"
+            className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+          >
+            GitHub
+          </a>
+        </div>
+      </nav>
+
       {/* Hero */}
-      <div className="relative overflow-hidden">
-        <div className="via-background to-background absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-red-900/20" />
-        <div className="relative mx-auto max-w-5xl px-6 pt-24 pb-16 text-center">
-          <Badge variant="destructive" className="mb-6 text-sm">
-            Browser Extension Security Scanner
-          </Badge>
-          <h1 className="text-foreground mb-4 text-5xl font-extrabold tracking-tight sm:text-7xl">
-            Am I Being{" "}
-            <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
-              Pwned
-            </span>
-            ?
-          </h1>
-          <p className="text-muted-foreground mx-auto mb-10 max-w-2xl text-lg">
-            Find out if your browser extensions are secretly harvesting your
-            data, hijacking your sessions, or doing things they shouldn&apos;t
-            be.
-          </p>
-          <Button size="lg" className="bg-red-600 text-white hover:bg-red-700">
-            Scan My Extensions
+      <header className="mx-auto max-w-6xl px-6 pt-20 pb-16">
+        <p className="text-muted-foreground mb-3 text-sm font-medium uppercase tracking-wider">
+          Browser Extension Security
+        </p>
+        <h1 className="text-foreground mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
+          Are your extensions
+          <br />
+          working against you?
+        </h1>
+        <p className="text-muted-foreground mb-8 max-w-xl text-lg">
+          We analyse browser extensions for data harvesting, session hijacking,
+          network tampering, and other threats. Install our extension to scan
+          what you have installed — or browse the database below.
+        </p>
+        <div className="flex gap-3">
+          <Button size="lg">Install Extension</Button>
+          <Button size="lg" variant="outline" asChild>
+            <a href="#database">Browse Database</a>
           </Button>
+        </div>
+      </header>
+
+      {/* Stats */}
+      <div className="border-border/50 border-y">
+        <div className="mx-auto grid max-w-6xl grid-cols-3 divide-x divide-border/50">
+          <div className="px-6 py-6">
+            <div className="text-foreground text-2xl font-bold">
+              {stats.total}
+            </div>
+            <div className="text-muted-foreground text-sm">
+              Extensions analysed
+            </div>
+          </div>
+          <div className="px-6 py-6">
+            <div className="text-2xl font-bold text-red-400">
+              {stats.critical}
+            </div>
+            <div className="text-muted-foreground text-sm">
+              High / Critical risk
+            </div>
+          </div>
+          <div className="px-6 py-6">
+            <div className="text-foreground text-2xl font-bold">
+              {formatUsers(stats.totalUsers)}
+            </div>
+            <div className="text-muted-foreground text-sm">
+              Affected users
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Extensions Table */}
-      <div className="mx-auto max-w-5xl px-6 py-16">
-        <h2 className="text-foreground mb-2 text-2xl font-bold">
-          Known Problematic Extensions
+      {/* How it works */}
+      <section className="mx-auto max-w-6xl px-6 py-16">
+        <h2 className="text-foreground mb-8 text-xl font-semibold">
+          How it works
         </h2>
-        <p className="text-muted-foreground mb-6">
-          Extensions we&apos;ve flagged based on behaviour analysis.
-        </p>
+        <div className="grid gap-8 sm:grid-cols-3">
+          <div>
+            <div className="text-muted-foreground mb-2 text-sm font-medium">
+              01
+            </div>
+            <h3 className="text-foreground mb-1 font-medium">Install</h3>
+            <p className="text-muted-foreground text-sm">
+              Add the extension to your browser. It only needs the{" "}
+              <code className="rounded bg-zinc-800 px-1 py-0.5 text-xs">
+                management
+              </code>{" "}
+              permission to list your extensions.
+            </p>
+          </div>
+          <div>
+            <div className="text-muted-foreground mb-2 text-sm font-medium">
+              02
+            </div>
+            <h3 className="text-foreground mb-1 font-medium">Scan</h3>
+            <p className="text-muted-foreground text-sm">
+              Open the popup and it automatically checks your installed
+              extensions against our database of known threats.
+            </p>
+          </div>
+          <div>
+            <div className="text-muted-foreground mb-2 text-sm font-medium">
+              03
+            </div>
+            <h3 className="text-foreground mb-1 font-medium">Review</h3>
+            <p className="text-muted-foreground text-sm">
+              See which extensions are flagged, why they were flagged, and what
+              endpoints they communicate with.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* What we detect */}
+      <section className="border-border/50 border-y">
+        <div className="mx-auto max-w-6xl px-6 py-16">
+          <h2 className="text-foreground mb-8 text-xl font-semibold">
+            What we detect
+          </h2>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                title: "Data Harvesting",
+                desc: "Extensions silently collecting browsing history, keystrokes, and personal data.",
+              },
+              {
+                title: "Session Hijacking",
+                desc: "Stealing authentication tokens and cookies to impersonate you on websites.",
+              },
+              {
+                title: "Code Injection",
+                desc: "Injecting scripts into pages to modify content, redirect traffic, or insert ads.",
+              },
+              {
+                title: "Network Tampering",
+                desc: "Intercepting requests to inject malware, alter DNS, or proxy through malicious servers.",
+              },
+            ].map((threat) => (
+              <div key={threat.title}>
+                <h3 className="text-foreground mb-1 text-sm font-medium">
+                  {threat.title}
+                </h3>
+                <p className="text-muted-foreground text-sm">{threat.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Database */}
+      <section id="database" className="mx-auto max-w-6xl px-6 py-16">
+        <div className="mb-6 flex items-end justify-between gap-4">
+          <div>
+            <h2 className="text-foreground text-xl font-semibold">
+              Extension Database
+            </h2>
+            <p className="text-muted-foreground text-sm">
+              {filtered.length} extension{filtered.length !== 1 ? "s" : ""}{" "}
+              flagged
+            </p>
+          </div>
+          <input
+            type="text"
+            placeholder="Search extensions..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="border-border bg-background text-foreground placeholder:text-muted-foreground w-64 rounded-md border px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-zinc-500"
+          />
+        </div>
+
         <div className="border-border rounded-lg border">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Extension</TableHead>
-                <TableHead>Users</TableHead>
-                <TableHead>Risk</TableHead>
-                <TableHead>Summary</TableHead>
+                <TableHead className="w-20">Users</TableHead>
+                <TableHead className="w-24">Risk</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {entries.map(([id, ext]) => {
+              {filtered.map(([id, ext]) => {
                 const cfg = riskConfig[ext.risk];
+                const isExpanded = expandedId === id;
                 return (
-                  <TableRow key={id}>
+                  <TableRow
+                    key={id}
+                    className="cursor-pointer"
+                    onClick={() => setExpandedId(isExpanded ? null : id)}
+                  >
                     <TableCell>
-                      <div>
-                        <div className="text-foreground font-medium">
-                          {ext.name}
-                        </div>
-                        <div className="text-muted-foreground font-mono text-xs">
-                          {id}
-                        </div>
+                      <div className="text-foreground text-sm font-medium">
+                        {ext.name}
                       </div>
+                      <div className="text-muted-foreground mt-0.5 text-xs">
+                        {ext.summary.length > 120
+                          ? ext.summary.slice(0, 120) + "..."
+                          : ext.summary}
+                      </div>
+                      {isExpanded && (
+                        <div className="mt-3 space-y-3 pb-1">
+                          <div className="text-muted-foreground text-xs">
+                            {ext.summary}
+                          </div>
+                          {ext.vulnerabilities.length > 0 && (
+                            <div>
+                              <div className="text-foreground mb-1 text-xs font-semibold">
+                                Vulnerabilities
+                              </div>
+                              <ul className="space-y-1">
+                                {ext.vulnerabilities.map((v) => (
+                                  <li
+                                    key={v.id}
+                                    className="text-muted-foreground text-xs"
+                                  >
+                                    <Badge
+                                      variant={
+                                        v.severity === "critical" ||
+                                        v.severity === "high"
+                                          ? "destructive"
+                                          : "outline"
+                                      }
+                                      className="mr-1.5 text-[10px]"
+                                    >
+                                      {v.severity}
+                                    </Badge>
+                                    {v.title}
+                                    {v.cvssScore && (
+                                      <span className="text-muted-foreground ml-1">
+                                        (CVSS {v.cvssScore})
+                                      </span>
+                                    )}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {ext.endpoints.length > 0 && (
+                            <div>
+                              <div className="text-foreground mb-1 text-xs font-semibold">
+                                Communicates with
+                              </div>
+                              <div className="flex flex-wrap gap-1">
+                                {ext.endpoints.map((ep) => (
+                                  <code
+                                    key={ep}
+                                    className="rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] text-zinc-300"
+                                  >
+                                    {ep}
+                                  </code>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {ext.permissions.length > 0 && (
+                            <div>
+                              <div className="text-foreground mb-1 text-xs font-semibold">
+                                Permissions
+                              </div>
+                              <div className="flex flex-wrap gap-1">
+                                {ext.permissions.map((p) => (
+                                  <code
+                                    key={p}
+                                    className="rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] text-zinc-400"
+                                  >
+                                    {p}
+                                  </code>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          <div className="text-muted-foreground pt-1 font-mono text-[10px]">
+                            {id}
+                          </div>
+                        </div>
+                      )}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-muted-foreground align-top text-sm">
                       {formatUsers(ext.userCount)}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="align-top">
                       <Badge variant={cfg.variant}>{cfg.label}</Badge>
-                    </TableCell>
-                    <TableCell className="max-w-xs">
-                      {ext.risk !== "clean" ? (
-                        <span className="text-muted-foreground text-sm">
-                          {ext.summary}
-                        </span>
-                      ) : (
-                        <span className="text-sm text-green-500">
-                          No issues found
-                        </span>
-                      )}
                     </TableCell>
                   </TableRow>
                 );
@@ -209,39 +379,16 @@ function App() {
             </TableBody>
           </Table>
         </div>
-      </div>
-
-      {/* Threats */}
-      <div className="mx-auto max-w-5xl px-6 py-16">
-        <h2 className="text-foreground mb-2 text-2xl font-bold">
-          What We Detect
-        </h2>
-        <p className="text-muted-foreground mb-6">
-          The most common ways extensions compromise your security.
-        </p>
-        <div className="grid gap-6 sm:grid-cols-2">
-          {threats.map((threat) => (
-            <Card
-              key={threat.title}
-              className="border-border/50 bg-card/50 transition-colors hover:border-red-500/30"
-            >
-              <CardHeader>
-                <div className="mb-2 flex size-10 items-center justify-center rounded-lg bg-red-500/10 text-red-500">
-                  {threat.icon}
-                </div>
-                <CardTitle>{threat.title}</CardTitle>
-                <CardDescription>{threat.description}</CardDescription>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
-      </div>
+      </section>
 
       {/* Footer */}
-      <footer className="border-border text-muted-foreground border-t py-8 text-center text-sm">
-        <p>
-          Am I Being Pwned? — Open source browser extension security scanner.
-        </p>
+      <footer className="border-border/50 border-t">
+        <div className="mx-auto max-w-6xl px-6 py-8">
+          <div className="text-muted-foreground flex items-center justify-between text-sm">
+            <span>Am I Being Pwned?</span>
+            <span>Open source browser extension security scanner</span>
+          </div>
+        </div>
       </footer>
     </div>
   );

@@ -1,0 +1,65 @@
+{
+  "name": "StayFocusd",
+  "risk": "medium-high",
+  "version": "4.4.3",
+  "userCount": 4000000,
+  "rating": 0,
+  "permissions": [
+    "alarms",
+    "tabs",
+    "storage",
+    "notifications",
+    "webNavigation",
+    "scripting"
+  ],
+  "hostPermissions": [
+    "*://*/*"
+  ],
+  "summary": "Owned by Sensor Tower. Shares identical codebase with StayFree. Embeds Pathmatics ad intelligence SDK with XHR/fetch hooking to scrape ads. Collects Gen-AI prompts/responses from ChatGPT, Gemini, DeepSeek, Perplexity, Copilot. Scrapes chatbot interactions from 30+ widgets. Uploads browsing data, page views, and URL query parameters to stayfocusd.st-panel-api.com.",
+  "vulnerabilities": [
+    {
+      "id": "VULN-01",
+      "severity": "high",
+      "title": "XHR/Fetch Interception for Ad Intelligence Scraping",
+      "description": "Pathmatics SDK hooks XHR and fetch to intercept all HTTP responses for ad creative harvesting from YouTube, Hulu, Netflix, TikTok, Twitter."
+    },
+    {
+      "id": "VULN-02",
+      "severity": "high",
+      "title": "Gen-AI Conversation Collection",
+      "description": "Scrapes AI conversations from ChatGPT, Gemini, DeepSeek, Perplexity, and Copilot. Uploads metadata and content to server."
+    },
+    {
+      "id": "VULN-03",
+      "severity": "medium",
+      "title": "Browsing Data Upload Pipeline",
+      "description": "Uploads per-site session durations, page view counts, URL query parameters, and chatbot interaction data."
+    }
+  ],
+  "flags": [
+    {
+      "tier": 1,
+      "category": "xhr_hooking",
+      "description": "Pathmatics SDK hooks XMLHttpRequest.prototype.send globally for ad response interception"
+    },
+    {
+      "tier": 1,
+      "category": "fetch_hooking",
+      "description": "window.fetch replaced to intercept all HTTP responses"
+    },
+    {
+      "tier": 1,
+      "category": "data_exfiltration",
+      "description": "Uploads browsing data, AI conversation data, chatbot conversations, and URL query parameters to stayfocusd.st-panel-api.com"
+    },
+    {
+      "tier": 2,
+      "category": "remote_config",
+      "description": "Remote config system allows server-controlled behavior changes without extension update"
+    }
+  ],
+  "endpoints": [
+    "stayfocusd.st-panel-api.com"
+  ],
+  "updatedAt": "2026-02-06T00:00:00Z"
+}
