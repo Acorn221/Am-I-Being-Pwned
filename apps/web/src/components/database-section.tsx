@@ -20,14 +20,21 @@ export function DatabaseSection({ reports }: { reports: ReportMap }) {
   const [showDisclaimer, setShowDisclaimer] = useState(true);
 
   const dbEntries = useMemo(() => {
-    const entries = [...reports.entries()] as [string, ExtensionReport][];
-    entries.sort((a, b) => {
-      const riskDiff = riskOrder[a[1].risk] - riskOrder[b[1].risk];
-      if (riskDiff !== 0) return riskDiff;
-      return b[1].userCount - a[1].userCount;
-    });
-    return entries;
-  }, [reports]);
+    const riskWeight: Record<string, number> = {
+      critical: 5,
+      high: 4,
+      "medium-high": 3,
+      medium: 2,
+      "medium-low": 1.5,
+      low: 1,
+      clean: 0,
+      unavailable: 0,
+    };
+    const score = (ext: ExtensionReport) =>
+      (riskWeight[ext.risk] ?? 0) * Math.log10(Math.max(ext.userCount, 1));
+    return [...reports.entries()]
+      .sort(([, a], [, b]) => score(b) - score(a));
+  }, [reports, reports.size]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return dbEntries;
