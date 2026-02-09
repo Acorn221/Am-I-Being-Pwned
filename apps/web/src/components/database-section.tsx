@@ -5,6 +5,7 @@ import type { ExtensionReport } from "@amibeingpwned/types";
 import {
   Table,
   TableBody,
+  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -13,11 +14,13 @@ import {
 import type { ReportMap } from "~/hooks/use-extension-database";
 import { riskOrder } from "~/lib/risk";
 import { DatabaseRow } from "~/components/database-row";
+import { ExtensionPastePanel } from "~/components/extension-paste-panel";
 
 export function DatabaseSection({ reports }: { reports: ReportMap }) {
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showDisclaimer, setShowDisclaimer] = useState(true);
+  const [pasteFilterIds, setPasteFilterIds] = useState<Set<string> | null>(null);
 
   const dbEntries = useMemo(() => {
     const riskWeight: Record<string, number> = {
@@ -36,27 +39,35 @@ export function DatabaseSection({ reports }: { reports: ReportMap }) {
       .sort(([, a], [, b]) => score(b) - score(a));
   }, [reports, reports.size]);
 
+  const pasteFiltered = useMemo(() => {
+    if (!pasteFilterIds) return dbEntries;
+    return dbEntries.filter(([id]) => pasteFilterIds.has(id));
+  }, [dbEntries, pasteFilterIds]);
+
   const filtered = useMemo(() => {
-    if (!search.trim()) return dbEntries;
+    if (!search.trim()) return pasteFiltered;
     const q = search.toLowerCase();
-    return dbEntries.filter(
+    return pasteFiltered.filter(
       ([id, ext]) =>
         ext.name.toLowerCase().includes(q) ||
         id.toLowerCase().includes(q) ||
         ext.summary.toLowerCase().includes(q),
     );
-  }, [dbEntries, search]);
+  }, [pasteFiltered, search]);
 
   return (
     <section id="database" className="mx-auto max-w-6xl px-6 py-16">
+      <ExtensionPastePanel onFilterChange={setPasteFilterIds} reports={reports} />
+
       <div className="mb-6 flex items-end justify-between gap-4">
         <div>
           <h2 className="text-foreground text-xl font-semibold">
             Extension Database
           </h2>
           <p className="text-muted-foreground text-sm">
-            {filtered.length} extension{filtered.length !== 1 ? "s" : ""}{" "}
-            flagged
+            {pasteFilterIds
+              ? `${filtered.length} of your extension${filtered.length !== 1 ? "s" : ""} found in database`
+              : `${filtered.length} extension${filtered.length !== 1 ? "s" : ""} flagged`}
           </p>
         </div>
         <input
@@ -96,15 +107,23 @@ export function DatabaseSection({ reports }: { reports: ReportMap }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map(([id, ext]) => (
-              <DatabaseRow
-                key={id}
-                id={id}
-                ext={ext}
-                isExpanded={expandedId === id}
-                onToggle={() => setExpandedId(expandedId === id ? null : id)}
-              />
-            ))}
+            {filtered.length === 0 && pasteFilterIds ? (
+              <TableRow>
+                <TableCell colSpan={3} className="text-muted-foreground py-8 text-center text-sm">
+                  None of your pasted extensions were found in the database.
+                </TableCell>
+              </TableRow>
+            ) : (
+              filtered.map(([id, ext]) => (
+                <DatabaseRow
+                  key={id}
+                  id={id}
+                  ext={ext}
+                  isExpanded={expandedId === id}
+                  onToggle={() => setExpandedId(expandedId === id ? null : id)}
+                />
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
