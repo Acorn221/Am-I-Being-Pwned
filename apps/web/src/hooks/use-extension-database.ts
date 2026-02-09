@@ -15,9 +15,10 @@ export function useExtensionDatabase() {
         const res = await fetch("/extensions.json");
         const data = (await res.json()) as ExtensionDatabase;
         if (!cancelled) {
+          const decode = (s: string) => s.replaceAll("&amp;", "&").replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&#39;", "'").replaceAll("&quot;", '"');
           const entries = Object.entries(data).map(
             ([id, ext]) =>
-              [id, { ...ext, risk: ext.risk.toLowerCase() as RiskLevel }] as const,
+              [id, { ...ext, risk: ext.risk.toLowerCase() as RiskLevel, name: decode(ext.name), summary: decode(ext.summary) }] as const,
           );
           setReports(new Map(entries));
         }
