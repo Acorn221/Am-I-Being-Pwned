@@ -43,7 +43,7 @@ function App({ reports }: { reports: ReportMap }) {
         </h1>
         <p className="text-muted-foreground mb-8 max-w-xl text-lg">
           We use AI tools to analyse Chrome extensions for data harvesting, session hijacking,
-          network tampering, and other threats, manually verifying the worst offenders.
+          network tampering, and Vulnerabilities, manually verifying the worst offenders.
           Install our Chrome extension to scan what you have installed or browse the database below.
         </p>
         <div className="flex gap-3">

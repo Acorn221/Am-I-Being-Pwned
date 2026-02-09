@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ClipboardPaste } from "lucide-react";
+import { ChevronDown, ClipboardPaste, Copy, Check } from "lucide-react";
 import { Button } from "@amibeingpwned/ui/button";
 
 import type { ReportMap } from "~/hooks/use-extension-database";
@@ -22,6 +22,7 @@ export function ExtensionPastePanel({
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [result, setResult] = useState<CheckResult | null>(null);
+  const [copied, setCopied] = useState(false);
 
   function handleCheck() {
     const { extensions } = parseExtensionList(text);
@@ -71,13 +72,25 @@ export function ExtensionPastePanel({
               <ol className="text-muted-foreground mb-3 list-inside list-decimal space-y-1 text-sm">
                 <li>
                   Open{" "}
-                  <code
-                    className="bg-muted cursor-copy rounded px-1.5 py-0.5 text-xs select-all"
-                    title="Click to select, then copy"
-                  >
+                  <code className="bg-muted rounded px-1.5 py-0.5 text-xs">
                     chrome://system/
-                  </code>{" "}
-                  in Chrome
+                  </code>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void navigator.clipboard.writeText("chrome://system/");
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 1500);
+                    }}
+                    className="text-muted-foreground hover:text-foreground ml-1 inline-flex translate-y-px rounded p-1 hover:bg-zinc-700/50"
+                    title="Copy to clipboard"
+                  >
+                    {copied
+                      ? <Check className="size-3 text-green-500" />
+                      : <Copy className="size-3" />}
+                  </button>{" "}
+                  in a new tab
                 </li>
                 <li>Click <strong>Expand</strong> next to <strong>Extensions</strong></li>
                 <li>Select all the text and copy it</li>
