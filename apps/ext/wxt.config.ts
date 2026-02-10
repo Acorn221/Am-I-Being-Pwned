@@ -16,8 +16,8 @@ export default defineConfig({
         ...(mode === "development" ? ["http://localhost/*"] : []),
       ],
     },
-    // id = ddialdjfnnjlobnkgbfnboaadhghibah
-    key: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA7MJwZypGpoYLHd8BS0OMCcU6bxD/kStylSLmMiXn+g+obA48pKspGC8VElJ5G8G3dQBVtmjKWoom/z05+K8f6PemCk6heeZG6hqDmTjfnxCKRR57lXuTUvyKWZ+/FfySM/lsQqcbhsvkWsJCkeyGloGyw+13MvdoYigg0lTfESpGuwIWqE2pupvwAr54kYDEYlC9L+2YMCoB2zPvqF6OnBYjrETA/kyOqO3fiZ+5vXFJiiyLxYFg+afQY0ZrRkwxfJ99TpUnsUnUq2LatHxpCHTLBG/+urVPcNbr/tAqZx0+MZ4g/hEKpwmIyUN2iUj2LLYJ5FUgw21c4Z4GPHxdeQIDAQAB",
+    // id = amibeingpndbmhcmnjdekhljpjcbjnpl
+    "key": "MIIBITANBgkqhkiG9w0BAQEFAAOCAQ4AMIIBCQKCAQBWvvsi01+e+dBPidQbGFSJl+5NkOOZzvXjfG2YzeDpDPiY+smMVcYCu6gKqXzZXmKc2cz6m5K2yDnE2YdyYNq8plwzEMdA1uoOlRydD/ad/gJaxkY2Wyi6V0vUac3KZLQ8EJEMmKeVHNJT7rnCYoBG2xNER8cWGTs2KIGq1870zqEnvNNCaP8+hfduZUYiU4eyZXjgxYEcNX7zb2rcUX+rvUAAD4qg38BFuW7F2Sc3jACPZGS0r4b1J+M5R7x2ZOoCmeGpuwXg4iCH5ZA3Et3cqvVgebLARZF3H2abnRXmyhDP0oNOmAh29kkjLu0aTEJeBrrmH1toB7xqWcfLHFKRAgMBAAE="
   }),
   vite: () => ({
     plugins: [tailwindcss()],

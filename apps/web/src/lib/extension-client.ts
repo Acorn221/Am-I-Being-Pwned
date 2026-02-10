@@ -2,7 +2,7 @@ import type { ExtRequest, ExtResponse } from "@amibeingpwned/types";
 import { ExtResponseSchema } from "@amibeingpwned/validators";
 
 /** Known extension ID — used for direct connection via externally_connectable */
-const KNOWN_EXTENSION_ID = "ddialdjfnnjlobnkgbfnboaadhghibah";
+const KNOWN_EXTENSION_ID = "amibeingpndbmhcmnjdekhljpjcbjnpl";
 
 /**
  * Try to PING the extension at a known ID. Returns the ID if it responds,
