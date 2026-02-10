@@ -9,7 +9,11 @@ export default defineConfig({
     short_name: "Am I Pwned?",
     description: "Scan your installed extensions for data harvesting, session hijacking, and other threats.",
     action: {},
-    permissions: ["management"],
+    permissions: ["alarms", "management", "notifications"],
+    host_permissions: [
+      "https://amibeingpwned.com/*",
+      ...(mode === "development" ? ["http://localhost/*"] : []),
+    ],
     externally_connectable: {
       matches: [
         "https://amibeingpwned.com/*",
