@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import type { InstalledExtensionInfo } from "@amibeingpwned/types";
 
-import { detectExtension, sendToExtension } from "~/lib/extension-client";
+import { extensionClient } from "~/lib/extension-client";
 
 export type ExtensionStatus = "detecting" | "connected" | "not_installed";
 
@@ -13,17 +13,15 @@ export function useExtension() {
   );
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const extensionIdRef = useRef<string | null>(null);
 
   const scan = useCallback(async () => {
-    const id = extensionIdRef.current;
-    if (!id) return;
+    if (!extensionClient.id) return;
 
     setScanning(true);
     setError(null);
 
     try {
-      const response = await sendToExtension(id, {
+      const response = await extensionClient.send({
         type: "GET_EXTENSIONS",
         version: 1,
       });
@@ -42,12 +40,10 @@ export function useExtension() {
 
   useEffect(() => {
     let cancelled = false;
-    void detectExtension().then((id) => {
+    void extensionClient.detect().then((id) => {
       if (cancelled) return;
       if (id) {
-        extensionIdRef.current = id;
         setStatus("connected");
-        // Auto-scan as soon as the extension is detected
         void scan();
       } else {
         setStatus("not_installed");
