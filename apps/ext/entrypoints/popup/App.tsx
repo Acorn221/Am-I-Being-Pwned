@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { ExtensionDatabase, RiskLevel } from "@amibeingpwned/types";
+import type { RiskLevel } from "@amibeingpwned/types";
 import { Badge } from "@amibeingpwned/ui/badge";
 import { Button } from "@amibeingpwned/ui/button";
 import { fetchExtensionDatabase } from "../../lib/api";
@@ -60,7 +60,8 @@ export default function App() {
         let count = 0;
         for (const ext of installed) {
           if (ext.type !== "extension" || ext.id === chrome.runtime.id) continue;
-          const report = (db as ExtensionDatabase)[ext.id];
+          const report = db[ext.id];
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
           const bucket = bucketForRisk(report?.risk ?? "unavailable");
           buckets[bucket]++;
           count++;
@@ -82,7 +83,7 @@ export default function App() {
   };
 
   return (
-    <div className="p-4 w-[350px]">
+    <div className="p-4 w-[350px">
       <h1 className="text-sm font-semibold text-foreground tracking-tight mb-3">
         Am I Being Pwned?
       </h1>
