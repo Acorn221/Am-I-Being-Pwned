@@ -14,6 +14,12 @@
       "cache": false,
       "persistent": false
     },
+    "@amibeingpwned/web#dev": {
+      "persistent": true
+    },
+    "@amibeingpwned/ext#dev": {
+      "persistent": true
+    },
     "format": {
       "outputs": [".cache/.prettiercache"],
       "outputLogs": "new-only"

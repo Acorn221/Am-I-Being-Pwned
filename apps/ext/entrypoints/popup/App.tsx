@@ -83,7 +83,7 @@ export default function App() {
   };
 
   return (
-    <div className="p-4 w-[350px">
+    <div className="p-4 w-[350px]">
       <h1 className="text-sm font-semibold text-foreground tracking-tight mb-3">
         Am I Being Pwned?
       </h1>
