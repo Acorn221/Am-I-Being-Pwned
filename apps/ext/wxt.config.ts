@@ -8,7 +8,9 @@ export default defineConfig({
     name: "Am I Being Pwned",
     short_name: "Am I Pwned?",
     description: "Scan your installed extensions for data harvesting, session hijacking, and other threats.",
-    action: {},
+    action: {
+      default_popup: "popup/index.html",
+    },
     permissions: ["alarms", "management", "notifications"],
     host_permissions: [
       "https://amibeingpwned.com/*",

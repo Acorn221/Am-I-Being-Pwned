@@ -48,11 +48,6 @@ const NOTIFY_THRESHOLD = RISK_SEVERITY.medium; // medium and above
 // Background service worker
 // ---------------------------------------------------------------------------
 export default defineBackground(() => {
-  // Open the web app when the extension icon is clicked (no popup)
-  chrome.action.onClicked.addListener(() => {
-    void chrome.tabs.create({ url: WEB_URL });
-  });
-
   // -------------------------------------------------------------------------
   // Extension install / update monitoring
   // -------------------------------------------------------------------------
@@ -112,6 +107,7 @@ export default defineBackground(() => {
     void chrome.alarms.create("daily-scan", { periodInMinutes: 24 * 60 });
 
     if (details.reason === "install") {
+      void chrome.tabs.create({ url: WEB_URL });
       void scanAllExtensions();
     }
   });
