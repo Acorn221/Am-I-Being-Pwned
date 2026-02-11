@@ -89,6 +89,17 @@ export interface InstalledExtensionInfo {
   enabled: boolean;
 }
 
+// ---------------------------------------------------------------------------
+// Content script ↔ Web App bridge (window.postMessage)
+// ---------------------------------------------------------------------------
+
+/** Data shape posted by the content script to announce the extension */
+export interface BridgeReadyMessage {
+  channel: "AIBP_BRIDGE";
+  type: "AIBP_EXTENSION_READY";
+  extensionId: string;
+}
+
 /** Messages the web page can send to the extension */
 export type ExtRequest =
   | { type: "PING"; version: 1 }

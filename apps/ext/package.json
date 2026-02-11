@@ -2,7 +2,7 @@
   "name": "@amibeingpwned/ext",
   "description": "Am I Being Pwned? browser extension",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "wxt",
@@ -29,6 +29,7 @@
     "@amibeingpwned/tailwind-config": "workspace:*",
     "@amibeingpwned/tsconfig": "workspace:*",
     "@tailwindcss/vite": "catalog:",
+    "@types/chrome": "^0.1.36",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "@wxt-dev/module-react": "^1.1.5",

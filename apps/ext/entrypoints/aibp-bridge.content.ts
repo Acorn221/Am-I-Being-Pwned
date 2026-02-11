@@ -1,17 +1,17 @@
+import type { BridgeReadyMessage } from "@amibeingpwned/types";
+
 export default defineContentScript({
   matches: [
     "https://amibeingpwned.com/*",
-    "http://localhost/*",
+    ...(import.meta.env.DEV ? ["http://localhost/*"] : []),
   ],
   runAt: "document_start",
   main() {
-    window.postMessage(
-      {
-        channel: "AIBP_BRIDGE",
-        type: "AIBP_EXTENSION_READY",
-        extensionId: chrome.runtime.id,
-      },
-      "*",
-    );
+    const message: BridgeReadyMessage = {
+      channel: "AIBP_BRIDGE",
+      type: "AIBP_EXTENSION_READY",
+      extensionId: chrome.runtime.id,
+    };
+    window.postMessage(message, location.origin);
   },
 });
