@@ -6,6 +6,7 @@ import { Button } from "@amibeingpwned/ui/button";
 import type { ReportMap } from "~/hooks/use-extension-database";
 import { DatabaseSection } from "~/components/database-section";
 import { HeroVisualization } from "~/components/hero-visualization";
+import { TypingTitle } from "~/components/typing-title";
 import { formatUsers } from "~/lib/risk";
 
 function App({ reports }: { reports: ReportMap }) {
@@ -31,14 +32,9 @@ function App({ reports }: { reports: ReportMap }) {
         <div className="flex w-full flex-col md:flex-row md:items-center md:justify-between">
           <div className="flex-1">
             <p className="text-muted-foreground mb-3 text-sm font-medium tracking-wider uppercase">
-              Chrome Extension Security
+              Am I Being Pwned
             </p>
-            <h1 className="text-foreground mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
-              Am I Being{" "}
-              <span className="bg-linear-to-t from-red-300 to-white bg-clip-text text-transparent">
-                Pwned?
-              </span>
-            </h1>
+            <TypingTitle />
             <p className="text-muted-foreground mb-8 max-w-xl text-lg">
               We use AI tools to analyse Chrome extensions for data harvesting,
               session hijacking, network tampering, and Vulnerabilities,
@@ -55,7 +51,7 @@ function App({ reports }: { reports: ReportMap }) {
               </Button>
             </div>
           </div>
-          <div className="flex-1 min-h-[400px] md:min-h-[500px]">
+          <div className="min-h-[400px] flex-1 md:min-h-[500px]">
             <HeroVisualization reports={reports} />
           </div>
         </div>
