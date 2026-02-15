@@ -6,8 +6,51 @@ import { Button } from "@amibeingpwned/ui/button";
 import type { ReportMap } from "~/hooks/use-extension-database";
 import { DatabaseSection } from "~/components/database-section";
 import { ExtensionPreviewCards } from "~/components/extension-preview-cards";
+import {
+  HeroCycleProvider,
+  useHeroCycle,
+} from "~/components/hero-cycle-context";
 import { TypingTitle } from "~/components/typing-title";
 import { formatUsers } from "~/lib/risk";
+
+function HeroSection({ reports }: { reports: ReportMap }) {
+  const { pause, resume } = useHeroCycle();
+
+  return (
+    <header
+      className="mx-auto flex min-h-screen max-w-6xl items-center px-6"
+      onMouseEnter={pause}
+      onMouseLeave={resume}
+    >
+      <div className="flex w-full flex-col md:flex-row md:items-center md:justify-between">
+        <div className="flex-1">
+          <p className="text-muted-foreground mb-3 text-sm font-medium tracking-wider uppercase">
+            Am I Being Pwned
+          </p>
+          <TypingTitle />
+          <p className="text-muted-foreground mb-8 max-w-xl text-lg">
+            We use AI tools to analyse Chrome extensions for data harvesting,
+            session hijacking, network tampering, and vulnerabilities,
+            manually verifying the worst offenders. Install our Chrome
+            extension to scan what you have installed or browse the database
+            below.
+          </p>
+          <div className="flex gap-3">
+            <Button size="lg" disabled className="hidden sm:inline-flex">
+              Install Extension (Coming Soon)
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <a href="#database">Browse Database</a>
+            </Button>
+          </div>
+        </div>
+        <div className="hidden flex-1 md:block">
+          <ExtensionPreviewCards reports={reports} />
+        </div>
+      </div>
+    </header>
+  );
+}
 
 function App({ reports }: { reports: ReportMap }) {
   const stats = useMemo(() => {
@@ -28,34 +71,9 @@ function App({ reports }: { reports: ReportMap }) {
   return (
     <div className="bg-background min-h-screen">
       {/* Hero */}
-      <header className="mx-auto flex min-h-screen max-w-6xl items-center px-6">
-        <div className="flex w-full flex-col md:flex-row md:items-center md:justify-between">
-          <div className="flex-1">
-            <p className="text-muted-foreground mb-3 text-sm font-medium tracking-wider uppercase">
-              Am I Being Pwned
-            </p>
-            <TypingTitle />
-            <p className="text-muted-foreground mb-8 max-w-xl text-lg">
-              We use AI tools to analyse Chrome extensions for data harvesting,
-              session hijacking, network tampering, and Vulnerabilities,
-              manually verifying the worst offenders. Install our Chrome
-              extension to scan what you have installed or browse the database
-              below.
-            </p>
-            <div className="flex gap-3">
-              <Button size="lg" disabled className="hidden sm:inline-flex">
-                Install Extension (Coming Soon)
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <a href="#database">Browse Database</a>
-              </Button>
-            </div>
-          </div>
-          <div className="hidden flex-1 md:block">
-            <ExtensionPreviewCards reports={reports} />
-          </div>
-        </div>
-      </header>
+      <HeroCycleProvider>
+        <HeroSection reports={reports} />
+      </HeroCycleProvider>
 
       {/* Nav */}
       <nav className="border-border/50 border-b">

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { useHeroCycle } from "~/components/hero-cycle-context";
+
 const PHRASES: string[] = [
   "ad blocker",
   "Chrome extension",
@@ -25,14 +27,18 @@ const PAUSE_AFTER_TYPED = 3000;
 const PAUSE_AFTER_DELETED = 200;
 
 export function TypingTitle() {
+  const { paused } = useHeroCycle();
   const [displayText, setDisplayText] = useState("");
-  // All mutable state in a single ref so tick() never reads stale closures
   const ref = useRef({
     phrase: 0,
     charIndex: 0,
     deleting: false,
   });
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const pausedRef = useRef(paused);
+  useEffect(() => {
+    pausedRef.current = paused;
+  }, [paused]);
 
   const longestPhrase = useMemo(
     () => PHRASES.reduce((a, b) => (a.length >= b.length ? a : b), ""),
@@ -46,28 +52,30 @@ export function TypingTitle() {
       const fullText = PHRASES[s.phrase] ?? PHRASES[0]!;
 
       if (!s.deleting) {
-        // Typing forward
         s.charIndex++;
         const text = fullText.slice(0, s.charIndex);
         setDisplayText(text);
 
         if (s.charIndex >= fullText.length) {
-          // Finished typing — pause, then start deleting
+          // Finished typing — wait, then start deleting
+          // But if paused, just hold here until resumed
           timeoutRef.current = setTimeout(() => {
-            s.deleting = true;
-            tick();
+            if (pausedRef.current) {
+              waitForResume();
+            } else {
+              s.deleting = true;
+              tick();
+            }
           }, PAUSE_AFTER_TYPED);
         } else {
           timeoutRef.current = setTimeout(tick, TYPING_SPEED);
         }
       } else {
-        // Deleting backward
         s.charIndex--;
         const text = fullText.slice(0, s.charIndex);
         setDisplayText(text);
 
         if (s.charIndex <= 0) {
-          // Finished deleting — switch phrase, then start typing
           s.deleting = false;
           s.charIndex = 0;
           s.phrase = (s.phrase + 1) % PHRASES.length;
@@ -76,6 +84,14 @@ export function TypingTitle() {
           timeoutRef.current = setTimeout(tick, DELETING_SPEED);
         }
       }
+    }
+
+    function waitForResume() {
+      if (!pausedRef.current) {
+        tick();
+        return;
+      }
+      timeoutRef.current = setTimeout(waitForResume, 100);
     }
 
     timeoutRef.current = setTimeout(tick, PAUSE_AFTER_DELETED);
