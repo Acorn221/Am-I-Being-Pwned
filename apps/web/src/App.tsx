@@ -4,11 +4,11 @@ import { Eye, Globe, ShieldAlert, Syringe, Wifi } from "lucide-react";
 import { Button } from "@amibeingpwned/ui/button";
 
 import type { ReportMap } from "~/hooks/use-extension-database";
-import { formatUsers } from "~/lib/risk";
 import { DatabaseSection } from "~/components/database-section";
+import { HeroVisualization } from "~/components/hero-visualization";
+import { formatUsers } from "~/lib/risk";
 
 function App({ reports }: { reports: ReportMap }) {
-
   const stats = useMemo(() => {
     const entries = [...reports.values()];
     const total = entries.length;
@@ -16,13 +16,51 @@ function App({ reports }: { reports: ReportMap }) {
       (e) => e.risk === "critical" || e.risk === "high",
     ).length;
     const totalUsers = entries
-      .filter((e) => e.risk === "critical" || e.risk === "high" || e.risk === "medium")
+      .filter(
+        (e) =>
+          e.risk === "critical" || e.risk === "high" || e.risk === "medium",
+      )
       .reduce((sum, e) => sum + e.userCount, 0);
     return { total, critical, totalUsers };
   }, [reports]);
 
   return (
     <div className="bg-background min-h-screen">
+      {/* Hero */}
+      <header className="mx-auto flex min-h-screen max-w-6xl items-center px-6">
+        <div className="flex w-full flex-col md:flex-row md:items-center md:justify-between">
+          <div className="flex-1">
+            <p className="text-muted-foreground mb-3 text-sm font-medium tracking-wider uppercase">
+              Chrome Extension Security
+            </p>
+            <h1 className="text-foreground mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
+              Am I Being{" "}
+              <span className="bg-linear-to-t from-red-300 to-white bg-clip-text text-transparent">
+                Pwned?
+              </span>
+            </h1>
+            <p className="text-muted-foreground mb-8 max-w-xl text-lg">
+              We use AI tools to analyse Chrome extensions for data harvesting,
+              session hijacking, network tampering, and Vulnerabilities,
+              manually verifying the worst offenders. Install our Chrome
+              extension to scan what you have installed or browse the database
+              below.
+            </p>
+            <div className="flex gap-3">
+              <Button size="lg" disabled className="hidden sm:inline-flex">
+                Install Extension (Coming Soon)
+              </Button>
+              <Button size="lg" variant="outline" asChild>
+                <a href="#database">Browse Database</a>
+              </Button>
+            </div>
+          </div>
+          <div className="flex-1 min-h-[400px] md:min-h-[500px]">
+            <HeroVisualization reports={reports} />
+          </div>
+        </div>
+      </header>
+
       {/* Nav */}
       <nav className="border-border/50 border-b">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
@@ -32,33 +70,9 @@ function App({ reports }: { reports: ReportMap }) {
         </div>
       </nav>
 
-      {/* Hero */}
-      <header className="mx-auto max-w-6xl px-6 pt-20 pb-16">
-        <p className="text-muted-foreground mb-3 text-sm font-medium uppercase tracking-wider">
-          Chrome Extension Security
-        </p>
-        <h1 className="text-foreground mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
-          Am I Being{" "}
-          <span className="bg-linear-to-t from-red-300 to-white bg-clip-text text-transparent">Pwned?</span>
-        </h1>
-        <p className="text-muted-foreground mb-8 max-w-xl text-lg">
-          We use AI tools to analyse Chrome extensions for data harvesting, session hijacking,
-          network tampering, and Vulnerabilities, manually verifying the worst offenders.
-          Install our Chrome extension to scan what you have installed or browse the database below.
-        </p>
-        <div className="flex gap-3">
-          <Button size="lg" disabled className="hidden sm:inline-flex">
-            Install Extension (Coming Soon)
-          </Button>
-          <Button size="lg" variant="outline" asChild>
-            <a href="#database">Browse Database</a>
-          </Button>
-        </div>
-      </header>
-
       {/* Stats */}
       <div className="border-border/50 border-y">
-        <div className="mx-auto grid max-w-6xl grid-cols-3 divide-x divide-border/50">
+        <div className="divide-border/50 mx-auto grid max-w-6xl grid-cols-3 divide-x">
           <div className="px-6 py-6">
             <div className="text-foreground text-2xl font-bold">
               {stats.total}
@@ -79,9 +93,7 @@ function App({ reports }: { reports: ReportMap }) {
             <div className="text-foreground text-2xl font-bold">
               {formatUsers(stats.totalUsers)}
             </div>
-            <div className="text-muted-foreground text-sm">
-              Affected users
-            </div>
+            <div className="text-muted-foreground text-sm">Affected users</div>
           </div>
         </div>
       </div>
@@ -94,26 +106,60 @@ function App({ reports }: { reports: ReportMap }) {
         <div className="flex flex-col items-center gap-4">
           <div className="grid w-full gap-4 sm:grid-cols-3">
             {[
-              { icon: Eye, title: "Data Harvesting", desc: "Silently collecting browsing history, keystrokes, and personal data." },
-              { icon: Globe, title: "Session Hijacking", desc: "Stealing auth tokens and cookies to impersonate you on websites." },
-              { icon: Syringe, title: "Code Injection", desc: "Injecting scripts into pages to modify content or insert ads." },
+              {
+                icon: Eye,
+                title: "Data Harvesting",
+                desc: "Silently collecting browsing history, keystrokes, and personal data.",
+              },
+              {
+                icon: Globe,
+                title: "Session Hijacking",
+                desc: "Stealing auth tokens and cookies to impersonate you on websites.",
+              },
+              {
+                icon: Syringe,
+                title: "Code Injection",
+                desc: "Injecting scripts into pages to modify content or insert ads.",
+              },
             ].map((threat) => (
-              <div key={threat.title} className="border-border rounded-lg border p-4">
+              <div
+                key={threat.title}
+                className="border-border rounded-lg border p-4"
+              >
                 <threat.icon className="text-muted-foreground mb-3 h-5 w-5" />
-                <h3 className="text-foreground mb-1 text-sm font-medium">{threat.title}</h3>
-                <p className="text-muted-foreground text-xs leading-relaxed">{threat.desc}</p>
+                <h3 className="text-foreground mb-1 text-sm font-medium">
+                  {threat.title}
+                </h3>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  {threat.desc}
+                </p>
               </div>
             ))}
           </div>
-          <div className="grid w-full gap-4 sm:grid-cols-2 sm:max-w-[66.666%]">
+          <div className="grid w-full gap-4 sm:max-w-[66.666%] sm:grid-cols-2">
             {[
-              { icon: Wifi, title: "Network Tampering", desc: "Intercepting requests to inject malware or proxy through malicious servers." },
-              { icon: ShieldAlert, title: "Vulnerabilities", desc: "Poor security hygiene, outdated dependencies, or known CVEs." },
+              {
+                icon: Wifi,
+                title: "Network Tampering",
+                desc: "Intercepting requests to inject malware or proxy through malicious servers.",
+              },
+              {
+                icon: ShieldAlert,
+                title: "Vulnerabilities",
+                desc: "Poor security hygiene, outdated dependencies, or known CVEs.",
+              },
             ].map((threat) => (
-              <div key={threat.title} className="border-border rounded-lg border p-4">
+              <div
+                key={threat.title}
+                className="border-border rounded-lg border p-4"
+              >
                 <threat.icon className="text-muted-foreground mb-3 h-5 w-5" />
-                <h3 className="text-foreground mb-1 text-sm font-medium">{threat.title}</h3>
-                <p className="text-muted-foreground text-xs leading-relaxed">{threat.desc}</p>
+                <h3 className="text-foreground mb-1 text-sm font-medium">
+                  {threat.title}
+                </h3>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  {threat.desc}
+                </p>
               </div>
             ))}
           </div>

@@ -13,11 +13,15 @@
     "@amibeingpwned/types": "workspace:*",
     "@amibeingpwned/ui": "workspace:*",
     "@amibeingpwned/validators": "workspace:*",
+    "@react-spring/three": "^10.0.3",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
     "lucide-react": "^0.563.0",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "react-markdown": "^10.1.0",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "three": "^0.182.0"
   },
   "devDependencies": {
     "@amibeingpwned/eslint-config": "workspace:*",
@@ -28,6 +32,7 @@
     "@tailwindcss/vite": "catalog:",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
+    "@types/three": "^0.182.0",
     "@vitejs/plugin-react": "catalog:",
     "babel-plugin-react-compiler": "^1.0.0",
     "eslint": "catalog:",
