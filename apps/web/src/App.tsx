@@ -5,7 +5,7 @@ import { Button } from "@amibeingpwned/ui/button";
 
 import type { ReportMap } from "~/hooks/use-extension-database";
 import { DatabaseSection } from "~/components/database-section";
-import { HeroVisualization } from "~/components/hero-visualization";
+import { ExtensionPreviewCards } from "~/components/extension-preview-cards";
 import { TypingTitle } from "~/components/typing-title";
 import { formatUsers } from "~/lib/risk";
 
@@ -51,8 +51,8 @@ function App({ reports }: { reports: ReportMap }) {
               </Button>
             </div>
           </div>
-          <div className="min-h-[400px] flex-1 md:min-h-[500px]">
-            <HeroVisualization reports={reports} />
+          <div className="hidden flex-1 md:block">
+            <ExtensionPreviewCards reports={reports} />
           </div>
         </div>
       </header>
