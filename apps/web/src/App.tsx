@@ -11,7 +11,6 @@ import { TypingTitle } from "~/components/typing-title";
 import { formatUsers } from "~/lib/risk";
 
 function HeroSection({ reports }: { reports: ReportMap }) {
-
   return (
     <header className="mx-auto flex min-h-screen max-w-6xl items-center px-6">
       <div className="flex w-full flex-col md:flex-row md:items-center md:justify-between">
@@ -21,11 +20,10 @@ function HeroSection({ reports }: { reports: ReportMap }) {
           </p>
           <TypingTitle />
           <p className="text-muted-foreground mb-8 max-w-xl text-lg">
-            We use AI tools to analyse Chrome extensions for data harvesting,
-            session hijacking, network tampering, and vulnerabilities,
-            manually verifying the worst offenders. Install our Chrome
-            extension to scan what you have installed or browse the database
-            below.
+            We find malicious and vulnerable Chrome extensions so you don't find
+            out before it's too late.
+            <br />
+            Scan yours or browse the database.
           </p>
           <div className="flex gap-3">
             <Button size="lg" disabled className="hidden sm:inline-flex">

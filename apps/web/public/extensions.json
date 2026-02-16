@@ -54777,7 +54777,7 @@
 	},
 	"laankejkbhbdhmipfmgcngdelahlfoji": {
 		"name": "StayFocusd – Website Blocker &amp; Focus Timer &amp; Shorts Blocker",
-		"risk": "high",
+		"risk": "critical",
 		"tags": [
 			"malware:surveillance",
 			"malware:data_exfil"

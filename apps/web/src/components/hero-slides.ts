@@ -26,15 +26,6 @@ export interface HeroSlide {
  */
 export const HERO_SLIDES: HeroSlide[] = [
   {
-    phrase: "free VPN",
-    extensionId: "oofgbpoabipfcfjapgnbbjjaenockbdp", // SetupVPN (critical) — 9M users
-    annotations: [
-      { permission: "proxy", title: "Opaque WASM Fingerprinting", description: "A Go-compiled binary collects screen, mouse, timezone & incognito data on every API call" },
-      { permission: "<all_urls>", title: "Any Website Can Control It", description: "externally_connectable set to <all_urls> — any site can change your proxy settings" },
-      { permission: "management", title: "Detects Other VPNs", description: "Enumerates all installed extensions to identify competing proxy extensions" },
-    ],
-  },
-  {
     phrase: "ad blocker",
     extensionId: "gbdjcgalliefpinpmggefbloehmmknca", // Ad block & Adblocker (critical) — 700K users
     annotations: [
@@ -115,7 +106,6 @@ export const HERO_SLIDES: HeroSlide[] = [
       { permission: "<all_urls>", title: "ChatGPT Cookies Extracted", description: "Reads all your chat.openai.com cookies to make API calls on your behalf" },
     ],
   },
-  { phrase: "antivirus", extensionId: "fheoggkfdfchfphceeifdbepaooicaho" }, // McAfee WebAdvisor (clean)
   {
     phrase: "notepad",
     extensionId: "fefodpegbocmidnfphgggnjcicipaibk", // Notepad online (high) — 100K users

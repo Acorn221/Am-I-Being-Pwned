@@ -28,20 +28,15 @@ export function DatabaseRow({
   return (
     <>
       <TableRow className="cursor-pointer" onClick={onToggle}>
-        <TableCell className="overflow-hidden whitespace-normal">
+        <TableCell className="overflow-hidden whitespace-normal py-3">
           <div className="text-foreground truncate text-sm font-medium">
             {ext.name}
           </div>
-          {!isExpanded && (
-            <div className="text-muted-foreground mt-0.5 truncate text-xs">
-              {ext.summary}
-            </div>
-          )}
         </TableCell>
-        <TableCell className="text-muted-foreground align-top text-sm">
+        <TableCell className="text-muted-foreground align-top py-3 text-sm">
           {formatUsers(ext.userCount)}
         </TableCell>
-        <TableCell className="align-top">
+        <TableCell className="align-top py-3">
           <Badge variant={cfg.variant}>{cfg.label}</Badge>
         </TableCell>
       </TableRow>
