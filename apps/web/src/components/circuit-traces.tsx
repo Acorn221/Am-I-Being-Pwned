@@ -873,9 +873,11 @@ export function CircuitTraces({
           );
         })}
       {traces.map((trace, i) => {
-        const delay = 100 + i * 150;
-
-        const traceDuration = 500;
+        // Dynamic timing: keep total window ~900ms regardless of trace count
+        const n = traces.length;
+        const stagger = n > 1 ? Math.min(150, 400 / (n - 1)) : 0;
+        const traceDuration = Math.max(300, 500 - n * 50);
+        const delay = 100 + i * stagger;
         const arriveDelay = delay + traceDuration;
 
         return (

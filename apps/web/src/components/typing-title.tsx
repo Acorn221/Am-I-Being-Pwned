@@ -5,7 +5,8 @@ import { HERO_SLIDES } from "~/components/hero-slides";
 
 const TYPING_SPEED = 120;
 const DELETING_SPEED = 60;
-const PAUSE_AFTER_TYPED = 5000;
+const PAUSE_AFTER_TYPED_BASE = 4000;
+const PAUSE_PER_ANNOTATION = 1000;
 const PAUSE_AFTER_DELETED = 400;
 
 export function TypingTitle() {
@@ -49,6 +50,8 @@ export function TypingTitle() {
 
         if (s.charIndex >= fullText.length) {
           // Finished typing — wait, then delete (or hold if paused)
+          const annotationCount = slide.annotations?.length ?? 0;
+          const pauseTime = PAUSE_AFTER_TYPED_BASE + annotationCount * PAUSE_PER_ANNOTATION;
           timeoutRef.current = setTimeout(() => {
             if (pausedRef.current) {
               waitForResume();
@@ -56,7 +59,7 @@ export function TypingTitle() {
               s.deleting = true;
               tick();
             }
-          }, PAUSE_AFTER_TYPED);
+          }, pauseTime);
         } else {
           timeoutRef.current = setTimeout(tick, TYPING_SPEED);
         }
