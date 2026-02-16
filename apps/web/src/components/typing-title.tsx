@@ -1,25 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useHeroCycle } from "~/components/hero-cycle-context";
-
-const PHRASES: string[] = [
-  "ad blocker",
-  "Chrome extension",
-  "free VPN",
-  "productivity app",
-  "grammar checker",
-  "coupon finder",
-  "screenshot tool",
-  "password manager",
-  "PDF converter",
-  "email tracker",
-  "tab manager",
-  "video downloader",
-  "clipboard manager",
-  "new tab page",
-  "browser theme",
-  "price tracker",
-];
+import { HERO_SLIDES } from "~/components/hero-slides";
 
 const TYPING_SPEED = 100;
 const DELETING_SPEED = 100;
@@ -27,38 +9,46 @@ const PAUSE_AFTER_TYPED = 3000;
 const PAUSE_AFTER_DELETED = 200;
 
 export function TypingTitle() {
-  const { paused } = useHeroCycle();
+  const { slideIndex, paused, advance } = useHeroCycle();
   const [displayText, setDisplayText] = useState("");
-  const ref = useRef({
-    phrase: 0,
+  const state = useRef({
     charIndex: 0,
     deleting: false,
   });
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
   const pausedRef = useRef(paused);
+  const slideRef = useRef(slideIndex);
+
   useEffect(() => {
     pausedRef.current = paused;
   }, [paused]);
 
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    slideRef.current = slideIndex;
+  }, [slideIndex]);
+
   const longestPhrase = useMemo(
-    () => PHRASES.reduce((a, b) => (a.length >= b.length ? a : b), ""),
+    () =>
+      HERO_SLIDES.reduce((a, b) => (a.phrase.length >= b.phrase.length ? a : b))
+        .phrase,
     [],
   );
 
   useEffect(() => {
     function tick() {
-      const s = ref.current;
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const fullText = PHRASES[s.phrase] ?? PHRASES[0]!;
+      const s = state.current;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const slide = HERO_SLIDES[slideRef.current];
+      if (!slide) return;
+      const fullText = slide.phrase;
 
       if (!s.deleting) {
         s.charIndex++;
-        const text = fullText.slice(0, s.charIndex);
-        setDisplayText(text);
+        setDisplayText(fullText.slice(0, s.charIndex));
 
         if (s.charIndex >= fullText.length) {
-          // Finished typing — wait, then start deleting
-          // But if paused, just hold here until resumed
+          // Finished typing — wait, then delete (or hold if paused)
           timeoutRef.current = setTimeout(() => {
             if (pausedRef.current) {
               waitForResume();
@@ -72,13 +62,14 @@ export function TypingTitle() {
         }
       } else {
         s.charIndex--;
-        const text = fullText.slice(0, s.charIndex);
-        setDisplayText(text);
+        setDisplayText(fullText.slice(0, s.charIndex));
 
         if (s.charIndex <= 0) {
+          // Finished deleting — advance to next slide, then start typing
           s.deleting = false;
           s.charIndex = 0;
-          s.phrase = (s.phrase + 1) % PHRASES.length;
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+          advance();
           timeoutRef.current = setTimeout(tick, PAUSE_AFTER_DELETED);
         } else {
           timeoutRef.current = setTimeout(tick, DELETING_SPEED);
@@ -98,7 +89,7 @@ export function TypingTitle() {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <h1 className="text-foreground mb-4 text-4xl font-bold tracking-tight sm:text-5xl">

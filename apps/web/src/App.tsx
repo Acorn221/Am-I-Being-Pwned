@@ -17,13 +17,9 @@ function HeroSection({ reports }: { reports: ReportMap }) {
   const { pause, resume } = useHeroCycle();
 
   return (
-    <header
-      className="mx-auto flex min-h-screen max-w-6xl items-center px-6"
-      onMouseEnter={pause}
-      onMouseLeave={resume}
-    >
+    <header className="mx-auto flex min-h-screen max-w-6xl items-center px-6">
       <div className="flex w-full flex-col md:flex-row md:items-center md:justify-between">
-        <div className="flex-1">
+        <div className="flex-1" onMouseEnter={pause} onMouseLeave={resume}>
           <p className="text-muted-foreground mb-3 text-sm font-medium tracking-wider uppercase">
             Am I Being Pwned
           </p>
@@ -44,7 +40,7 @@ function HeroSection({ reports }: { reports: ReportMap }) {
             </Button>
           </div>
         </div>
-        <div className="hidden flex-1 md:block">
+        <div className="hidden flex-1 md:block" onMouseEnter={pause} onMouseLeave={resume}>
           <ExtensionPreviewCards reports={reports} />
         </div>
       </div>

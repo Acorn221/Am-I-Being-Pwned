@@ -1,18 +1,18 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { ExtensionReport } from "@amibeingpwned/types";
 import { Badge } from "@amibeingpwned/ui/badge";
 
 import { useHeroCycle } from "~/components/hero-cycle-context";
+import { HERO_SLIDES } from "~/components/hero-slides";
 import type { ReportMap } from "~/hooks/use-extension-database";
-import { formatUsers, riskConfig, riskOrder } from "~/lib/risk";
+import { formatUsers, riskConfig } from "~/lib/risk";
 
 interface ExtensionPreviewCardsProps {
   reports: ReportMap;
 }
 
 const VISIBLE_COUNT = 4;
-const CYCLE_INTERVAL = 4000;
 const EXIT_DURATION = 600;
 
 const cardTransforms = [
@@ -22,9 +22,61 @@ const cardTransforms = [
   { rotate: 5, x: 10, y: -8 },
 ];
 
-function CardContent({ ext }: { ext: ExtensionReport }) {
+/** Permissions that enable common abuse patterns */
+const SENSITIVE_PERMS = new Set([
+  "cookies",
+  "webRequest",
+  "webRequestBlocking",
+  "declarativeNetRequest",
+  "tabs",
+  "history",
+  "bookmarks",
+  "clipboardRead",
+  "clipboardWrite",
+  "management",
+  "proxy",
+  "debugger",
+  "nativeMessaging",
+  "privacy",
+  "topSites",
+  "browsingData",
+]);
+
+function isSensitivePerm(perm: string): boolean {
+  if (SENSITIVE_PERMS.has(perm)) return true;
+  if (
+    perm === "<all_urls>" ||
+    perm === "*://*/*" ||
+    perm === "http://*/*" ||
+    perm === "https://*/*"
+  )
+    return true;
+  return false;
+}
+
+const isRisky = (risk: string) =>
+  risk === "critical" ||
+  risk === "high" ||
+  risk === "medium-high" ||
+  risk === "medium";
+
+function CardContent({
+  ext,
+  highlight,
+}: {
+  ext: ExtensionReport;
+  highlight?: boolean;
+}) {
   const risk = riskConfig[ext.risk];
   const allPerms = [...ext.permissions, ...ext.hostPermissions];
+
+  const sorted = [...allPerms].sort((a, b) => {
+    const aS = isSensitivePerm(a) ? 0 : 1;
+    const bS = isSensitivePerm(b) ? 0 : 1;
+    return aS - bS;
+  });
+  const shown = sorted.slice(0, 6);
+  const extIsRisky = isRisky(ext.risk);
 
   return (
     <>
@@ -41,23 +93,30 @@ function CardContent({ ext }: { ext: ExtensionReport }) {
         {formatUsers(ext.userCount)} users
       </p>
 
-      {allPerms.length > 0 && (
+      {shown.length > 0 && (
         <div>
           <p className="text-muted-foreground mb-2 text-xs font-medium uppercase tracking-wide">
             Permissions
           </p>
           <div className="flex flex-wrap gap-1.5">
-            {allPerms.slice(0, 8).map((p) => (
-              <span
-                key={p}
-                className="bg-muted text-muted-foreground rounded-md px-2 py-1 font-mono text-xs"
-              >
-                {p}
-              </span>
-            ))}
-            {allPerms.length > 8 && (
+            {shown.map((p) => {
+              const dangerous = extIsRisky && isSensitivePerm(p);
+              return (
+                <span
+                  key={p}
+                  className={`rounded-md px-2 py-1 font-mono text-xs transition-all duration-700 ${
+                    dangerous && highlight
+                      ? "bg-red-500/15 text-red-400 ring-1 ring-red-500/30"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {p}
+                </span>
+              );
+            })}
+            {allPerms.length > 6 && (
               <span className="text-muted-foreground px-1.5 py-1 text-xs">
-                +{allPerms.length - 8} more
+                +{allPerms.length - 6} more
               </span>
             )}
           </div>
@@ -68,86 +127,56 @@ function CardContent({ ext }: { ext: ExtensionReport }) {
 }
 
 export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
-  const pool = useMemo(() => {
-    const entries = [...reports.values()];
-    if (entries.length === 0) return [];
+  const { slideIndex } = useHeroCycle();
 
-    const sorted = entries
-      .filter((e) => e.risk !== "unavailable")
-      .sort((a, b) => riskOrder[a.risk] - riskOrder[b.risk]);
+  // Build the visible window: current front card + 3 behind it (wrapping)
+  const visible = useMemo(() => {
+    const count = Math.min(VISIBLE_COUNT, HERO_SLIDES.length);
+    const cards: { ext: ExtensionReport; slot: number }[] = [];
 
-    const picks: typeof sorted = [];
-    const used = new Set<string>();
-
-    const tiers = [
-      ["critical", "high"],
-      ["medium-high", "medium"],
-      ["medium-low", "low"],
-      ["clean"],
-    ];
-
-    for (const tier of tiers) {
-      const candidate = sorted.find(
-        (e) => tier.includes(e.risk) && !used.has(e.extensionId),
-      );
-      if (candidate) {
-        picks.push(candidate);
-        used.add(candidate.extensionId);
-      }
+    for (let i = 0; i < count; i++) {
+      const idx =
+        (slideIndex - (count - 1) + i + HERO_SLIDES.length) %
+        HERO_SLIDES.length;
+      const slide = HERO_SLIDES[idx];
+      if (!slide) continue;
+      const ext = reports.get(slide.extensionId);
+      if (!ext) continue;
+      cards.push({ ext, slot: i });
     }
 
-    for (const entry of sorted) {
-      if (picks.length >= 10) break;
-      if (!used.has(entry.extensionId)) {
-        picks.push(entry);
-        used.add(entry.extensionId);
-      }
-    }
+    return cards;
+  }, [slideIndex, reports]);
 
-    return picks;
-  }, [reports]);
-
-  const { paused } = useHeroCycle();
-  const [offset, setOffset] = useState(0);
-  const [leaving, setLeaving] = useState<{
-    ext: ExtensionReport;
-    fromTransform: string;
-  } | null>(null);
-  const leavingSlot = useRef(VISIBLE_COUNT - 1);
-
-  const cycle = useCallback(() => {
-    if (pool.length <= VISIBLE_COUNT) return;
-
-    const frontIdx = (offset + VISIBLE_COUNT - 1) % pool.length;
-    const frontExt = pool[frontIdx]!;
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const ft = (cardTransforms[VISIBLE_COUNT - 1] ?? cardTransforms[0])!;
-
-    setLeaving({
-      ext: frontExt,
-      fromTransform: `rotate(${ft.rotate}deg) translate(${ft.x}px, ${ft.y}px)`,
-    });
-    leavingSlot.current = VISIBLE_COUNT - 1;
-
-    setOffset((o) => (o + 1) % pool.length);
-
-    setTimeout(() => setLeaving(null), EXIT_DURATION);
-  }, [pool, offset]);
+  // Track leaving card
+  const [leaving, setLeaving] = useState<ExtensionReport | null>(null);
+  const prevSlideRef = useRef(slideIndex);
 
   useEffect(() => {
-    if (pool.length <= VISIBLE_COUNT || paused) return;
-    const id = setInterval(cycle, CYCLE_INTERVAL);
-    return () => clearInterval(id);
-  }, [pool.length, cycle, paused]);
+    if (prevSlideRef.current === slideIndex) return;
 
-  const visible = useMemo(() => {
-    if (pool.length === 0) return [];
-    const count = Math.min(VISIBLE_COUNT, pool.length);
-    return Array.from({ length: count }, (_, i) => ({
-      ext: pool[(offset + i) % pool.length]!,
-      slot: i,
-    }));
-  }, [pool, offset]);
+    // The old front card is the one that was at the top
+    const oldFrontIdx =
+      (prevSlideRef.current + HERO_SLIDES.length) % HERO_SLIDES.length;
+    const oldSlide = HERO_SLIDES[oldFrontIdx];
+    if (oldSlide) {
+      const ext = reports.get(oldSlide.extensionId);
+      if (ext) {
+        setLeaving(ext);
+        setTimeout(() => setLeaving(null), EXIT_DURATION);
+      }
+    }
+
+    prevSlideRef.current = slideIndex;
+  }, [slideIndex, reports]);
+
+  // Delayed highlight for the front card
+  const [highlighted, setHighlighted] = useState(false);
+  useEffect(() => {
+    setHighlighted(false);
+    const id = setTimeout(() => setHighlighted(true), 800);
+    return () => clearTimeout(id);
+  }, [slideIndex]);
 
   if (visible.length === 0) return null;
 
@@ -171,6 +200,8 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
         {visible.map(({ ext, slot }) => {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           const t = (cardTransforms[slot] ?? cardTransforms[0])!;
+          const isFront =
+            slot === VISIBLE_COUNT - 1 || slot === visible.length - 1;
           return (
             <div
               key={ext.extensionId}
@@ -180,20 +211,20 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
                 zIndex: slot,
               }}
             >
-              <CardContent ext={ext} />
+              <CardContent ext={ext} highlight={isFront && highlighted} />
             </div>
           );
         })}
         {leaving && (
           <div
-            key={`leaving-${leaving.ext.extensionId}`}
+            key={`leaving-${leaving.extensionId}`}
             className="border-border bg-card absolute inset-0 rounded-xl border p-6 shadow-lg"
             style={{
               zIndex: VISIBLE_COUNT + 1,
               animation: `card-exit ${EXIT_DURATION}ms ease-in forwards`,
             }}
           >
-            <CardContent ext={leaving.ext} />
+            <CardContent ext={leaving} highlight />
           </div>
         )}
       </div>
