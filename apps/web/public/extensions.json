@@ -20614,11 +20614,11 @@
 	},
 	"efaidnbmnnnibpcajpcglclefindmkaj": {
 		"name": "Adobe Acrobat: PDF edit, convert, sign tools",
-		"risk": "clean",
+		"risk": "medium",
 		"tags": [],
 		"rating": 4.4,
-		"summary": "Legitimate PDF tools extension from Adobe Inc. with 339M users. Professional development, clear functionality matching advertised purpose. Uses remote code execution from CDN for feature deployment (supply chain risk concern but not malicious). All network calls to legitimate Adobe domains. Extensive permissions justified by advertised functionality (Google Workspace, Outlook, LinkedIn integration). No credential theft, malware, or unauthorized data collection detected. Missing DNS security controls (CAA, DNSSEC) noted as architectural improvement area.",
-		"verdict": "CLEAN - Legitimate extension serving advertised purpose. Remote execution architecture creates supply chain risk exposure but is not exploited. Professional development by established company with appropriate security controls in place.",
+		"summary": "Legitimate PDF tools extension from Adobe Inc. with 339M users. The extension loads and executes remote JavaScript from Adobe's CDN via innerHTML injection, creating a significant supply chain risk: if the CDN is compromised, an attacker gains arbitrary code execution on every website visited by 339M users. Additional concerns include CustomEvent SSRF patterns exploitable with pre-existing XSS, open redirects in sign-in flows, and outdated jQuery 3.1.1. No malicious behavior detected, but the architectural RCE risk warrants MEDIUM.",
+		"verdict": "MEDIUM - No malicious behavior, but remote code execution architecture from CDN creates catastrophic supply chain risk for 339M users. CDN compromise would grant arbitrary code execution across all websites.",
 		"version": "26.1.2.1",
 		"endpoints": [
 			"acrobat.adobe.com",
@@ -20744,26 +20744,12 @@
 			"fileSystem"
 		],
 		"flagCategories": [
-			"ad_injection",
-			"affiliate_fraud",
 			"all_urls",
 			"cookie_access",
-			"csp_unsafe_inline",
-			"data_exfiltration",
-			"dynamic_eval",
-			"dynamic_function",
-			"dynamic_import",
-			"dynamic_tab_url",
-			"dynamic_window_open",
 			"extensive_permissions",
-			"fetch_hooking",
 			"innerHTML_injection",
-			"keylogging",
-			"postmessage_no_origin",
 			"remote_code_execution_cdn",
-			"remote_config",
-			"wasm_binary",
-			"xhr_hooking"
+			"remote_config"
 		],
 		"dataFlowSummary": {
 			"inbound": [
@@ -20806,7 +20792,7 @@
 		"vulnerabilityCount": {
 			"low": 2,
 			"high": 0,
-			"medium": 0,
+			"medium": 2,
 			"critical": 0
 		},
 		"comparisonToMalware": {
