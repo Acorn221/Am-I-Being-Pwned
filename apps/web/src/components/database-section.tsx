@@ -114,11 +114,12 @@ export function DatabaseSection({ reports }: { reports: ReportMap }) {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map(([id, ext]) => (
+              filtered.map(([id, ext], index) => (
                 <DatabaseRow
                   key={id}
                   id={id}
                   ext={ext}
+                  index={index}
                   isExpanded={expandedId === id}
                   onToggle={() => setExpandedId(expandedId === id ? null : id)}
                 />

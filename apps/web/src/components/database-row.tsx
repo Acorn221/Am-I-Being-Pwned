@@ -10,11 +10,13 @@ import { formatUsers, riskConfig } from "~/lib/risk";
 export function DatabaseRow({
   id,
   ext,
+  index,
   isExpanded,
   onToggle,
 }: {
   id: string;
   ext: ExtensionReport;
+  index: number;
   isExpanded: boolean;
   onToggle: () => void;
 }) {
@@ -27,21 +29,21 @@ export function DatabaseRow({
 
   return (
     <>
-      <TableRow className="cursor-pointer" onClick={onToggle}>
-        <TableCell className="overflow-hidden whitespace-normal py-3">
+      <TableRow className={`cursor-pointer ${index % 2 === 1 ? "bg-muted/30" : ""}`} onClick={onToggle}>
+        <TableCell className="overflow-hidden whitespace-normal py-4">
           <div className="text-foreground truncate text-sm font-medium">
             {ext.name}
           </div>
         </TableCell>
-        <TableCell className="text-muted-foreground align-top py-3 text-sm">
+        <TableCell className="text-muted-foreground align-top py-4 text-sm">
           {formatUsers(ext.userCount)}
         </TableCell>
-        <TableCell className="align-top py-3">
+        <TableCell className="align-top py-4">
           <Badge variant={cfg.variant}>{cfg.label}</Badge>
         </TableCell>
       </TableRow>
       {isExpanded && (
-        <TableRow className="hover:bg-transparent">
+        <TableRow className={`hover:bg-transparent ${index % 2 === 1 ? "bg-muted/30" : ""}`}>
           <TableCell colSpan={3} className="whitespace-normal pt-0">
             <div className="space-y-3 pb-2">
               <div className="text-muted-foreground text-xs">
