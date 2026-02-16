@@ -131,7 +131,7 @@ function CardContent({
 }
 
 export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
-  const { slideIndex } = useHeroCycle();
+  const { slideIndex, pause, resume } = useHeroCycle();
 
   // Build the visible window: current front card + 3 behind it (wrapping)
   const visible = useMemo(() => {
@@ -206,7 +206,7 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
           }
         }
       `}</style>
-      <div ref={containerRef} className="relative h-[440px] w-[480px]">
+      <div ref={containerRef} className="relative h-[440px] w-[480px]" onMouseEnter={pause} onMouseLeave={resume}>
         {visible.map(({ ext, slot }) => {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           const t = (cardTransforms[slot] ?? cardTransforms[0])!;

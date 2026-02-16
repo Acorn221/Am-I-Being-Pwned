@@ -18,7 +18,7 @@ export function useExtensionDatabase() {
           const decode = (s: string) => s.replaceAll("&amp;", "&").replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&#39;", "'").replaceAll("&quot;", '"');
           const entries = Object.entries(data).map(
             ([id, ext]) =>
-              [id, { ...ext, risk: ext.risk.toLowerCase() as RiskLevel, name: decode(ext.name), summary: decode(ext.summary) }] as const,
+              [id, { ...ext, risk: (ext.risk || "unavailable").toLowerCase() as RiskLevel, name: decode(ext.name ?? ""), summary: decode(ext.summary ?? ""), userCount: Number(ext.userCount) || 0 }] as const,
           );
           setReports(new Map(entries));
         }

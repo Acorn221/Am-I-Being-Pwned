@@ -6,20 +6,16 @@ import { Button } from "@amibeingpwned/ui/button";
 import type { ReportMap } from "~/hooks/use-extension-database";
 import { DatabaseSection } from "~/components/database-section";
 import { ExtensionPreviewCards } from "~/components/extension-preview-cards";
-import {
-  HeroCycleProvider,
-  useHeroCycle,
-} from "~/components/hero-cycle-context";
+import { HeroCycleProvider } from "~/components/hero-cycle-context";
 import { TypingTitle } from "~/components/typing-title";
 import { formatUsers } from "~/lib/risk";
 
 function HeroSection({ reports }: { reports: ReportMap }) {
-  const { pause, resume } = useHeroCycle();
 
   return (
     <header className="mx-auto flex min-h-screen max-w-6xl items-center px-6">
       <div className="flex w-full flex-col md:flex-row md:items-center md:justify-between">
-        <div className="flex-1" onMouseEnter={pause} onMouseLeave={resume}>
+        <div className="flex-1">
           <p className="text-muted-foreground mb-3 text-sm font-medium tracking-wider uppercase">
             Am I Being Pwned
           </p>
@@ -40,7 +36,7 @@ function HeroSection({ reports }: { reports: ReportMap }) {
             </Button>
           </div>
         </div>
-        <div className="hidden flex-1 md:block" onMouseEnter={pause} onMouseLeave={resume}>
+        <div className="hidden flex-1 md:block">
           <ExtensionPreviewCards reports={reports} />
         </div>
       </div>
@@ -60,7 +56,7 @@ function App({ reports }: { reports: ReportMap }) {
         (e) =>
           e.risk === "critical" || e.risk === "high" || e.risk === "medium",
       )
-      .reduce((sum, e) => sum + e.userCount, 0);
+      .reduce((sum, e) => sum + (e.userCount || 0), 0);
     return { total, critical, totalUsers };
   }, [reports]);
 

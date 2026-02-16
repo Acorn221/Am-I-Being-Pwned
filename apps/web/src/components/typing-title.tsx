@@ -3,10 +3,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useHeroCycle } from "~/components/hero-cycle-context";
 import { HERO_SLIDES } from "~/components/hero-slides";
 
-const TYPING_SPEED = 100;
-const DELETING_SPEED = 100;
-const PAUSE_AFTER_TYPED = 3000;
-const PAUSE_AFTER_DELETED = 200;
+const TYPING_SPEED = 120;
+const DELETING_SPEED = 60;
+const PAUSE_AFTER_TYPED = 5000;
+const PAUSE_AFTER_DELETED = 400;
 
 export function TypingTitle() {
   const { slideIndex, paused, advance } = useHeroCycle();

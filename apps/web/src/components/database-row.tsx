@@ -18,7 +18,7 @@ export function DatabaseRow({
   isExpanded: boolean;
   onToggle: () => void;
 }) {
-  const cfg = riskConfig[ext.risk];
+  const cfg = riskConfig[ext.risk] ?? riskConfig.unavailable;
   const totalVulns =
     ext.vulnerabilityCount.critical +
     ext.vulnerabilityCount.high +

@@ -1,8 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 /* eslint-disable @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
 import type { RefObject } from "react";
 import { useEffect, useState } from "react";
 
 import type { PermAnnotation } from "~/components/hero-slides";
+
+/** Set to true to render debug bounding boxes for traces/labels/chips */
+const SHOW_DEBUG_BOXES = false;
 
 // ── Label slots scattered around the card ───────────────────────────────────
 // Container: 480×440, card: ~x:70..420, y:22..402 (after front card rotation).
@@ -109,8 +113,10 @@ const LABEL_AVOID_PAD = 8; // px padding around labels for avoidance
 
 /** Check if a line segment (p1→p2) intersects an axis-aligned rectangle. */
 function segmentHitsBox(
-  p1x: number, p1y: number,
-  p2x: number, p2y: number,
+  p1x: number,
+  p1y: number,
+  p2x: number,
+  p2y: number,
   box: { x: number; y: number; w: number; h: number },
   pad: number,
 ): boolean {
@@ -120,7 +126,10 @@ function segmentHitsBox(
   const bh = box.h + pad * 2;
 
   // Check multiple sample points along the segment
-  const steps = Math.max(8, Math.ceil(Math.sqrt((p2x - p1x) ** 2 + (p2y - p1y) ** 2) / 4));
+  const steps = Math.max(
+    8,
+    Math.ceil(Math.sqrt((p2x - p1x) ** 2 + (p2y - p1y) ** 2) / 4),
+  );
   for (let s = 0; s <= steps; s++) {
     const t = s / steps;
     const px = p1x + (p2x - p1x) * t;
@@ -169,12 +178,21 @@ function buildRoute(
     [chipRect.x + CORNER_INSET, chipRect.y + CORNER_INSET],
     [chipRect.x + chipRect.w - CORNER_INSET, chipRect.y + CORNER_INSET],
     [chipRect.x + CORNER_INSET, chipRect.y + chipRect.h - CORNER_INSET],
-    [chipRect.x + chipRect.w - CORNER_INSET, chipRect.y + chipRect.h - CORNER_INSET],
+    [
+      chipRect.x + chipRect.w - CORNER_INSET,
+      chipRect.y + chipRect.h - CORNER_INSET,
+    ],
   ];
 
-  const results: { route: [number, number][]; len: number; corner: number; strategy: string }[] = [];
+  const results: {
+    route: [number, number][];
+    len: number;
+    corner: number;
+    strategy: string;
+  }[] = [];
 
-  const fmt = (pts: [number, number][]) => pts.map(p => `(${Math.round(p[0])},${Math.round(p[1])})`).join('→');
+  const fmt = (pts: [number, number][]) =>
+    pts.map((p) => `(${Math.round(p[0])},${Math.round(p[1])})`).join("→");
 
   /** Check which obstacles a route hits (for logging). */
   const findHits = (pts: [number, number][], skip: number) => {
@@ -185,7 +203,9 @@ function buildRoute(
       for (const ob of allObstacles) {
         if (segmentHitsBox(x1, y1, x2, y2, ob, LABEL_AVOID_PAD)) {
           const isChipZone = chipZone && ob === chipZone;
-          hits.push(`seg${i}(${Math.round(x1)},${Math.round(y1)}→${Math.round(x2)},${Math.round(y2)}) hits ${isChipZone ? 'CHIPZONE' : 'box'}(${Math.round(ob.x)},${Math.round(ob.y)} ${Math.round(ob.w)}×${Math.round(ob.h)})`);
+          hits.push(
+            `seg${i}(${Math.round(x1)},${Math.round(y1)}→${Math.round(x2)},${Math.round(y2)}) hits ${isChipZone ? "CHIPZONE" : "box"}(${Math.round(ob.x)},${Math.round(ob.y)} ${Math.round(ob.w)}×${Math.round(ob.h)})`,
+          );
         }
       }
     }
@@ -193,9 +213,7 @@ function buildRoute(
   };
 
   // Include chip zone as an obstacle so routes don't cut through the chip row
-  const allObstacles = chipZone
-    ? [...textObstacles, chipZone]
-    : textObstacles;
+  const allObstacles = chipZone ? [...textObstacles, chipZone] : textObstacles;
 
   for (let ci = 0; ci < chipCorners.length; ci++) {
     const [sx, sy] = chipCorners[ci]!;
@@ -210,33 +228,91 @@ function buildRoute(
 
     // 1. Direct: chip → anchor (check all segments)
     const d: [number, number][] = [[sx, sy], target];
-    if (clear(d, 0)) { results.push({ route: d, len: pathLength(d), corner: ci, strategy: 'direct' }); continue; }
-    if (!quiet) console.log(`  [corner${ci}] direct BLOCKED: ${fmt(d)}`, findHits(d, 0));
+    if (clear(d, 0)) {
+      results.push({
+        route: d,
+        len: pathLength(d),
+        corner: ci,
+        strategy: "direct",
+      });
+      continue;
+    }
+    if (!quiet)
+      console.log(`  [corner${ci}] direct BLOCKED: ${fmt(d)}`, findHits(d, 0));
 
     // 2. Exit → anchor (skip chip→exit)
     const r1: [number, number][] = [[sx, sy], ep, target];
-    if (clear(r1, 1)) { results.push({ route: r1, len: pathLength(r1), corner: ci, strategy: 'exit→anchor' }); continue; }
-    if (!quiet) console.log(`  [corner${ci}] exit→anchor BLOCKED: ${fmt(r1)}`, findHits(r1, 1));
+    if (clear(r1, 1)) {
+      results.push({
+        route: r1,
+        len: pathLength(r1),
+        corner: ci,
+        strategy: "exit→anchor",
+      });
+      continue;
+    }
+    if (!quiet)
+      console.log(
+        `  [corner${ci}] exit→anchor BLOCKED: ${fmt(r1)}`,
+        findHits(r1, 1),
+      );
 
     // 3. Exit → exit column → anchor
     const r2: [number, number][] = [[sx, sy], ep, [exitX, ep[1]], target];
-    if (clear(r2, 1)) { results.push({ route: r2, len: pathLength(r2), corner: ci, strategy: 'exit→col→anchor' }); continue; }
-    if (!quiet) console.log(`  [corner${ci}] exit→col→anchor BLOCKED: ${fmt(r2)}`, findHits(r2, 1));
+    if (clear(r2, 1)) {
+      results.push({
+        route: r2,
+        len: pathLength(r2),
+        corner: ci,
+        strategy: "exit→col→anchor",
+      });
+      continue;
+    }
+    if (!quiet)
+      console.log(
+        `  [corner${ci}] exit→col→anchor BLOCKED: ${fmt(r2)}`,
+        findHits(r2, 1),
+      );
 
     // 4. Vertical detour scan
     const step = labelAnchor.y < ep[1] ? -6 : 6;
     let found = false;
-    for (let clearY = ep[1] + step; Math.abs(clearY - ep[1]) < 400; clearY += step) {
+    for (
+      let clearY = ep[1] + step;
+      Math.abs(clearY - ep[1]) < 400;
+      clearY += step
+    ) {
       const r3: [number, number][] = [[sx, sy], ep, [exitX, clearY], target];
-      if (clear(r3, 1)) { results.push({ route: r3, len: pathLength(r3), corner: ci, strategy: `detour@y=${Math.round(clearY)}` }); found = true; break; }
+      if (clear(r3, 1)) {
+        results.push({
+          route: r3,
+          len: pathLength(r3),
+          corner: ci,
+          strategy: `detour@y=${Math.round(clearY)}`,
+        });
+        found = true;
+        break;
+      }
     }
     if (found) continue;
 
     // 5. Wide fallback
-    const wideX = Math.max(exitX + 20, ...textObstacles.map(o => o.x + o.w + LABEL_AVOID_PAD + 8));
+    const wideX = Math.max(
+      exitX + 20,
+      ...textObstacles.map((o) => o.x + o.w + LABEL_AVOID_PAD + 8),
+    );
     for (let clearY = ep[1]; Math.abs(clearY - ep[1]) < 400; clearY += step) {
       const r4: [number, number][] = [[sx, sy], ep, [wideX, clearY], target];
-      if (clear(r4, 1)) { results.push({ route: r4, len: pathLength(r4), corner: ci, strategy: `wide@(${Math.round(wideX)},${Math.round(clearY)})` }); found = true; break; }
+      if (clear(r4, 1)) {
+        results.push({
+          route: r4,
+          len: pathLength(r4),
+          corner: ci,
+          strategy: `wide@(${Math.round(wideX)},${Math.round(clearY)})`,
+        });
+        found = true;
+        break;
+      }
     }
 
     if (!found && !quiet) console.log(`  [corner${ci}] ALL strategies FAILED`);
@@ -246,18 +322,29 @@ function buildRoute(
     results.sort((a, b) => a.len - b.len);
     const best = results[0]!;
     if (!quiet) {
-      console.log(`[Route] OK corner${best.corner} ${best.strategy} (len=${Math.round(best.len)}): ${fmt(best.route)}`);
+      console.log(
+        `[Route] OK corner${best.corner} ${best.strategy} (len=${Math.round(best.len)}): ${fmt(best.route)}`,
+      );
       // Double-check: does the winning route ACTUALLY hit any obstacles (including seg 0)?
       const allHits = findHits(best.route, 0);
-      if (allHits.length > 0) console.warn(`[Route] ⚠️ WINNING ROUTE HITS OBSTACLES (checked from seg0):`, allHits);
+      if (allHits.length > 0)
+        console.warn(
+          `[Route] ⚠️ WINNING ROUTE HITS OBSTACLES (checked from seg0):`,
+          allHits,
+        );
     }
     return best.route;
   }
 
   // Absolute fallback
   const fb = bestCorner(chipRect, labelAnchor.x, labelAnchor.y);
-  const fbExit: [number, number] = chipZone ? [chipZone.x + chipZone.w + 4, fb.y] : [exitX, fb.y];
-  if (!quiet) console.log(`[Route] WARNING: no clear route found, using fallback: ${fmt([[fb.x, fb.y], fbExit, [labelAnchor.x, labelAnchor.y]])}`);
+  const fbExit: [number, number] = chipZone
+    ? [chipZone.x + chipZone.w + 4, fb.y]
+    : [exitX, fb.y];
+  if (!quiet)
+    console.log(
+      `[Route] WARNING: no clear route found, using fallback: ${fmt([[fb.x, fb.y], fbExit, [labelAnchor.x, labelAnchor.y]])}`,
+    );
   return [[fb.x, fb.y], fbExit, [labelAnchor.x, labelAnchor.y]];
 }
 
@@ -280,7 +367,10 @@ function bestSlotAssignment(
 
   function evalPerm(perm: number[]): number {
     const labelBoxes = perm.map((si) => ({
-      x: slots[si]!.labelX, y: slots[si]!.labelY, w: LABEL_WIDTH, h: LABEL_HEIGHT,
+      x: slots[si]!.labelX,
+      y: slots[si]!.labelY,
+      w: LABEL_WIDTH,
+      h: LABEL_HEIGHT,
     }));
 
     const order = chips.map((_, i) => i);
@@ -324,7 +414,9 @@ function bestSlotAssignment(
   search([], new Set());
   console.log(
     `[Assignment] best:`,
-    best.map((s, i) => `chip${i}→slot${s}(${slots[s]!.labelX},${slots[s]!.labelY})`),
+    best.map(
+      (s, i) => `chip${i}→slot${s}(${slots[s]!.labelX},${slots[s]!.labelY})`,
+    ),
     `routedCost=${Math.round(bestCost)}`,
   );
   return best;
@@ -397,7 +489,10 @@ export function CircuitTraces({
         : 420; // fallback
 
       // ── Match annotations → chips, cap at slot count ────────────────
-      const matched: { annotation: PermAnnotation; chip: { x: number; y: number; w: number; h: number } }[] = [];
+      const matched: {
+        annotation: PermAnnotation;
+        chip: { x: number; y: number; w: number; h: number };
+      }[] = [];
       for (const ann of annotations) {
         const chip = chipPositions.get(ann.permission);
         if (!chip) continue;
@@ -411,7 +506,8 @@ export function CircuitTraces({
       }
 
       // ── Measure text obstacles on the front card (AABBs for collision) ─
-      const textObstacles: { x: number; y: number; w: number; h: number }[] = [];
+      const textObstacles: { x: number; y: number; w: number; h: number }[] =
+        [];
       if (frontCard) {
         const obstacleEls = frontCard.querySelectorAll("[data-trace-obstacle]");
         obstacleEls.forEach((el) => {
@@ -427,7 +523,10 @@ export function CircuitTraces({
         });
       }
       // Compute chip zone bounding box (all chips combined)
-      let czMinX = Infinity, czMinY = Infinity, czMaxX = -Infinity, czMaxY = -Infinity;
+      let czMinX = Infinity,
+        czMinY = Infinity,
+        czMaxX = -Infinity,
+        czMaxY = -Infinity;
       chipEls.forEach((el) => {
         const rect = el.getBoundingClientRect();
         const cx = rect.left - containerRect.left;
@@ -437,9 +536,10 @@ export function CircuitTraces({
         czMaxX = Math.max(czMaxX, cx + rect.width);
         czMaxY = Math.max(czMaxY, cy + rect.height);
       });
-      const chipZone = czMinX < Infinity
-        ? { x: czMinX, y: czMinY, w: czMaxX - czMinX, h: czMaxY - czMinY }
-        : null;
+      const chipZone =
+        czMinX < Infinity
+          ? { x: czMinX, y: czMinY, w: czMaxX - czMinX, h: czMaxY - czMinY }
+          : null;
 
       // ── Route-aware slot assignment ────────────────────────────────
       const slotAssignment = bestSlotAssignment(
@@ -452,7 +552,12 @@ export function CircuitTraces({
 
       const allLabelBoxes = matched.map((_, i) => {
         const slot = LABEL_SLOTS[slotAssignment[i]!]!;
-        return { x: slot.labelX, y: slot.labelY, w: LABEL_WIDTH, h: LABEL_HEIGHT };
+        return {
+          x: slot.labelX,
+          y: slot.labelY,
+          w: LABEL_WIDTH,
+          h: LABEL_HEIGHT,
+        };
       });
 
       // ── Sort by chip Y so staggered exits look natural ────────────────
@@ -486,12 +591,18 @@ export function CircuitTraces({
           `exitX=${Math.round(exitX)}`,
           `chip=(${Math.round(m.chip.x)},${Math.round(m.chip.y)} ${Math.round(m.chip.w)}×${Math.round(m.chip.h)})`,
           `anchor=(${Math.round(anchor.x)},${Math.round(anchor.y)})`,
-          `chipZone=${chipZone ? `(${Math.round(chipZone.x)},${Math.round(chipZone.y)} ${Math.round(chipZone.w)}×${Math.round(chipZone.h)})` : 'none'}`,
+          `chipZone=${chipZone ? `(${Math.round(chipZone.x)},${Math.round(chipZone.y)} ${Math.round(chipZone.w)}×${Math.round(chipZone.h)})` : "none"}`,
           `obstacles: ${otherLabels.length} labels + ${textObstacles.length} text = ${allObstacles.length}`,
         );
 
         // Build the polyline
-        const pixels = buildRoute(m.chip, anchor, exitX, allObstacles, chipZone);
+        const pixels = buildRoute(
+          m.chip,
+          anchor,
+          exitX,
+          allObstacles,
+          chipZone,
+        );
         const { path, length } = pointsToSvg(pixels);
 
         const startPt = pixels[0]!;
@@ -521,7 +632,10 @@ export function CircuitTraces({
       // Chip zone bounding box
       if (chipZone) {
         boxes.push({
-          x: chipZone.x, y: chipZone.y, w: chipZone.w, h: chipZone.h,
+          x: chipZone.x,
+          y: chipZone.y,
+          w: chipZone.w,
+          h: chipZone.h,
           color: "rgba(250,204,21,0.5)",
           label: "chip zone",
         });
@@ -539,14 +653,20 @@ export function CircuitTraces({
         });
         // Actual label box (no padding)
         boxes.push({
-          x: lb.x, y: lb.y, w: lb.w, h: lb.h,
+          x: lb.x,
+          y: lb.y,
+          w: lb.w,
+          h: lb.h,
           color: "rgba(59,130,246,0.7)",
         });
       }
 
       // Card right edge
       boxes.push({
-        x: cardRightX, y: 0, w: 1, h: 440,
+        x: cardRightX,
+        y: 0,
+        w: 1,
+        h: 440,
         color: "rgba(34,197,94,0.5)",
         label: "card edge",
       });
@@ -555,7 +675,10 @@ export function CircuitTraces({
       for (let rank = 0; rank < order.length; rank++) {
         const ex = cardRightX + CARD_EXIT_MARGIN + rank * EXIT_STAGGER;
         boxes.push({
-          x: ex, y: 0, w: 1, h: 440,
+          x: ex,
+          y: 0,
+          w: 1,
+          h: 440,
           color: "rgba(168,85,247,0.3)",
           label: `exit ${rank}`,
         });
@@ -579,17 +702,19 @@ export function CircuitTraces({
           const cx = rangeRect.left + rangeRect.width / 2 - containerRect.left;
           const cy = rangeRect.top + rangeRect.height / 2 - containerRect.top;
           // Range gives AABB of text; undo rotation inflation
-          const rad = Math.abs(cardAngle * Math.PI / 180);
+          const rad = Math.abs((cardAngle * Math.PI) / 180);
           const cos = Math.cos(rad);
           const sin = Math.sin(rad);
           // Solve: aabbW = w*cos + h*sin, aabbH = w*sin + h*cos
           const det = cos * cos - sin * sin;
-          const w = det !== 0
-            ? (rangeRect.width * cos - rangeRect.height * sin) / det
-            : rangeRect.width;
-          const h = det !== 0
-            ? (rangeRect.height * cos - rangeRect.width * sin) / det
-            : rangeRect.height;
+          const w =
+            det !== 0
+              ? (rangeRect.width * cos - rangeRect.height * sin) / det
+              : rangeRect.width;
+          const h =
+            det !== 0
+              ? (rangeRect.height * cos - rangeRect.width * sin) / det
+              : rangeRect.height;
           boxes.push({
             x: cx - w / 2,
             y: cy - h / 2,
@@ -637,7 +762,8 @@ export function CircuitTraces({
       const container = containerRef.current;
       if (!container) return;
       const containerRect = container.getBoundingClientRect();
-      const labelEls = container.querySelectorAll<HTMLDivElement>("[data-trace-label]");
+      const labelEls =
+        container.querySelectorAll<HTMLDivElement>("[data-trace-label]");
       const boxes: DebugBox[] = [];
       labelEls.forEach((el) => {
         const rect = el.getBoundingClientRect();
@@ -673,38 +799,9 @@ export function CircuitTraces({
       style={{ zIndex: 50 }}
     >
       {/* Debug: measured label boxes (green) */}
-      {measuredLabelBoxes.map((box, i) => (
-        <g key={`mlabel-${i}`}>
-          <rect
-            x={box.x}
-            y={box.y}
-            width={box.w}
-            height={box.h}
-            fill="none"
-            stroke={box.color}
-            strokeWidth={1.5}
-            strokeDasharray={box.w > 2 ? "4 2" : undefined}
-          />
-          {box.label && (
-            <text
-              x={box.x + 2}
-              y={box.y - 2}
-              fill={box.color}
-              fontSize={8}
-              fontFamily="monospace"
-            >
-              {box.label}
-            </text>
-          )}
-        </g>
-      ))}
-      {/* Debug bounding boxes */}
-      {debugBoxes.map((box, i) => {
-        const cx = box.x + box.w / 2;
-        const cy = box.y + box.h / 2;
-        const rot = box.rotate ? `rotate(${box.rotate} ${cx} ${cy})` : undefined;
-        return (
-          <g key={`debug-${i}`} transform={rot}>
+      {SHOW_DEBUG_BOXES &&
+        measuredLabelBoxes.map((box, i) => (
+          <g key={`mlabel-${i}`}>
             <rect
               x={box.x}
               y={box.y}
@@ -712,7 +809,7 @@ export function CircuitTraces({
               height={box.h}
               fill="none"
               stroke={box.color}
-              strokeWidth={1}
+              strokeWidth={1.5}
               strokeDasharray={box.w > 2 ? "4 2" : undefined}
             />
             {box.label && (
@@ -727,8 +824,41 @@ export function CircuitTraces({
               </text>
             )}
           </g>
-        );
-      })}
+        ))}
+      {/* Debug bounding boxes */}
+      {SHOW_DEBUG_BOXES &&
+        debugBoxes.map((box, i) => {
+          const cx = box.x + box.w / 2;
+          const cy = box.y + box.h / 2;
+          const rot = box.rotate
+            ? `rotate(${box.rotate} ${cx} ${cy})`
+            : undefined;
+          return (
+            <g key={`debug-${i}`} transform={rot}>
+              <rect
+                x={box.x}
+                y={box.y}
+                width={box.w}
+                height={box.h}
+                fill="none"
+                stroke={box.color}
+                strokeWidth={1}
+                strokeDasharray={box.w > 2 ? "4 2" : undefined}
+              />
+              {box.label && (
+                <text
+                  x={box.x + 2}
+                  y={box.y - 2}
+                  fill={box.color}
+                  fontSize={8}
+                  fontFamily="monospace"
+                >
+                  {box.label}
+                </text>
+              )}
+            </g>
+          );
+        })}
       {traces.map((trace, i) => {
         const delay = 200 + i * 200;
 
