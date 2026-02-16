@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
-/* eslint-disable @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unnecessary-condition, @typescript-eslint/no-non-null-assertion */
 import type { RefObject } from "react";
 import { useEffect, useState } from "react";
 
@@ -447,22 +446,53 @@ export function CircuitTraces({
   containerRef,
 }: CircuitTracesProps) {
   const [traces, setTraces] = useState<TraceData[]>([]);
+  const [animateIn, setAnimateIn] = useState(false);
   const [debugBoxes, setDebugBoxes] = useState<DebugBox[]>([]);
   const [measuredLabelBoxes, setMeasuredLabelBoxes] = useState<DebugBox[]>([]);
 
   useEffect(() => {
     if (!highlighted || !containerRef.current || annotations.length === 0) {
-      const id = requestAnimationFrame(() => setTraces([]));
-      return () => cancelAnimationFrame(id);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional cleanup when highlight ends
+      setTraces([]);
+      setAnimateIn(false);
+      return;
     }
 
+    let animateRafId = 0;
     const rafId = requestAnimationFrame(() => {
       const container = containerRef.current;
       if (!container) return;
 
       const containerRect = container.getBoundingClientRect();
 
-      // ── Measure chip positions ──────────────────────────────────────
+      // ── Measure card rotation & right edge ──────────────────────────
+      const frontCard = container.querySelector("[data-card-front]");
+      const cardRightX = frontCard
+        ? frontCard.getBoundingClientRect().right - containerRect.left
+        : 420; // fallback
+
+      let cardAngle = 0;
+      if (frontCard) {
+        const matrix = new DOMMatrix(getComputedStyle(frontCard).transform);
+        cardAngle = Math.atan2(matrix.b, matrix.a) * (180 / Math.PI);
+      }
+
+      // Precompute rotation correction factors for undoing AABB inflation
+      const rad = Math.abs((cardAngle * Math.PI) / 180);
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+      const det = cos * cos - sin * sin;
+
+      /** Undo AABB inflation from card rotation: recover true (pre-rotation) size */
+      const unrotateAABB = (aabbW: number, aabbH: number) => {
+        if (det === 0) return { w: aabbW, h: aabbH };
+        return {
+          w: (aabbW * cos - aabbH * sin) / det,
+          h: (aabbH * cos - aabbW * sin) / det,
+        };
+      };
+
+      // ── Measure chip positions (corrected for card rotation) ──────
       const chipEls =
         container.querySelectorAll<HTMLSpanElement>("[data-perm]");
       const chipPositions = new Map<
@@ -474,19 +504,18 @@ export function CircuitTraces({
         const perm = el.dataset.perm;
         if (!perm) return;
         const rect = el.getBoundingClientRect();
+        // AABB center is correct; offsetWidth/Height give true pre-transform size
+        const cx = rect.left + rect.width / 2 - containerRect.left;
+        const cy = rect.top + rect.height / 2 - containerRect.top;
+        const w = el.offsetWidth;
+        const h = el.offsetHeight;
         chipPositions.set(perm, {
-          x: rect.left - containerRect.left,
-          y: rect.top - containerRect.top,
-          w: rect.width,
-          h: rect.height,
+          x: cx - w / 2,
+          y: cy - h / 2,
+          w,
+          h,
         });
       });
-
-      // ── Measure card right edge ────────────────────────────────────
-      const frontCard = container.querySelector("[data-card-front]");
-      const cardRightX = frontCard
-        ? frontCard.getBoundingClientRect().right - containerRect.left
-        : 420; // fallback
 
       // ── Match annotations → chips, cap at slot count ────────────────
       const matched: {
@@ -505,7 +534,7 @@ export function CircuitTraces({
         return;
       }
 
-      // ── Measure text obstacles on the front card (AABBs for collision) ─
+      // ── Measure text obstacles on the front card (corrected for rotation) ─
       const textObstacles: { x: number; y: number; w: number; h: number }[] =
         [];
       if (frontCard) {
@@ -514,28 +543,23 @@ export function CircuitTraces({
           const range = document.createRange();
           range.selectNodeContents(el);
           const rr = range.getBoundingClientRect();
-          textObstacles.push({
-            x: rr.left - containerRect.left,
-            y: rr.top - containerRect.top,
-            w: rr.width,
-            h: rr.height,
-          });
+          const cx = rr.left + rr.width / 2 - containerRect.left;
+          const cy = rr.top + rr.height / 2 - containerRect.top;
+          const { w, h } = unrotateAABB(rr.width, rr.height);
+          textObstacles.push({ x: cx - w / 2, y: cy - h / 2, w, h });
         });
       }
-      // Compute chip zone bounding box (all chips combined)
+      // Compute chip zone bounding box from already-corrected chip positions
       let czMinX = Infinity,
         czMinY = Infinity,
         czMaxX = -Infinity,
         czMaxY = -Infinity;
-      chipEls.forEach((el) => {
-        const rect = el.getBoundingClientRect();
-        const cx = rect.left - containerRect.left;
-        const cy = rect.top - containerRect.top;
-        czMinX = Math.min(czMinX, cx);
-        czMinY = Math.min(czMinY, cy);
-        czMaxX = Math.max(czMaxX, cx + rect.width);
-        czMaxY = Math.max(czMaxY, cy + rect.height);
-      });
+      for (const chip of chipPositions.values()) {
+        czMinX = Math.min(czMinX, chip.x);
+        czMinY = Math.min(czMinY, chip.y);
+        czMaxX = Math.max(czMaxX, chip.x + chip.w);
+        czMaxY = Math.max(czMaxY, chip.y + chip.h);
+      }
       const chipZone =
         czMinX < Infinity
           ? { x: czMinX, y: czMinY, w: czMaxX - czMinX, h: czMaxY - czMinY }
@@ -684,13 +708,6 @@ export function CircuitTraces({
         });
       }
 
-      // Extract card rotation angle from its CSS transform
-      let cardAngle = 0;
-      if (frontCard) {
-        const matrix = new DOMMatrix(getComputedStyle(frontCard).transform);
-        cardAngle = Math.atan2(matrix.b, matrix.a) * (180 / Math.PI);
-      }
-
       // Text obstacles ONLY from the front card (rotated to match card)
       // Use Range API to measure actual text bounds (not block-level element width)
       if (frontCard) {
@@ -701,20 +718,7 @@ export function CircuitTraces({
           const rangeRect = range.getBoundingClientRect();
           const cx = rangeRect.left + rangeRect.width / 2 - containerRect.left;
           const cy = rangeRect.top + rangeRect.height / 2 - containerRect.top;
-          // Range gives AABB of text; undo rotation inflation
-          const rad = Math.abs((cardAngle * Math.PI) / 180);
-          const cos = Math.cos(rad);
-          const sin = Math.sin(rad);
-          // Solve: aabbW = w*cos + h*sin, aabbH = w*sin + h*cos
-          const det = cos * cos - sin * sin;
-          const w =
-            det !== 0
-              ? (rangeRect.width * cos - rangeRect.height * sin) / det
-              : rangeRect.width;
-          const h =
-            det !== 0
-              ? (rangeRect.height * cos - rangeRect.width * sin) / det
-              : rangeRect.height;
+          const { w, h } = unrotateAABB(rangeRect.width, rangeRect.height);
           boxes.push({
             x: cx - w / 2,
             y: cy - h / 2,
@@ -746,10 +750,19 @@ export function CircuitTraces({
       });
 
       setDebugBoxes(boxes);
+      setAnimateIn(false);
       setTraces(computed);
+
+      // After the hidden-state frame paints, flip to trigger CSS transitions
+      animateRafId = requestAnimationFrame(() => {
+        setAnimateIn(true);
+      });
     });
 
-    return () => cancelAnimationFrame(rafId);
+    return () => {
+      cancelAnimationFrame(rafId);
+      cancelAnimationFrame(animateRafId);
+    };
   }, [highlighted, annotations, containerRef]);
 
   // Second pass: measure actual rendered label sizes
@@ -860,11 +873,14 @@ export function CircuitTraces({
           );
         })}
       {traces.map((trace, i) => {
-        const delay = 200 + i * 200;
+        const delay = 100 + i * 150;
+
+        const traceDuration = 500;
+        const arriveDelay = delay + traceDuration;
 
         return (
           <g key={trace.annotation.permission}>
-            {/* Trace path */}
+            {/* Trace path — draws from chip to label */}
             <path
               d={trace.path}
               fill="none"
@@ -872,33 +888,33 @@ export function CircuitTraces({
               strokeWidth={1.5}
               strokeOpacity={0.7}
               strokeDasharray={trace.pathLength}
-              strokeDashoffset={highlighted ? 0 : trace.pathLength}
+              strokeDashoffset={animateIn ? 0 : trace.pathLength}
               style={{
-                transition: `stroke-dashoffset 800ms ease-out ${delay}ms`,
+                transition: `stroke-dashoffset ${traceDuration}ms ease-out ${delay}ms`,
               }}
             />
 
-            {/* Dot at chip */}
+            {/* Dot at chip — appears immediately */}
             <circle
               cx={trace.chipX}
               cy={trace.chipY}
               r={3}
               fill="rgb(248 113 113)"
-              opacity={highlighted ? 0.8 : 0}
-              style={{ transition: `opacity 300ms ease-out ${delay}ms` }}
+              opacity={animateIn ? 0.8 : 0}
+              style={{ transition: `opacity 200ms ease-out ${delay}ms` }}
             />
 
-            {/* Dot at label anchor */}
+            {/* Dot at label anchor — appears when trace arrives */}
             <circle
               cx={trace.anchorX}
               cy={trace.anchorY}
               r={3}
               fill="rgb(248 113 113)"
-              opacity={highlighted ? 0.8 : 0}
-              style={{ transition: `opacity 300ms ease-out ${delay}ms` }}
+              opacity={animateIn ? 0.8 : 0}
+              style={{ transition: `opacity 200ms ease-out ${arriveDelay}ms` }}
             />
 
-            {/* Floating label */}
+            {/* Floating label — fades in when trace arrives */}
             <foreignObject
               x={trace.labelX}
               y={trace.labelY}
@@ -910,8 +926,8 @@ export function CircuitTraces({
                 data-trace-label={trace.annotation.permission}
                 className="pointer-events-none w-max max-w-[190px] rounded-lg border border-red-500/20 bg-black/70 px-3 py-1.5 backdrop-blur-sm"
                 style={{
-                  opacity: highlighted ? 1 : 0,
-                  transition: `opacity 400ms ease-out ${delay}ms`,
+                  opacity: animateIn ? 1 : 0,
+                  transition: `opacity 250ms ease-out ${arriveDelay}ms`,
                 }}
               >
                 <p className="text-sm font-medium text-red-400">
