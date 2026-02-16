@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ExtensionReport } from "@amibeingpwned/types";
 import { Badge } from "@amibeingpwned/ui/badge";
 
+import { CircuitTraces } from "~/components/circuit-traces";
 import { useHeroCycle } from "~/components/hero-cycle-context";
 import { HERO_SLIDES } from "~/components/hero-slides";
 import type { ReportMap } from "~/hooks/use-extension-database";
@@ -178,6 +179,10 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
     return () => clearTimeout(id);
   }, [slideIndex]);
 
+  // Get the current slide's annotations
+  const currentSlide = HERO_SLIDES[slideIndex % HERO_SLIDES.length];
+  const annotations = currentSlide?.annotations ?? [];
+
   if (visible.length === 0) return null;
 
   return (
@@ -196,7 +201,7 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
           }
         }
       `}</style>
-      <div className="relative h-[380px] w-[340px]">
+      <div className="relative h-[440px] w-[480px]">
         {visible.map(({ ext, slot }) => {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           const t = (cardTransforms[slot] ?? cardTransforms[0])!;
@@ -205,7 +210,7 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
           return (
             <div
               key={ext.extensionId}
-              className="border-border bg-card absolute inset-0 rounded-xl border p-6 shadow-lg transition-all duration-500 ease-out"
+              className="border-border bg-card absolute inset-x-[70px] top-[30px] h-[380px] rounded-xl border p-6 shadow-lg transition-all duration-500 ease-out"
               style={{
                 transform: `rotate(${t.rotate}deg) translate(${t.x}px, ${t.y}px)`,
                 zIndex: slot,
@@ -218,7 +223,7 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
         {leaving && (
           <div
             key={`leaving-${leaving.extensionId}`}
-            className="border-border bg-card absolute inset-0 rounded-xl border p-6 shadow-lg"
+            className="border-border bg-card absolute inset-x-[70px] top-[30px] h-[380px] rounded-xl border p-6 shadow-lg"
             style={{
               zIndex: VISIBLE_COUNT + 1,
               animation: `card-exit ${EXIT_DURATION}ms ease-in forwards`,
@@ -226,6 +231,12 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
           >
             <CardContent ext={leaving} highlight />
           </div>
+        )}
+        {annotations.length > 0 && (
+          <CircuitTraces
+            annotations={annotations}
+            highlighted={highlighted}
+          />
         )}
       </div>
     </div>
