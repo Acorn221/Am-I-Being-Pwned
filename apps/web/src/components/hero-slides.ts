@@ -27,15 +27,24 @@ export interface HeroSlide {
 export const HERO_SLIDES: HeroSlide[] = [
   {
     phrase: "free VPN",
-    extensionId: "fcfhplploccackoneaefokcmbjfbkenj", // Free VPN 1clickvpn (high) — 8M users
+    extensionId: "oofgbpoabipfcfjapgnbbjjaenockbdp", // SetupVPN (critical) — 9M users
     annotations: [
-      { permission: "proxy", title: "You Are the VPN", description: "Your home internet is used as a proxy to route strangers' traffic" },
-      { permission: "webRequest", title: "Ads Injected", description: "Injects ads into pages you visit to generate revenue" },
+      { permission: "proxy", title: "Opaque WASM Fingerprinting", description: "A Go-compiled binary collects screen, mouse, timezone & incognito data on every API call" },
+      { permission: "<all_urls>", title: "Any Website Can Control It", description: "externally_connectable set to <all_urls> — any site can change your proxy settings" },
+      { permission: "management", title: "Detects Other VPNs", description: "Enumerates all installed extensions to identify competing proxy extensions" },
     ],
   },
   {
-    phrase: "productivity app",
-    extensionId: "laankejkbhbdhmipfmgcngdelahlfoji", // StayFocusd (critical) — 700K users, owned by Sensor Tower
+    phrase: "ad blocker",
+    extensionId: "gbdjcgalliefpinpmggefbloehmmknca", // Ad block & Adblocker (critical) — 700K users
+    annotations: [
+      { permission: "tabs", title: "Every URL Uploaded", description: "Every page you visit is sent to smartadblocker.com with a persistent tracking UUID" },
+      { permission: "<all_urls>", title: "Cross-Device Tracking", description: "Your tracking ID syncs across all your devices via chrome.storage.sync" },
+    ],
+  },
+  {
+    phrase: "focus timer",
+    extensionId: "laankejkbhbdhmipfmgcngdelahlfoji", // StayFocusd (high) — 700K users, Sensor Tower
     annotations: [
       { permission: "tabs", title: "AI Chats Uploaded", description: "Your ChatGPT, Gemini & DeepSeek conversations are sent to Sensor Tower" },
       { permission: "webNavigation", title: "Search Queries Captured", description: "Every URL parameter — including Google searches — is uploaded to Sensor Tower" },
@@ -43,9 +52,9 @@ export const HERO_SLIDES: HeroSlide[] = [
   },
   {
     phrase: "VPN proxy",
-    extensionId: "adlpodnneegcnbophopdmhedicjbcgco", // Troywell VPN (high) — 600K users
+    extensionId: "adlpodnneegcnbophopdmhedicjbcgco", // Troywell VPN (critical) — 600K users
     annotations: [
-      { permission: "proxy", title: "You're an Exit Node", description: "Unknown traffic is routed through your home connection" },
+      { permission: "proxy", title: "You're an Exit Node", description: "Unknown traffic is routed through your home connection as a residential proxy" },
       { permission: "management", title: "Kills Other Extensions", description: "Silently disables every other VPN so you can't switch away" },
       { permission: "cookies", title: "Shopping Hijacked", description: "Injects affiliate codes into your purchases via CityAds network" },
     ],
@@ -59,20 +68,35 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "email tracker",
-    extensionId: "bnompdfnhdbgdaoanapncknhmckenfog", // Email Tracker (high) — 300K users
+    phrase: "ad skip tool",
+    extensionId: "pcjlckhhhmlefmobnnoolakplfppdchi", // Ad Speedup (critical) — 200K users
     annotations: [
-      { permission: "cookies", title: "Email Data Collected", description: "Email metadata and tracking data is sent to emailtracker.website servers" },
-      { permission: "<all_urls>", title: "Network Hooks on All Sites", description: "Hooks XHR & fetch on every site, not just email providers" },
+      { permission: "tabs", title: "ChatGPT Sessions Stolen", description: "Creates hidden ChatGPT tabs to hijack your access tokens and prompts" },
+      { permission: "*://*/*", title: "Residential Proxy Botnet", description: "Your browser becomes a proxy node via orangemonkey.site command server" },
     ],
   },
-  { phrase: "ad blocker", extensionId: "cfhdojbkjhnklbpkdaibdccddilifddb" }, // Adblock Plus (clean)
   {
-    phrase: "screen time tracker",
-    extensionId: "elfaihghhjjoknimpccccmkioofjjfkf", // StayFree (critical) — 200K users, also Sensor Tower
+    phrase: "screen timer",
+    extensionId: "elfaihghhjjoknimpccccmkioofjjfkf", // StayFree (critical) — 200K users, Sensor Tower
     annotations: [
       { permission: "*://*/*", title: "Ad Intelligence Sensor", description: "Embeds Sensor Tower's Pathmatics SDK to scrape ads from every page" },
       { permission: "tabs", title: "AI Chats Uploaded", description: "Your ChatGPT, Gemini & Copilot prompts are sent to Sensor Tower's servers" },
+    ],
+  },
+  {
+    phrase: "Twitter tool",
+    extensionId: "amoldiondpmjdnllknhklocndiibkcoe", // Tweet Hunter X (critical) — 40K users
+    annotations: [
+      { permission: "cookies", title: "X Session Stolen", description: "Reads your x.com auth cookies to make API calls as you" },
+      { permission: "webRequest", title: "Credential Harvesting", description: "Intercepts login requests to capture your X/Twitter credentials" },
+    ],
+  },
+  {
+    phrase: "one-click VPN",
+    extensionId: "fcfhplploccackoneaefokcmbjfbkenj", // Free VPN 1clickvpn (high) — 8M users
+    annotations: [
+      { permission: "proxy", title: "You Are the VPN", description: "Your home internet is used as a proxy to route strangers' traffic" },
+      { permission: "webRequest", title: "Ads Injected", description: "Injects ads into pages you visit to generate revenue" },
     ],
   },
   {
@@ -84,21 +108,14 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "YouTube tool",
-    extensionId: "hmbnhhcgiecenbbkgdoaoafjpeaboine", // Autoskip for Youtube Ads (critical) — 100K users
-    annotations: [
-      { permission: "declarativeNetRequest", title: "Remote Control Server", description: "Receives commands from backend.ytadblock.com to execute on your browser" },
-      { permission: "<all_urls>", title: "Runs on Every Site", description: "Injected into all websites — not just YouTube — with no justification" },
-    ],
-  },
-  {
-    phrase: "browser theme",
-    extensionId: "meffljleomgifbbcffejnmhjagncfpbd", // Infinite Dashboard (critical) — 100K users
+    phrase: "new tab page",
+    extensionId: "meffljleomgifbbcffejnmhjagncfpbd", // Infinite Dashboard (high) — 100K users
     annotations: [
       { permission: "topSites", title: "Top Sites Harvested", description: "Your most-visited sites are collected and sent to infinitetab.com" },
       { permission: "<all_urls>", title: "ChatGPT Cookies Extracted", description: "Reads all your chat.openai.com cookies to make API calls on your behalf" },
     ],
   },
+  { phrase: "antivirus", extensionId: "fheoggkfdfchfphceeifdbepaooicaho" }, // McAfee WebAdvisor (clean)
   {
     phrase: "notepad",
     extensionId: "fefodpegbocmidnfphgggnjcicipaibk", // Notepad online (high) — 100K users
@@ -123,13 +140,12 @@ export const HERO_SLIDES: HeroSlide[] = [
       { permission: "storage", title: "Remote Tab Redirect", description: "Server responses can force your active tab to navigate elsewhere" },
     ],
   },
-  { phrase: "security tool", extensionId: "fheoggkfdfchfphceeifdbepaooicaho" }, // McAfee WebAdvisor (clean)
   {
-    phrase: "QR code reader",
-    extensionId: "likadllkkidlligfcdhfnnbkjigdkmci", // QR Code Reader (high) — 200K users
+    phrase: "YouTube tool",
+    extensionId: "hmbnhhcgiecenbbkgdoaoafjpeaboine", // Autoskip for Youtube Ads (high) — 100K users
     annotations: [
-      { permission: "tabs", title: "Browsing Data Sent", description: "Your browsing activity is sent to external data collection servers" },
-      { permission: "storage", title: "Remote Config", description: "A remote config can expand what data is collected without an update" },
+      { permission: "declarativeNetRequest", title: "Remote Control Server", description: "Receives commands from backend.ytadblock.com to execute on your browser" },
+      { permission: "<all_urls>", title: "Runs on Every Site", description: "Injected into all websites — not just YouTube — with no justification" },
     ],
   },
   {
@@ -138,22 +154,6 @@ export const HERO_SLIDES: HeroSlide[] = [
     annotations: [
       { permission: "<all_urls>", title: "Keylogging Code Found", description: "Contains keylogging and XHR hooking code in its source" },
       { permission: "tabs", title: "Ads Injected", description: "Injects ads and affiliate links across sites you visit" },
-    ],
-  },
-  {
-    phrase: "PDF converter",
-    extensionId: "kdpelmjpfafjppnhbloffcjpeomlnpah", // WPS PDF (medium) — 8M users
-    annotations: [
-      { permission: "cookies", title: "Has Cookie Access", description: "Requests access to cookies on all sites — far more than PDF viewing needs" },
-      { permission: "nativeMessaging", title: "Reaches Your OS", description: "Talks directly to a desktop app outside the browser sandbox" },
-    ],
-  },
-  {
-    phrase: "download manager",
-    extensionId: "ahmpjcflkgiildlgicmcieglgoilbfdp", // Free Download Manager (medium) — 3M users
-    annotations: [
-      { permission: "cookies", title: "All Headers Forwarded", description: "Every HTTP header — including cookies — is forwarded to its desktop app" },
-      { permission: "history", title: "Full Traffic Visible", description: "Monitors all network requests and responses across every site" },
     ],
   },
 ];
