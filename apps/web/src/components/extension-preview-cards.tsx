@@ -64,9 +64,11 @@ const isRisky = (risk: string) =>
 function CardContent({
   ext,
   highlight,
+  isFront,
 }: {
   ext: ExtensionReport;
   highlight?: boolean;
+  isFront?: boolean;
 }) {
   const risk = riskConfig[ext.risk];
   const allPerms = [...ext.permissions, ...ext.hostPermissions];
@@ -82,21 +84,21 @@ function CardContent({
   return (
     <>
       <div className="mb-4 flex items-start justify-between gap-3">
-        <h3 className="text-card-foreground line-clamp-2 text-base font-semibold leading-snug">
+        <h3 data-trace-obstacle className="text-card-foreground line-clamp-2 text-base font-semibold leading-snug">
           {ext.name}
         </h3>
-        <Badge variant={risk.variant} className="shrink-0 text-xs">
+        <Badge data-trace-obstacle variant={risk.variant} className="shrink-0 text-xs">
           {risk.label}
         </Badge>
       </div>
 
-      <p className="text-muted-foreground mb-4 text-sm">
+      <p data-trace-obstacle className="text-muted-foreground mb-4 text-sm">
         {formatUsers(ext.userCount)} users
       </p>
 
       {shown.length > 0 && (
         <div>
-          <p className="text-muted-foreground mb-2 text-xs font-medium uppercase tracking-wide">
+          <p data-trace-obstacle className="text-muted-foreground mb-2 text-xs font-medium uppercase tracking-wide">
             Permissions
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -105,6 +107,7 @@ function CardContent({
               return (
                 <span
                   key={p}
+                  data-perm={isFront ? p : undefined}
                   className={`rounded-md px-2 py-1 font-mono text-xs transition-all duration-700 ${
                     dangerous && highlight
                       ? "bg-red-500/15 text-red-400 ring-1 ring-red-500/30"
@@ -116,7 +119,7 @@ function CardContent({
               );
             })}
             {allPerms.length > 6 && (
-              <span className="text-muted-foreground px-1.5 py-1 text-xs">
+              <span data-trace-obstacle className="text-muted-foreground px-1.5 py-1 text-xs">
                 +{allPerms.length - 6} more
               </span>
             )}
@@ -183,6 +186,8 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
   const currentSlide = HERO_SLIDES[slideIndex % HERO_SLIDES.length];
   const annotations = currentSlide?.annotations ?? [];
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
   if (visible.length === 0) return null;
 
   return (
@@ -201,7 +206,7 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
           }
         }
       `}</style>
-      <div className="relative h-[440px] w-[480px]">
+      <div ref={containerRef} className="relative h-[440px] w-[480px]">
         {visible.map(({ ext, slot }) => {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           const t = (cardTransforms[slot] ?? cardTransforms[0])!;
@@ -210,13 +215,14 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
           return (
             <div
               key={ext.extensionId}
+              data-card-front={isFront || undefined}
               className="border-border bg-card absolute inset-x-[70px] top-[30px] h-[380px] rounded-xl border p-6 shadow-lg transition-all duration-500 ease-out"
               style={{
                 transform: `rotate(${t.rotate}deg) translate(${t.x}px, ${t.y}px)`,
                 zIndex: slot,
               }}
             >
-              <CardContent ext={ext} highlight={isFront && highlighted} />
+              <CardContent ext={ext} highlight={isFront && highlighted} isFront={isFront} />
             </div>
           );
         })}
@@ -236,6 +242,7 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
           <CircuitTraces
             annotations={annotations}
             highlighted={highlighted}
+            containerRef={containerRef}
           />
         )}
       </div>

@@ -19,19 +19,27 @@ export interface HeroSlide {
  */
 export const HERO_SLIDES: HeroSlide[] = [
   {
-    phrase: "free VPN",
-    extensionId: "fcfhplploccackoneaefokcmbjfbkenj", // Free VPN 1clickvpn (high)
+    phrase: "email tracker",
+    extensionId: "bnompdfnhdbgdaoanapncknhmckenfog", // Email Tracker (high)
     annotations: [
-      { permission: "proxy", title: "Proxy Control", description: "Routes your traffic through their servers" },
-      { permission: "webRequest", title: "Network Interception", description: "Can read & modify all web requests" },
+      { permission: "cookies", title: "Cookie Theft", description: "Reads & exfiltrates session cookies" },
+      { permission: "tabs", title: "Browsing Spy", description: "Tracks every page you open" },
     ],
   },
-  { phrase: "ad blocker", extensionId: "cfhdojbkjhnklbpkdaibdccddilifddb" }, // Adblock Plus (clean)
   {
     phrase: "productivity app",
     extensionId: "laankejkbhbdhmipfmgcngdelahlfoji", // StayFocusd (critical)
     annotations: [
       { permission: "tabs", title: "Tab Surveillance", description: "Monitors every site you visit" },
+    ],
+  },
+  { phrase: "ad blocker", extensionId: "cfhdojbkjhnklbpkdaibdccddilifddb" }, // Adblock Plus (clean)
+  {
+    phrase: "free VPN",
+    extensionId: "fcfhplploccackoneaefokcmbjfbkenj", // Free VPN 1clickvpn (high)
+    annotations: [
+      { permission: "proxy", title: "Proxy Control", description: "Routes your traffic through their servers" },
+      { permission: "webRequest", title: "Network Interception", description: "Can read & modify all web requests" },
     ],
   },
   {
@@ -40,14 +48,6 @@ export const HERO_SLIDES: HeroSlide[] = [
     annotations: [
       { permission: "cookies", title: "Cookie Access", description: "Reads session cookies from all sites" },
       { permission: "nativeMessaging", title: "System Access", description: "Communicates with programs on your computer" },
-    ],
-  },
-  {
-    phrase: "email tracker",
-    extensionId: "bnompdfnhdbgdaoanapncknhmckenfog", // Email Tracker (high)
-    annotations: [
-      { permission: "cookies", title: "Cookie Theft", description: "Reads & exfiltrates session cookies" },
-      { permission: "tabs", title: "Browsing Spy", description: "Tracks every page you open" },
     ],
   },
   {
