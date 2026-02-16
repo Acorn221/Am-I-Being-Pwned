@@ -1,54 +1,49 @@
-# Red Shield VPN - Security Vulnerability Report
+# Red Shield VPN -- Security Analysis
 
-## Extension Metadata
-
-| Field | Value |
-|-------|-------|
-| **Extension Name** | Red Shield VPN |
-| **Extension ID** | `fmhbdohlogekfmknbhfpbeiphcldcfji` |
-| **Version** | 1.0.315 |
-| **User Count** | ~20,000 |
-| **Manifest Version** | 3 |
-| **Author** | Red Shield VPN |
-| **Framework** | Parcel bundler + Vue 3 (popup), vanilla JS (background) |
+**Extension ID:** `fmhbdohlogekfmknbhfpbeiphcldcfji`
+**Users:** ~20,000
+**Manifest Version:** 3
+**Framework:** Parcel bundler + Vue 3 (popup), vanilla JS (background service worker)
+**Author:** Red Shield VPN
 
 ---
 
 ## Executive Summary
 
-Red Shield VPN is a subscription-based VPN extension that employs sophisticated infrastructure obfuscation techniques. The extension uses DNS-over-HTTPS (DoH) with AES-256 encryption to dynamically discover its API server domain, making the actual backend infrastructure opaque to static analysis. It also implements user-initiated anti-competitive functionality by disabling all other proxy extensions when activated.
+Red Shield VPN is a paid subscription VPN extension built with Vue 3 and Parcel. It uses a sophisticated **DNS-over-HTTPS (DoH) domain resolution system** to dynamically discover its API server, with the real API domain encrypted via AES-256 in a DNS TXT record (`pl.metgo4u5yhre.org`). The extension **actively disables competing proxy extensions** via `browser.management.setEnabled()`. It also uses `externally_connectable` with `<all_urls>` to receive subscription payment confirmations from external websites.
 
-**Key Concerns:**
-1. **Anti-competitive extension killing** via `chrome.management` API (user-initiated)
-2. **Encrypted DNS infrastructure** with hardcoded AES key for API domain resolution
-3. **Overly broad `externally_connectable` scope** (`<all_urls>` instead of specific domains)
+While the extension has an aggressive anti-competition mechanism and obscured infrastructure, it does **not** exhibit the hallmarks of spyware (no data harvesting, no cookie theft, no keylogging, no ad injection, no remote code execution). The code is a legitimate VPN client with questionable competitive practices and unnecessarily opaque infrastructure.
 
-**Positive Security Indicators:**
-- No data harvesting, credential theft, or cookie access
-- No content scripts or DOM manipulation
-- No keylogging, ad injection, or remote code execution
-- Standard VPN functionality with proper proxy authentication
-- No third-party analytics or tracking SDKs
-
-**Overall Risk Level: MEDIUM**
+**Risk Level: MEDIUM**
 
 ---
 
-## Vulnerability Details
+## Flag Verdicts Table
 
-### VULN-001: Anti-Competitive Extension Disabling
+| Flag | Verdict | Evidence |
+|------|---------|----------|
+| Extension Enumeration/Killing | **CONFIRMED** | `management.getAll()` filters for `proxy` permission, disables all enabled proxy extensions except itself (popup.588cc70c.js:13210-13226) |
+| Credential Harvesting | **NOT FOUND** | No DOM scraping of login forms, no content scripts in manifest |
+| Keylogging | **NOT FOUND** | `keydown`/`keypress` only in Vue framework code (Tab focus trapping) |
+| DOM Scraping | **NOT FOUND** | No content scripts registered; `rsvcontent.js` is empty (comment only) |
+| XHR/Fetch Monkey-Patching | **NOT FOUND** | Native `fetch()` used directly; no prototype overrides |
+| eval / Dynamic Code | **NOT FOUND** | No `eval()`, no `new Function()`, no `importScripts` (matches are Vue/promise polyfill) |
+| Encrypted Comms | **CONFIRMED** | AES-256 decryption of DNS TXT record to resolve API domain, hardcoded key in source (bg:12076-12078) |
+| Cookie Theft | **NOT FOUND** | No cookie API usage anywhere |
+| Ad Injection | **NOT FOUND** | No ad-related code, no script injection into pages |
+| Fingerprinting | **NOT FOUND** | `navigator.userAgent` used only for browser name/version headers (`X-RSV-Browser-Name`, `X-RSV-Browser-Ver`) -- standard API client identification |
+| Remote Code Loading | **NOT FOUND** | No `scripting.executeScript`, no dynamic script loading |
+| C2 / Server-Controlled Behavior | **PARTIAL** | API domain is resolved dynamically via encrypted DNS; behavior itself is standard VPN config (endpoints, credentials, subscription status) |
+| WebRTC Leak Prevention | **LEGITIMATE** | `privacy.network.webRTCIPHandlingPolicy` set to `disable_non_proxied_udp` when connected (bg:24798-24800) |
 
-**Severity:** MEDIUM
-**Category:** Anti-competitive behavior
-**Status:** CONFIRMED
+---
 
-**Description:**
-The extension enumerates all installed browser extensions and disables any that have the `proxy` permission (excluding itself). This behavior is triggered when a user clicks a "Disable" button in the popup UI when the extension detects it doesn't have control over proxy settings.
+## Detailed Findings
 
-**Location:**
-- File: `popup.588cc70c.js` (minified line 13207-13228)
+### 1. Proxy Extension Killing (CONFIRMED -- Anti-Competitive)
 
-**Code Evidence:**
+**Location:** `popup.588cc70c.js` (beautified lines 13207-13228)
+
 ```javascript
 async function l() {
     let e = await browser.management.getAll();
@@ -67,89 +62,63 @@ async function l() {
 }
 ```
 
-**Impact:**
-- Disables ALL proxy extensions, not just the conflicting one
-- Creates poor user experience for users with multiple proxy tools
-- Anti-competitive behavior that may violate Chrome Web Store policies
+**Behavior:** Enumerates all installed extensions, filters those with the `proxy` permission that are not itself and are enabled, then forcibly disables them. This is exposed as a UI button labeled "Disable" when the extension detects it does not have control over proxy settings (`error_control_other` error state).
 
-**Mitigation:**
-User-initiated (requires clicking button), not automatic. However, the broad scope of disabling ALL proxy extensions rather than identifying the specific conflicting extension is problematic.
+**Trigger:** Called from popup when `isControl` is false (another extension controls proxy settings). The user sees: *"Other extensions have control over the required browser settings. You can disable them."* and clicks a "Disable" button.
 
-**Verdict:** MEDIUM risk - Anti-competitive but user-initiated and transparent to the user.
+**Assessment:** This is user-initiated (requires clicking the button), but it is an aggressive anti-competitive tactic that disables ALL proxy extensions, not just the one blocking control. The `management` permission enables this.
 
----
+### 2. DNS-over-HTTPS Domain Resolution with AES Encryption (CONFIRMED -- Evasive Infrastructure)
 
-### VULN-002: Encrypted DNS Infrastructure with Hardcoded Key
+**Location:** `static/background/index.js` (beautified lines 11936-12118)
 
-**Severity:** MEDIUM
-**Category:** Infrastructure obfuscation
-**Status:** CONFIRMED
+The extension resolves its API domain by:
 
-**Description:**
-The extension uses an encrypted DNS TXT record to resolve its API domain. The TXT record at `pl.metgo4u5yhre.org` contains AES-256 encrypted data, decrypted using a hardcoded 128-character key embedded in the source code. This allows the backend operator to change the API domain without updating the extension.
+1. Querying `pl.metgo4u5yhre.org` TXT record via 10 different DNS-over-HTTPS resolvers in a race condition (first to respond wins)
+2. The TXT record content is AES-256 encrypted
+3. Decryption uses a **hardcoded key**: `eiS5iuFai1ahngeexeiWaew2Ophoh9ahz5ooph4zoong7baek5Eph5aiyai2Thai0Aep5Dujopi7phie3Nugie7ooqueexe5ahzo4rohyiesaceangai8Dopaagieyah`
+4. The decrypted value is validated as a domain name, then used as the API base URL
 
-**Location:**
-- File: `static/background/index.js` (minified, ~lines 11936-12118)
+**DNS Resolvers used (in parallel):**
+- `8.8.8.8` (Google DNS JSON)
+- `149.112.112.11` (Quad9 binary DoH)
+- `9.9.9.11` (Quad9 binary DoH)
+- `8.8.4.4` (Google DNS JSON)
+- `doh.pub` (Tencent DNS JSON)
+- `dns.google` (Google DNS JSON)
+- `<random>.kmntc3ty8boq.online:8000` (custom resolver, binary DoH)
+- `<random>.kmntc3ty8boq.online` (custom resolver, binary DoH)
+- `<random>.kmntc3ty8boq.online:8443` (custom resolver, binary DoH)
+- `dns11.quad9.net` (Quad9 binary DoH)
 
-**Technical Details:**
+**Fallback domain:** `r872qg487g8.49032ur98u3892h84h8h243t.online`
 
-1. **DNS Resolution Strategy:**
-   Queries 10 different DoH providers in parallel (race condition - first response wins):
-   - Google DNS: `8.8.8.8`, `8.8.4.4`, `dns.google`
-   - Quad9: `149.112.112.11`, `9.9.9.11`, `dns11.quad9.net`
-   - Tencent: `doh.pub`
-   - Custom: `<random>.kmntc3ty8boq.online` (ports 443, 8000, 8443)
+**Random subdomain generation** for `kmntc3ty8boq.online`:
+```javascript
+function f() {
+    let e = "0123456789abcdefghijklmnopqrstuvwxyz", t = "";
+    for (let r = 0; r < 10; r++) {
+        let r = Math.floor(Math.random() * e.length);
+        t += e[r]
+    }
+    return t
+}
+```
 
-2. **Random Subdomain Generation:**
-   ```javascript
-   function f() {
-       let e = "0123456789abcdefghijklmnopqrstuvwxyz", t = "";
-       for (let r = 0; r < 10; r++) {
-           let r = Math.floor(Math.random() * e.length);
-           t += e[r]
-       }
-       return t
-   }
-   ```
+**Assessment:** This is a domain fronting/resilience technique. The encrypted DNS TXT record means the actual API domain can be rotated without updating the extension. The random subdomains for `kmntc3ty8boq.online` suggest wildcard DNS. While this is not inherently malicious (VPN services operating in hostile jurisdictions use this to survive domain blocking), it does create an opaque infrastructure where the API domain is unknowable without performing the DNS resolution and decryption at runtime.
 
-3. **Hardcoded AES Key:**
-   ```
-   eiS5iuFai1ahngeexeiWaew2Ophoh9ahz5ooph4zoong7baek5Eph5aiyai2Thai0Aep5Dujopi7phie3Nugie7ooqueexe5ahzo4rohyiesaceangai8Dopaagieyah
-   ```
+### 3. Externally Connectable with `<all_urls>` (ELEVATED RISK)
 
-4. **Fallback Domain:**
-   `r872qg487g8.49032ur98u3892h84h8h243t.online`
+**Location:** `manifest.json`
 
-**Impact:**
-- API domain can be changed without extension update
-- Makes infrastructure tracking and analysis difficult
-- Potential for redirection to malicious infrastructure (though no current evidence)
-- Hardcoded key is visible in source code (AES provides no real protection)
-
-**Verdict:** MEDIUM risk - While this technique is used by legitimate VPN services in hostile jurisdictions for censorship resistance, it creates an opaque infrastructure that could be abused for malicious purposes. No current evidence of abuse.
-
----
-
-### VULN-003: Overly Broad External Messaging Scope
-
-**Severity:** LOW
-**Category:** Permission scope
-**Status:** CONFIRMED
-
-**Description:**
-The extension uses `externally_connectable` with `<all_urls>`, allowing any website to send messages to the extension. While the message handler only responds to `RSV_SUBSCRIPTION_PAID` messages (for payment confirmation), the scope is unnecessarily broad.
-
-**Location:**
-- File: `manifest.json`
-
-**Code Evidence:**
 ```json
 "externally_connectable": {
     "matches": ["<all_urls>"]
 }
 ```
 
-Message handler:
+**Usage:** `browser.runtime.onMessageExternal` listener accepts `RSV_SUBSCRIPTION_PAID` messages from any website:
+
 ```javascript
 browser.runtime.onMessageExternal.addListener((e, t, r) => {
     "RSV_SUBSCRIPTION_PAID" === e.type && (
@@ -160,162 +129,124 @@ browser.runtime.onMessageExternal.addListener((e, t, r) => {
 })
 ```
 
-**Impact:**
-- Any website can attempt to communicate with the extension
-- Handler is narrowly scoped to one message type (good)
-- No sensitive data exposed through handler (good)
-- Best practice would be to scope to `redshieldvpn.com` only
+**Assessment:** The handler only responds to `RSV_SUBSCRIPTION_PAID` and triggers a reload of general info and endpoints. The `<all_urls>` scope is overly broad -- should be restricted to `redshieldvpn.com` -- but the actual handler is narrowly scoped and does not expose sensitive data.
 
-**Verdict:** LOW risk - Handler is safely implemented, but scope should be restricted.
+### 4. Proxy Authentication via webRequest (LEGITIMATE)
+
+**Location:** `static/background/index.js` (beautified lines 26884-26905)
+
+```javascript
+chrome.webRequest.onAuthRequired.addListener(
+    this.boundCallbackAuth,
+    { urls: ["<all_urls>"] },
+    ["blocking"]
+);
+```
+
+**Assessment:** Standard HTTPS proxy authentication. The `webRequestAuthProvider` permission is specifically for this. The callback provides `{ authCredentials: { username, password } }` from the stored proxy credentials. This is the correct way to implement proxy auth in Manifest V3.
+
+### 5. PAC Script Generation (LEGITIMATE)
+
+**Location:** `static/background/index.js` (beautified lines 26757-26822)
+
+The extension generates PAC (Proxy Auto-Configuration) scripts with the marker comment `/* RedShieldVPN */` for three tunnel modes:
+- **All traffic:** Route everything through proxy
+- **Exclude domains:** Route everything except specified domains through proxy
+- **Custom domains:** Route only specified domains through proxy
+
+**Assessment:** Standard VPN split-tunneling implementation. The domain list handling includes proper parsing, subdomain matching with wildcards, and bogon IP filtering.
 
 ---
 
-## False Positive Analysis
-
-| Pattern | Source | Verdict | Reason |
-|---------|--------|---------|--------|
-| `setTimeout`, `setInterval` | Vue 3 framework, Parcel runtime | **FALSE POSITIVE** | Standard framework timers, not dynamic code execution |
-| `navigator.userAgent` | API request headers | **FALSE POSITIVE** | Used only for browser identification headers (`X-RSV-Browser-Name`, `X-RSV-Browser-Ver`) |
-| `chrome.tabs.query` | Background script | **FALSE POSITIVE** | Used only to check active tab on startup, standard VPN behavior |
-| `chrome.webRequest.onAuthRequired` | Background script | **FALSE POSITIVE** | Standard proxy authentication implementation |
-| `privacy.network.webRTCIPHandlingPolicy` | Background script | **FALSE POSITIVE** | Legitimate WebRTC leak prevention (`disable_non_proxied_udp`) |
-| `localStorage` | Background script | **FALSE POSITIVE** | Standard state persistence for extension settings |
-
----
-
-## API Endpoints and Data Flow
+## Network Map
 
 ### Domains
 
-| Domain | Purpose | Protocol |
-|--------|---------|----------|
-| `pl.metgo4u5yhre.org` | DNS TXT record (encrypted API domain) | DoH (DNS-over-HTTPS) |
-| `<random>.kmntc3ty8boq.online` | Custom DoH resolver | HTTPS (ports 443, 8000, 8443) |
-| `r872qg487g8.49032ur98u3892h84h8h243t.online` | Fallback API domain | HTTPS |
-| `redshieldvpn.com` | Company website (ToS, Privacy Policy) | HTTPS |
-| `<dynamic_from_dns>` | Actual API server (resolved at runtime) | HTTPS |
+| Domain | Purpose | Type |
+|--------|---------|------|
+| `pl.metgo4u5yhre.org` | DNS TXT record holding encrypted API domain | DoH lookup target |
+| `r872qg487g8.49032ur98u3892h84h8h243t.online` | Fallback API domain | HTTPS API |
+| `<random>.kmntc3ty8boq.online` (ports 443, 8000, 8443) | Custom DoH resolver | DNS resolution |
+| `redshieldvpn.com` | Company website (ToS, Privacy Policy links) | Static |
+| `<dynamic from DNS>` | Actual API server (resolved at runtime) | HTTPS API |
+| Various VPN endpoint hosts (from `/api/v2/endpoints`) | Proxy servers | HTTPS proxy |
 
-### API Endpoints
+### API Endpoints (all relative to dynamic API domain)
 
-All endpoints relative to dynamically resolved API domain:
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/v2/login` | POST | User authentication |
+| `/api/v2/register-password` | POST | Account registration |
+| `/api/v2/recover` | POST | Password recovery |
+| `/api/v2/logout` | POST | Session termination |
+| `/api/v2/general` | GET | Subscription info, payment domain, refcode |
+| `/api/v2/endpoints` | GET | VPN server list, credentials, ports |
+| `/api/v2/feedback` | POST | User rating/feedback |
+| `/api/v2/captcha/altcha/challenge` | GET | CAPTCHA challenge (Altcha) |
+| `check_url` (from endpoints response) | GET | Connection verification |
 
-| Endpoint | Method | Purpose | Data Sent |
-|----------|--------|---------|-----------|
-| `/api/v2/login` | POST | User authentication | Username, password |
-| `/api/v2/register-password` | POST | Account registration | Email, password |
-| `/api/v2/recover` | POST | Password recovery | Email |
-| `/api/v2/logout` | POST | Session termination | Token |
-| `/api/v2/general` | GET | Subscription info | Token |
-| `/api/v2/endpoints` | GET | VPN server list | Token |
-| `/api/v2/feedback` | POST | User rating/feedback | Token, rating, comment |
-| `/api/v2/captcha/altcha/challenge` | GET | CAPTCHA challenge (Altcha) | None |
+### Headers Sent with API Requests
 
-### Request Headers
-
-| Header | Value | Purpose |
-|--------|-------|---------|
-| `X-RSV-Platform` | `plugin` | Platform identification |
-| `X-RSV-Lang` | `ru` or `en` | User language preference |
-| `X-RSV-Build` | Extension build number | Version tracking |
-| `X-RSV-Browser-Name` | Chrome/Firefox/Safari/etc. | Browser identification |
-| `X-RSV-Browser-Ver` | Browser version | Compatibility tracking |
-| `X-RSV-Token` | Auth token | User authentication |
-
-### Data Flow Summary
-
-1. **Extension Installation:** Resolves API domain via encrypted DNS
-2. **User Registration/Login:** Sends credentials to `/api/v2/login`, receives token
-3. **VPN Connection:** Fetches server list from `/api/v2/endpoints`, configures proxy with PAC script
-4. **Proxy Authentication:** Uses `chrome.webRequest.onAuthRequired` to inject credentials
-5. **WebRTC Protection:** Sets `privacy.network.webRTCIPHandlingPolicy` to prevent IP leaks
-6. **Payment Confirmation:** Receives `RSV_SUBSCRIPTION_PAID` message from `redshieldvpn.com` payment page
-
-**No data exfiltration detected:**
-- No cookie access
-- No browsing history access
-- No download monitoring
-- No tab content scraping
-- No keylogging
-- No analytics/tracking SDKs
+| Header | Value |
+|--------|-------|
+| `X-RSV-Platform` | `plugin` |
+| `X-RSV-Lang` | `ru` or `en` |
+| `X-RSV-Build` | Extension build number |
+| `X-RSV-Browser-Name` | Chrome/Firefox/Safari/etc. |
+| `X-RSV-Browser-Ver` | Browser version number |
+| `X-RSV-Token` | Auth token (when logged in) |
 
 ---
 
-## Permissions Analysis
+## What It Does NOT Do
 
-| Permission | Declared | Used | Justified | Risk |
-|------------|----------|------|-----------|------|
-| `storage` | ✓ | ✓ | Token, settings, connection state | LOW |
-| `unlimitedStorage` | ✓ | ✓ | Logs, tunnel domain lists | LOW |
-| `proxy` | ✓ | ✓ | Core VPN functionality | LOW |
-| `management` | ✓ | ✓ | **Extension disabling (anti-competitive)** | MEDIUM |
-| `tabs` | ✓ | ✓ | Active tab query, create, reload | LOW |
-| `webRequest` | ✓ | ✓ | Proxy authentication | LOW |
-| `webRequestAuthProvider` | ✓ | ✓ | Required for `onAuthRequired` in MV3 | LOW |
-| `privacy` | ✓ | ✓ | WebRTC leak prevention | LOW |
-| `<all_urls>` (host) | ✓ | ✓ | Proxy applies to all traffic | LOW |
-
----
-
-## What the Extension Does NOT Do
-
-✓ **No content scripts** - `rsvcontent.js` is empty (only contains `//`)
-✓ **No cookie harvesting** - No use of `chrome.cookies` or `document.cookie`
-✓ **No credential theft** - No form scraping, no login interception
-✓ **No keylogging** - No `keydown`/`keypress` listeners on web pages
-✓ **No browsing history access** - No `chrome.history` API usage
-✓ **No download monitoring** - No `chrome.downloads` API usage
-✓ **No DOM manipulation** - No script injection into web pages
-✓ **No ad injection** - No advertising code or ad network connections
-✓ **No XHR/fetch hooking** - No prototype patching or monkey-patching
-✓ **No eval or dynamic code** - No `eval()`, `new Function()`, or dynamic imports
-✓ **No remote code loading** - No `scripting.executeScript()` or external script fetching
-✓ **No fingerprinting** - UA string used only for API headers
-✓ **No analytics/tracking** - No Google Analytics, Amplitude, Sentry, or other tracking SDKs
-✓ **No market intelligence SDKs** - No Sensor Tower, Pathmatics, or similar
+- **No content scripts** -- manifest.json declares no `content_scripts`. `rsvcontent.js` is web-accessible but completely empty (just `//`).
+- **No cookie access** -- No use of `chrome.cookies` or `document.cookie` anywhere.
+- **No browsing history access** -- No `chrome.history`, `chrome.bookmarks`, or `chrome.topSites`.
+- **No download interception** -- No `chrome.downloads` usage.
+- **No tab content access** -- `tabs` permission used only for `tabs.query` (check active tab on startup), `tabs.create` (open payment page), and `tabs.reload` (reload active tab after reconnect).
+- **No analytics/tracking** -- No Google Analytics, no Amplitude, no third-party tracking.
+- **No ad injection** -- No DOM manipulation on web pages, no script injection.
+- **No fingerprinting** -- UA string parsed only for browser identification headers.
+- **No data exfiltration** -- API calls are strictly VPN operations (auth, endpoint list, connection check).
+- **No remote code execution** -- No `eval()`, `new Function()`, `scripting.executeScript()`.
 
 ---
 
-## Overall Risk Assessment
+## Permissions vs. Usage Assessment
 
-### Risk Level: MEDIUM
-
-**Rationale:**
-
-**Concerning Behaviors:**
-1. **Anti-competitive extension disabling** - Disables all proxy extensions, not just conflicting ones
-2. **Encrypted infrastructure** - API domain hidden behind AES-encrypted DNS with hardcoded key
-3. **Custom DoH resolver** - Uses suspicious domain (`kmntc3ty8boq.online`) with random subdomains
-4. **Overly broad external messaging** - `<all_urls>` scope when specific domain would suffice
-
-**Mitigating Factors:**
-1. **Extension disabling is user-initiated** - Not automatic, requires user action
-2. **No data harvesting** - No access to cookies, history, credentials, or page content
-3. **No malicious functionality** - Standard VPN operations, no hidden payload
-4. **No remote code execution** - No dynamic code loading or eval
-5. **Encrypted DNS is single-purpose** - Only for API domain resolution, not for C2
-6. **Message handler is safe** - Only responds to subscription payment confirmation
-
-**Comparison to Malicious Extensions:**
-- Unlike malicious VPN extensions, Red Shield VPN does NOT:
-  - Harvest browsing data or cookies
-  - Inject ads or scripts into web pages
-  - Function as a residential proxy network
-  - Use the device for market intelligence or web scraping
-  - Contain hidden cryptocurrency miners or clickbots
-
-**Verdict:**
-Red Shield VPN is a **functional VPN extension with questionable infrastructure practices and anti-competitive behavior**. The encrypted DNS system and extension disabling functionality are concerning from a policy perspective but do not represent active malware or data theft. The extension serves its stated purpose (VPN service) without additional hidden functionality.
-
-**Recommended Action:**
-- Monitor for changes in behavior or backend infrastructure
-- Consider warning users about anti-competitive extension disabling
-- Request scoping of `externally_connectable` to specific domain
-- Flag for potential Chrome Web Store policy review regarding `management` permission abuse
+| Permission | Declared | Used | Justified |
+|------------|----------|------|-----------|
+| `storage` | Yes | Yes | State persistence (token, settings, connection state) |
+| `unlimitedStorage` | Yes | Yes | Logs, tunnel domain lists |
+| `proxy` | Yes | Yes | Core VPN functionality (PAC script / proxy.settings) |
+| `management` | Yes | Yes | **Anti-competitive extension disabling** -- overprivileged |
+| `tabs` | Yes | Yes | Active tab query, create, reload -- could use `activeTab` instead |
+| `webRequest` | Yes | Yes | Proxy authentication (`onAuthRequired`) |
+| `webRequestAuthProvider` | Yes | Yes | Required for `onAuthRequired` blocking in MV3 |
+| `privacy` | Yes | Yes | WebRTC leak prevention |
+| `<all_urls>` (host) | Yes | Yes | Proxy applies to all URLs |
+| `externally_connectable: <all_urls>` | Yes | Partially | Subscription payment messages -- should be scoped to `redshieldvpn.com` |
 
 ---
 
-## Revision History
+## Final Verdict
 
-| Date | Version | Changes |
-|------|---------|---------|
-| 2026-02-08 | 1.0 | Initial security analysis |
+**Risk Level: MEDIUM**
+
+Red Shield VPN is a functional, subscription-based VPN extension with two notable security/ethical concerns:
+
+1. **Anti-competitive extension killing (MEDIUM):** The extension will disable all other proxy extensions when a user clicks the "Disable" button. While user-initiated, it is aggressive and unnecessary -- the correct approach is to inform users which specific extension conflicts and how to resolve it manually.
+
+2. **Evasive infrastructure (MEDIUM):** The API domain is hidden behind encrypted DNS TXT records resolved via 10 different DoH providers, with a custom DoH resolver on a suspicious domain (`kmntc3ty8boq.online`) using random subdomains. The AES decryption key is hardcoded. This makes the actual API infrastructure deliberately opaque to static analysis and network monitoring. While this could be a legitimate anti-censorship measure (the extension appears to target Russian-speaking users based on the default locale and i18n), it also means the extension operator could redirect all API traffic to a new domain without any extension update.
+
+**What keeps this from HIGH risk:**
+- No data harvesting, no content scripts, no DOM access
+- No cookie/history/credential theft
+- No ad injection or search manipulation
+- No remote code execution
+- The extension killing is user-triggered, not automatic
+- The encrypted DNS is for infrastructure discovery, not for hiding malicious payloads
+- Standard VPN operations (proxy settings, WebRTC protection, split tunneling)
+
+**Recommendation:** Downgrade to REVIEW. The extension is aggressive but not malicious. The `management` permission abuse is the primary concern, but it is user-initiated. Monitor the encrypted API domain resolution for any changes in behavior.
