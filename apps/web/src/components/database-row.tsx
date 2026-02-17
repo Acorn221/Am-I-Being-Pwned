@@ -6,19 +6,22 @@ import { Button } from "@amibeingpwned/ui/button";
 import { TableCell, TableRow } from "@amibeingpwned/ui/table";
 
 import { formatUsers, riskConfig } from "~/lib/risk";
+import { navigate } from "~/router";
 
 export function DatabaseRow({
   id,
   ext,
+  index,
   isExpanded,
   onToggle,
 }: {
   id: string;
   ext: ExtensionReport;
+  index: number;
   isExpanded: boolean;
   onToggle: () => void;
 }) {
-  const cfg = riskConfig[ext.risk];
+  const cfg = riskConfig[ext.risk] ?? riskConfig.unavailable;
   const totalVulns =
     ext.vulnerabilityCount.critical +
     ext.vulnerabilityCount.high +
@@ -27,26 +30,21 @@ export function DatabaseRow({
 
   return (
     <>
-      <TableRow className="cursor-pointer" onClick={onToggle}>
-        <TableCell className="overflow-hidden whitespace-normal">
+      <TableRow className={`cursor-pointer ${index % 2 === 1 ? "bg-muted/30" : ""}`} onClick={onToggle}>
+        <TableCell className="overflow-hidden whitespace-normal py-4">
           <div className="text-foreground truncate text-sm font-medium">
             {ext.name}
           </div>
-          {!isExpanded && (
-            <div className="text-muted-foreground mt-0.5 truncate text-xs">
-              {ext.summary}
-            </div>
-          )}
         </TableCell>
-        <TableCell className="text-muted-foreground align-top text-sm">
+        <TableCell className="text-muted-foreground align-top py-4 text-sm">
           {formatUsers(ext.userCount)}
         </TableCell>
-        <TableCell className="align-top">
+        <TableCell className="align-top py-4">
           <Badge variant={cfg.variant}>{cfg.label}</Badge>
         </TableCell>
       </TableRow>
       {isExpanded && (
-        <TableRow className="hover:bg-transparent">
+        <TableRow className={`hover:bg-transparent ${index % 2 === 1 ? "bg-muted/30" : ""}`}>
           <TableCell colSpan={3} className="whitespace-normal pt-0">
             <div className="space-y-3 pb-2">
               <div className="text-muted-foreground text-xs">
@@ -156,7 +154,7 @@ export function DatabaseRow({
                   className="ml-auto shrink-0 bg-white text-black hover:bg-white/90"
                   onClick={(e) => {
                     e.stopPropagation();
-                    window.location.hash = `/report/${id}`;
+                    navigate(`/report/${id}`);
                   }}
                 >
                   View Full Report

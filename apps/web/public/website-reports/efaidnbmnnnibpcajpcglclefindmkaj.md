@@ -15,19 +15,19 @@
 
 ## Executive Summary
 
-**Overall Risk Level: CLEAN**
+**Overall Risk Level: MEDIUM**
 
 Adobe Acrobat is a legitimate, professionally developed extension from Adobe Inc. with 339 million users. The extension provides PDF viewing, editing, and conversion functionality with deep integration into Google Workspace, Outlook, LinkedIn, WhatsApp, ChatGPT, and other platforms.
 
 **Key Findings:**
-- ✅ All network calls go to legitimate Adobe domains
-- ✅ No credential theft, malware, or proxy infrastructure
-- ✅ Legitimate business purpose for extensive permissions
-- ⚠️ Remote code execution from CDN (supply chain risk concern)
-- ⚠️ Missing DNS security controls (no CAA records or DNSSEC)
-- ⚠️ innerHTML injection from remote source
+- No credential theft, malware, or proxy infrastructure
+- Legitimate business purpose for extensive permissions
+- **MEDIUM: Remote code execution from CDN — if Adobe's CDN is compromised, attacker gains arbitrary code execution on every website visited by 339M users**
+- **MEDIUM: CustomEvent SSRF pattern exploitable with pre-existing XSS on integrated platforms**
+- Missing DNS security controls (no CAA records or DNSSEC)
+- innerHTML injection from remote source with 10-minute cache TTL
 
-**Verdict:** While the extension itself is CLEAN and serves its intended purpose, it employs a remote execution architecture that creates supply chain risk exposure for 339M users. The code is legitimate but the architectural choices warrant documentation.
+**Verdict:** No malicious behavior detected, but the remote code execution architecture creates catastrophic supply chain risk for 339M users. The extension loads JavaScript from Adobe's CDN and injects it via innerHTML into web pages. CDN compromise would grant an attacker arbitrary code execution across all websites. Additional concerns include CustomEvent-based SSRF patterns on integrated sites (LinkedIn, Gmail, etc.) that amplify pre-existing XSS, and outdated jQuery 3.1.1.
 
 ---
 
@@ -35,9 +35,9 @@ Adobe Acrobat is a legitimate, professionally developed extension from Adobe Inc
 
 ### 1. Remote Code Execution from CDN (Architectural Concern)
 
-**Severity:** LOW (legitimate use, but architectural risk)
-**Category:** Supply Chain Risk
-**Status:** By design, not exploited
+**Severity:** MEDIUM (catastrophic supply chain risk for 339M users)
+**Category:** Supply Chain Risk / Remote Code Execution
+**Status:** By design, not currently exploited
 
 **Description:**
 The extension loads and executes JavaScript from Adobe's CDN at runtime for feature deployment (primarily the "Edit in Adobe Express" integration on Google Drive/Gmail).
@@ -301,22 +301,17 @@ chrome.cookies?.onChanged?.addListener(e => {
 
 ## Overall Risk Assessment
 
-### Risk Level: **CLEAN**
+### Risk Level: **MEDIUM**
 
 **Rationale:**
-1. **Legitimate Publisher:** Adobe Inc., established company with security team
-2. **Clear Functionality:** All features match advertised purpose
-3. **No Malicious Behavior:** No credential theft, ad injection, or proxy abuse
-4. **Professional Development:** High code quality, proper error handling
-5. **Transparent Data Usage:** Adobe's privacy policy covers extension
+1. **No Malicious Behavior:** Adobe is a legitimate publisher with no evidence of credential theft, ad injection, or proxy abuse
+2. **Supply Chain RCE Risk:** The extension loads and executes remote JavaScript from Adobe's CDN via innerHTML injection. If the CDN is compromised, an attacker gains arbitrary code execution on every website visited by 339M users — the largest blast radius of any extension analyzed
+3. **CustomEvent SSRF:** The inject script → CustomEvent → content script → service worker architecture enables SSRF to 5 Adobe services if an attacker has pre-existing XSS on LinkedIn, Gmail, Outlook, or other integrated platforms
+4. **Missing DNS Security:** No CAA records, no DNSSEC — DNS hijacking could redirect CDN traffic
+5. **Outdated Dependencies:** jQuery 3.1.1 with known CVEs (no exploitable vector found, but represents maintenance concern)
 
-**Supply Chain Risk Note:**
-The remote execution architecture is a valid security concern for researchers and infrastructure planners, but does not make the extension itself malicious. It's comparable to:
-- Chrome auto-updates (Google controls what code runs)
-- Electron apps with auto-update (developer controls updates)
-- Web apps (server controls all code)
-
-The difference is that browser extensions have elevated privileges, making the CDN a high-value target. However, Adobe's security posture (large security team, bug bounty program, Akamai CDN) mitigates this concern significantly.
+**Why MEDIUM, not CLEAN:**
+While the extension itself is not malicious, the remote code execution architecture creates a supply chain risk that is qualitatively different from auto-update mechanisms. Browser extensions have elevated privileges (`<all_urls>`, `cookies`, `webRequest`, `nativeMessaging`), and the CDN code executes in the context of every web page the user visits. A CDN compromise would be a catastrophic supply chain attack affecting 339M users with no update review gate.
 
 ---
 
@@ -348,13 +343,13 @@ The difference is that browser extensions have elevated privileges, making the C
 
 ## Conclusion
 
-The Adobe Acrobat Chrome Extension is a **CLEAN**, professionally developed extension serving its advertised purpose. It employs extensive permissions for legitimate functionality across Google Workspace, Microsoft Outlook, and other platforms.
+The Adobe Acrobat Chrome Extension is a **MEDIUM risk**, professionally developed extension serving its advertised purpose. It employs extensive permissions for legitimate functionality across Google Workspace, Microsoft Outlook, and other platforms.
 
-The remote code execution architecture is a valid architectural concern from a supply chain security perspective, but does not constitute malicious behavior. The extension would benefit from implementing DNS security controls (CAA, DNSSEC) to reduce supply chain risk, but these are defense-in-depth measures rather than indicators of compromise.
+While not malicious, the remote code execution architecture creates the largest supply chain risk surface of any extension analyzed — 339M users with `<all_urls>` access, loading JavaScript from a CDN with a 10-minute cache TTL and no Subresource Integrity checks. CDN compromise would bypass Chrome Web Store review entirely.
 
-**Recommendation for users:** Safe to install and use.
-**Recommendation for Adobe:** Implement suggested DNS security controls.
-**Recommendation for researchers:** Monitor CDN for changes; note architectural pattern.
+**Recommendation for users:** Safe to use for its intended purpose, but understand the trust chain extends to Adobe's CDN infrastructure.
+**Recommendation for Adobe:** Implement SRI hashes, CAA records, DNSSEC, and restrict CORS to extension origins.
+**Recommendation for researchers:** Monitor CDN at `acrobat.adobe.com/dc-chrome-extension/` for unauthorized changes.
 
 ---
 

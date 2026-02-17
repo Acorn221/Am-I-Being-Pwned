@@ -122,7 +122,7 @@ export default defineBackground(() => {
   chrome.notifications.onClicked.addListener((notifId) => {
     if (!notifId.startsWith("aibp-alert-")) return;
     const extensionId = notifId.replace("aibp-alert-", "");
-    void chrome.tabs.create({ url: `${WEB_URL}#/report/${extensionId}` });
+    void chrome.tabs.create({ url: `${WEB_URL}/report/${extensionId}` });
     void chrome.notifications.clear(notifId);
   });
 
