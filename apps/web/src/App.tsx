@@ -9,6 +9,8 @@ import { TypingTitle } from "~/components/typing-title";
 import { formatUsers } from "~/lib/risk";
 import { navigate } from "~/router";
 
+const SHOW_DATABASE = false;
+
 function HeroSection({ reports }: { reports: ReportMap }) {
   return (
     <header className="mx-auto flex min-h-screen max-w-6xl items-center px-6">
@@ -19,8 +21,8 @@ function HeroSection({ reports }: { reports: ReportMap }) {
           </p>
           <TypingTitle />
           <p className="text-muted-foreground mb-8 max-w-xl text-lg">
-            We find malicious and vulnerable Chrome extensions so you don't find
-            out before it's too late.
+            We find problems with Chrome extensions so you don't find out before
+            it's too late.
             <br />
             Scan yours or browse the database.
           </p>
@@ -170,13 +172,23 @@ function App({ reports }: { reports: ReportMap }) {
       </section>
 
       {/* Database */}
-      <DatabaseSection reports={reports} />
+      {SHOW_DATABASE ? (
+        <DatabaseSection reports={reports} />
+      ) : (
+        <section className="mx-auto max-w-6xl px-6 py-16 text-center">
+          <h2 className="text-foreground mb-3 text-xl font-semibold">
+            Extension Database
+          </h2>
+          <p className="text-muted-foreground text-lg">Coming soon.</p>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="border-border/50 border-t">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-8">
           <p className="text-muted-foreground text-sm">
-            &copy; {new Date().getFullYear()} Am I Being Pwned. All rights reserved.
+            &copy; {new Date().getFullYear()} Am I Being Pwned. All rights
+            reserved.
           </p>
           <a
             href="/faq"
