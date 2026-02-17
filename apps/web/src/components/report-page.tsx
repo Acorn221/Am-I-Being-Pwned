@@ -7,6 +7,7 @@ import { Badge } from "@amibeingpwned/ui/badge";
 import { Button } from "@amibeingpwned/ui/button";
 
 import { formatUsers, riskConfig } from "~/lib/risk";
+import { navigate } from "~/router";
 
 export function ReportPage({
   extensionId,
@@ -48,7 +49,7 @@ export function ReportPage({
               size="sm"
               className="shrink-0"
               onClick={() => {
-                window.location.hash = "";
+                navigate("/");
               }}
             >
               Back
@@ -92,7 +93,7 @@ export function ReportPage({
             <Button
               variant="outline"
               onClick={() => {
-                window.location.hash = "";
+                navigate("/");
               }}
             >
               Back to database

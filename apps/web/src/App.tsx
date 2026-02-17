@@ -1,14 +1,13 @@
 import { useMemo } from "react";
 import { Eye, Globe, ShieldAlert, Syringe, Wifi } from "lucide-react";
 
-import { Button } from "@amibeingpwned/ui/button";
-
 import type { ReportMap } from "~/hooks/use-extension-database";
 import { DatabaseSection } from "~/components/database-section";
 import { ExtensionPreviewCards } from "~/components/extension-preview-cards";
 import { HeroCycleProvider } from "~/components/hero-cycle-context";
 import { TypingTitle } from "~/components/typing-title";
 import { formatUsers } from "~/lib/risk";
+import { navigate } from "~/router";
 
 function HeroSection({ reports }: { reports: ReportMap }) {
   return (
@@ -25,14 +24,14 @@ function HeroSection({ reports }: { reports: ReportMap }) {
             <br />
             Scan yours or browse the database.
           </p>
-          <div className="flex gap-3">
+          {/* <div className="flex gap-3">
             <Button size="lg" disabled className="hidden sm:inline-flex">
               Install Extension (Coming Soon)
             </Button>
             <Button size="lg" variant="outline" asChild>
               <a href="#database">Browse Database</a>
             </Button>
-          </div>
+          </div> */}
         </div>
         <div className="hidden flex-1 md:block">
           <ExtensionPreviewCards reports={reports} />
@@ -175,10 +174,20 @@ function App({ reports }: { reports: ReportMap }) {
 
       {/* Footer */}
       <footer className="border-border/50 border-t">
-        <div className="mx-auto max-w-6xl px-6 py-8 text-center">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-8">
           <p className="text-muted-foreground text-sm">
-            Made with ❤️ by James Arnott
+            &copy; {new Date().getFullYear()} Am I Being Pwned. All rights reserved.
           </p>
+          <a
+            href="/faq"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/faq");
+            }}
+            className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+          >
+            FAQ
+          </a>
         </div>
       </footer>
     </div>

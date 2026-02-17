@@ -6,6 +6,7 @@ import { Button } from "@amibeingpwned/ui/button";
 import { TableCell, TableRow } from "@amibeingpwned/ui/table";
 
 import { formatUsers, riskConfig } from "~/lib/risk";
+import { navigate } from "~/router";
 
 export function DatabaseRow({
   id,
@@ -153,7 +154,7 @@ export function DatabaseRow({
                   className="ml-auto shrink-0 bg-white text-black hover:bg-white/90"
                   onClick={(e) => {
                     e.stopPropagation();
-                    window.location.hash = `/report/${id}`;
+                    navigate(`/report/${id}`);
                   }}
                 >
                   View Full Report

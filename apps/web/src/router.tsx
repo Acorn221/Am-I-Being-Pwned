@@ -1,47 +1,56 @@
 import { useLayoutEffect, useRef, useSyncExternalStore } from "react";
 
 import App from "~/App";
+import { FaqPage } from "~/components/faq-page";
 import { ReportPage } from "~/components/report-page";
 import { useExtensionDatabase } from "~/hooks/use-extension-database";
 
-const REPORT_RE = /^#\/report\/([a-p]{32})$/;
+const REPORT_RE = /^\/report\/([a-p]{32})$/;
 
-function getHash() {
-  return window.location.hash;
+function getPath() {
+  return window.location.pathname;
 }
 
 function subscribe(callback: () => void) {
-  window.addEventListener("hashchange", callback);
-  return () => window.removeEventListener("hashchange", callback);
+  window.addEventListener("popstate", callback);
+  return () => window.removeEventListener("popstate", callback);
 }
 
-function useHash() {
-  return useSyncExternalStore(subscribe, getHash);
+function usePath() {
+  return useSyncExternalStore(subscribe, getPath);
+}
+
+/** Navigate without a full page reload. */
+export function navigate(to: string) {
+  window.history.pushState(null, "", to);
+  window.dispatchEvent(new PopStateEvent("popstate"));
 }
 
 export function Router() {
-  const hash = useHash();
+  const path = usePath();
   const { reports } = useExtensionDatabase();
   const scrollYRef = useRef(0);
   const prevExtIdRef = useRef<string | undefined>(undefined);
 
-  const reportMatch = hash.match(REPORT_RE);
+  const reportMatch = path.match(REPORT_RE);
   const extensionId = reportMatch?.[1];
+  const isFaq = path === "/faq";
+  const isSubPage = !!extensionId || isFaq;
 
   // Capture scroll position during render (before DOM mutations)
-  if (extensionId && !prevExtIdRef.current) {
+  if (isSubPage && !prevExtIdRef.current) {
     scrollYRef.current = window.scrollY;
   }
   prevExtIdRef.current = extensionId;
 
   // Scroll after DOM commits but before browser paints
   useLayoutEffect(() => {
-    window.scrollTo(0, extensionId ? 0 : scrollYRef.current);
-  }, [extensionId]);
+    window.scrollTo(0, isSubPage ? 0 : scrollYRef.current);
+  }, [isSubPage]);
 
   return (
     <>
-      <div hidden={!!extensionId}>
+      <div hidden={isSubPage}>
         <App reports={reports} />
       </div>
       {extensionId && (
@@ -50,6 +59,7 @@ export function Router() {
           ext={reports.get(extensionId)}
         />
       )}
+      {isFaq && <FaqPage />}
     </>
   );
 }

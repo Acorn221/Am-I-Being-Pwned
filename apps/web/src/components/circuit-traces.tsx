@@ -13,8 +13,8 @@ const SHOW_DEBUG_BOXES = false;
 const LABEL_WIDTH = 190;
 const LABEL_HEIGHT = 48;
 const LABEL_SLOTS = [
-  { labelX: 455, labelY: 100 },
-  { labelX: 455, labelY: 350 },
+  { labelX: 420, labelY: 100 },
+  { labelX: 420, labelY: 350 },
   { labelX: 280, labelY: -50 },
 ];
 

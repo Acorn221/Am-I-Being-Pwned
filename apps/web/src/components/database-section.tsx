@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { TriangleAlert, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, TriangleAlert, X } from "lucide-react";
 
 import type { ExtensionReport } from "@amibeingpwned/types";
 import {
@@ -21,6 +21,8 @@ export function DatabaseSection({ reports }: { reports: ReportMap }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showDisclaimer, setShowDisclaimer] = useState(true);
   const [pasteFilterIds, setPasteFilterIds] = useState<Set<string> | null>(null);
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 25;
 
   const dbEntries = useMemo(() => {
     const riskWeight: Record<string, number> = {
@@ -45,6 +47,7 @@ export function DatabaseSection({ reports }: { reports: ReportMap }) {
   }, [dbEntries, pasteFilterIds]);
 
   const filtered = useMemo(() => {
+    setPage(0);
     if (!search.trim()) return pasteFiltered;
     const q = search.toLowerCase();
     return pasteFiltered.filter(
@@ -54,6 +57,9 @@ export function DatabaseSection({ reports }: { reports: ReportMap }) {
         ext.summary.toLowerCase().includes(q),
     );
   }, [pasteFiltered, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   return (
     <section id="database" className="mx-auto max-w-6xl px-6 py-16">
@@ -114,7 +120,7 @@ export function DatabaseSection({ reports }: { reports: ReportMap }) {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map(([id, ext], index) => (
+              paginated.map(([id, ext], index) => (
                 <DatabaseRow
                   key={id}
                   id={id}
@@ -128,6 +134,33 @@ export function DatabaseSection({ reports }: { reports: ReportMap }) {
           </TableBody>
         </Table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between">
+          <p className="text-muted-foreground text-sm">
+            {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, filtered.length)} of {filtered.length}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              disabled={page === 0}
+              onClick={() => setPage(page - 1)}
+              className="text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <span className="text-muted-foreground text-sm">
+              {page + 1} / {totalPages}
+            </span>
+            <button
+              disabled={page >= totalPages - 1}
+              onClick={() => setPage(page + 1)}
+              className="text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

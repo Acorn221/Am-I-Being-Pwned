@@ -188,10 +188,20 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Hide traces on smaller screens where labels would clip
+  const [wideEnough, setWideEnough] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1100px)");
+    const update = () => setWideEnough(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
   if (visible.length === 0) return null;
 
   return (
-    <div className="relative flex h-full items-center justify-center py-12">
+    <div className="relative flex h-full items-center py-12">
       <style>{`
         @keyframes card-exit {
           0% {
@@ -238,7 +248,7 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
             <CardContent ext={leaving} highlight />
           </div>
         )}
-        {annotations.length > 0 && (
+        {annotations.length > 0 && wideEnough && (
           <CircuitTraces
             annotations={annotations}
             highlighted={highlighted}
