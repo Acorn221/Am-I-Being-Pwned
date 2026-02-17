@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, TriangleAlert, X } from "lucide-react";
 
 import type { ExtensionReport } from "@amibeingpwned/types";
@@ -14,7 +14,6 @@ import {
 import type { ReportMap } from "~/hooks/use-extension-database";
 import { DatabaseRow } from "~/components/database-row";
 import { ExtensionPastePanel } from "~/components/extension-paste-panel";
-import { riskOrder } from "~/lib/risk";
 
 function Pagination({
   page,
@@ -70,6 +69,29 @@ export function DatabaseSection({ reports }: { reports: ReportMap }) {
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 25;
 
+  // Auto-scan via extension when opened with ?scan=1
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has("scan")) return;
+
+    const ac = new AbortController();
+
+    void import("~/lib/extension-client").then(async ({ extensionClient }) => {
+      const id = await extensionClient.detect();
+      if (!id || ac.signal.aborted) return;
+
+      const resp = await extensionClient.send({ type: "GET_EXTENSIONS", version: 1 });
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- aborted may change after await
+      if (ac.signal.aborted || resp.type !== "EXTENSIONS_RESULT") return;
+
+      const ids = new Set(resp.extensions.map((e) => e.id));
+      setPasteFilterIds(ids);
+      document.getElementById("database")?.scrollIntoView({ behavior: "smooth" });
+    });
+
+    return () => ac.abort();
+  }, []);
+
   const dbEntries = useMemo(() => {
     const riskWeight: Record<string, number> = {
       critical: 5,
@@ -84,27 +106,30 @@ export function DatabaseSection({ reports }: { reports: ReportMap }) {
     const score = (ext: ExtensionReport) =>
       (riskWeight[ext.risk] ?? 0) * Math.log10(Math.max(ext.userCount, 1));
     return [...reports.entries()].sort(([, a], [, b]) => score(b) - score(a));
-  }, [reports, reports.size]);
+  }, [reports]);
 
   const pasteFiltered = useMemo(() => {
     if (!pasteFilterIds) return dbEntries;
     return dbEntries.filter(([id]) => pasteFilterIds.has(id));
   }, [dbEntries, pasteFilterIds]);
 
-  const filtered = useMemo(() => {
-    setPage(0);
-    if (!search.trim()) return pasteFiltered;
-    const q = search.toLowerCase();
-    return pasteFiltered.filter(
-      ([id, ext]) =>
-        ext.name.toLowerCase().includes(q) ||
-        id.toLowerCase().includes(q) ||
-        ext.summary.toLowerCase().includes(q),
-    );
-  }, [pasteFiltered, search]);
+  const filtered = useMemo(
+    () => {
+      if (!search.trim()) return pasteFiltered;
+      const q = search.toLowerCase();
+      return pasteFiltered.filter(
+        ([id, ext]) =>
+          ext.name.toLowerCase().includes(q) ||
+          id.toLowerCase().includes(q) ||
+          ext.summary.toLowerCase().includes(q),
+      );
+    },
+    [pasteFiltered, search],
+  );
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const clampedPage = Math.min(page, totalPages - 1);
+  const paginated = filtered.slice(clampedPage * PAGE_SIZE, (clampedPage + 1) * PAGE_SIZE);
 
   return (
     <section id="database" className="mx-auto max-w-6xl px-6 py-16">
@@ -128,7 +153,7 @@ export function DatabaseSection({ reports }: { reports: ReportMap }) {
           type="text"
           placeholder="Search extensions..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => { setSearch(e.target.value); setPage(0); }}
           className="border-border bg-background text-foreground placeholder:text-muted-foreground w-64 rounded-md border px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-zinc-500"
         />
       </div>
@@ -153,7 +178,7 @@ export function DatabaseSection({ reports }: { reports: ReportMap }) {
 
       {totalPages > 1 && (
         <Pagination
-          page={page}
+          page={clampedPage}
           totalPages={totalPages}
           total={filtered.length}
           pageSize={PAGE_SIZE}
@@ -199,7 +224,7 @@ export function DatabaseSection({ reports }: { reports: ReportMap }) {
 
       {totalPages > 1 && (
         <Pagination
-          page={page}
+          page={clampedPage}
           totalPages={totalPages}
           total={filtered.length}
           pageSize={PAGE_SIZE}

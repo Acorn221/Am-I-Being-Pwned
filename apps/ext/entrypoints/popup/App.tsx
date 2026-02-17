@@ -78,7 +78,7 @@ export default function App() {
   }, []);
 
   const openDashboard = () => {
-    void chrome.tabs.create({ url: API_BASE_URL });
+    void chrome.tabs.create({ url: `${API_BASE_URL}/?scan=1` });
     window.close();
   };
 
