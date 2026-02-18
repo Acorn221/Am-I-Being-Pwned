@@ -28,7 +28,7 @@ export const HERO_SLIDES: HeroSlide[] = [
   {
     // phrase: "ad blocker",
     phrase: "browser extension",
-    extensionId: "gbdjcgalliefpinpmggefbloehmmknca",    annotations: [
+    extensionId: "gbdjcgalliefpinpmggefbloehmmknca", annotations: [
       { permission: "tabs", title: "Every URL Uploaded", description: "Every page you visit is sent to a remote server with a persistent tracking UUID" },
       { permission: "<all_urls>", title: "Cross-Device Tracking", description: "Your tracking ID syncs across all your devices via chrome.storage.sync" },
     ],
@@ -36,7 +36,7 @@ export const HERO_SLIDES: HeroSlide[] = [
   {
     // phrase: "focus timer",
     phrase: "productivity tool",
-    extensionId: "laankejkbhbdhmipfmgcngdelahlfoji",    annotations: [
+    extensionId: "laankejkbhbdhmipfmgcngdelahlfoji", annotations: [
       { permission: "tabs", title: "AI Chats Uploaded", description: "Your ChatGPT, Gemini & DeepSeek conversations are sent to a data broker" },
       { permission: "webNavigation", title: "Search Queries Captured", description: "Every URL parameter — including Google searches — is uploaded to a data broker" },
     ],
@@ -44,7 +44,7 @@ export const HERO_SLIDES: HeroSlide[] = [
   {
     // phrase: "VPN proxy",
     phrase: "free VPN",
-    extensionId: "adlpodnneegcnbophopdmhedicjbcgco",    annotations: [
+    extensionId: "adlpodnneegcnbophopdmhedicjbcgco", annotations: [
       { permission: "proxy", title: "You're an Exit Node", description: "Unknown traffic is routed through your home connection as a residential proxy" },
       { permission: "management", title: "Kills Other Extensions", description: "Silently disables every other VPN so you can't switch away" },
       { permission: "cookies", title: "Shopping Hijacked", description: "Injects affiliate codes into your purchases via a third-party ad network" },
@@ -53,7 +53,7 @@ export const HERO_SLIDES: HeroSlide[] = [
   {
     // phrase: "website finder",
     phrase: "search tool",
-    extensionId: "necpbmbhhdiplmfhmjicabdeighkndkn",    annotations: [
+    extensionId: "necpbmbhhdiplmfhmjicabdeighkndkn", annotations: [
       { permission: "webRequest", title: "File Uploads Intercepted", description: "Documents you upload can be silently forwarded to a server-configured domain" },
       { permission: "tabs", title: "Encrypted Exfiltration", description: "Collected data is RSA+AES encrypted before being sent to a remote server" },
     ],
@@ -61,7 +61,7 @@ export const HERO_SLIDES: HeroSlide[] = [
   {
     // phrase: "ad skip tool",
     phrase: "ad blocker",
-    extensionId: "pcjlckhhhmlefmobnnoolakplfppdchi",    annotations: [
+    extensionId: "pcjlckhhhmlefmobnnoolakplfppdchi", annotations: [
       { permission: "tabs", title: "ChatGPT Sessions Stolen", description: "Creates hidden ChatGPT tabs to hijack your access tokens and prompts" },
       { permission: "*://*/*", title: "Residential Proxy Botnet", description: "Your browser becomes a proxy node via a remote command server" },
     ],
@@ -69,7 +69,7 @@ export const HERO_SLIDES: HeroSlide[] = [
   {
     // phrase: "screen timer",
     phrase: "screen time tracker",
-    extensionId: "elfaihghhjjoknimpccccmkioofjjfkf",    annotations: [
+    extensionId: "elfaihghhjjoknimpccccmkioofjjfkf", annotations: [
       { permission: "*://*/*", title: "Ad Intelligence Sensor", description: "Embeds a data broker's SDK to scrape ads from every page you visit" },
       { permission: "tabs", title: "AI Chats Uploaded", description: "Your ChatGPT, Gemini & Copilot prompts are sent to a data broker's servers" },
     ],
@@ -77,7 +77,7 @@ export const HERO_SLIDES: HeroSlide[] = [
   {
     // phrase: "Twitter tool",
     phrase: "social media tool",
-    extensionId: "amoldiondpmjdnllknhklocndiibkcoe",    annotations: [
+    extensionId: "amoldiondpmjdnllknhklocndiibkcoe", annotations: [
       { permission: "cookies", title: "Session Stolen", description: "Reads your auth cookies to make API calls as you" },
       { permission: "webRequest", title: "Credential Harvesting", description: "Intercepts login requests to capture your credentials" },
     ],
@@ -85,7 +85,7 @@ export const HERO_SLIDES: HeroSlide[] = [
   {
     // phrase: "one-click VPN",
     phrase: "VPN extension",
-    extensionId: "fcfhplploccackoneaefokcmbjfbkenj",    annotations: [
+    extensionId: "fcfhplploccackoneaefokcmbjfbkenj", annotations: [
       { permission: "proxy", title: "You Are the VPN", description: "Your home internet is used as a proxy to route strangers' traffic" },
       { permission: "webRequest", title: "Ads Injected", description: "Injects ads into pages you visit to generate revenue" },
     ],
@@ -93,21 +93,21 @@ export const HERO_SLIDES: HeroSlide[] = [
   {
     // phrase: "video editor",
     phrase: "media editor",
-    extensionId: "ohgkmilcibaoempgifldidkidnbkbeii",    annotations: [
+    extensionId: "ohgkmilcibaoempgifldidkidnbkbeii", annotations: [
       { permission: "tabs", title: "Every Site Reported", description: "Every URL you visit is hex-encoded and sent to a remote tracking server" },
       { permission: "storage", title: "Permanent Tracking ID", description: "A unique ID stored in chrome.storage.sync follows you across devices" },
     ],
   },
   {
     phrase: "new tab page",
-    extensionId: "meffljleomgifbbcffejnmhjagncfpbd",    annotations: [
+    extensionId: "meffljleomgifbbcffejnmhjagncfpbd", annotations: [
       { permission: "topSites", title: "Top Sites Harvested", description: "Your most-visited sites are collected and sent to a remote server" },
       { permission: "<all_urls>", title: "ChatGPT Cookies Extracted", description: "Reads all your ChatGPT cookies to make API calls on your behalf" },
     ],
   },
   {
     phrase: "notepad",
-    extensionId: "fefodpegbocmidnfphgggnjcicipaibk",    annotations: [
+    extensionId: "fefodpegbocmidnfphgggnjcicipaibk", annotations: [
       { permission: "unlimitedStorage", title: "All Local Data Sent", description: "Your entire localStorage is dumped and uploaded to a remote server" },
       { permission: "storage", title: "Tracked Until 2033", description: "A tracking cookie is set to expire in 10+ years" },
     ],
@@ -115,7 +115,7 @@ export const HERO_SLIDES: HeroSlide[] = [
   {
     // phrase: "office suite",
     phrase: "document editor",
-    extensionId: "aobjedggladklcfbokddfgjkfdioknak",    annotations: [
+    extensionId: "aobjedggladklcfbokddfgjkfdioknak", annotations: [
       { permission: "tabs", title: "Browsing History Uploaded", description: "Every URL you visit is hex-encoded and sent to a remote tracking server" },
       { permission: "storage", title: "Remote Tab Redirect", description: "The server can force your active tab to navigate to a different URL" },
     ],
@@ -123,7 +123,7 @@ export const HERO_SLIDES: HeroSlide[] = [
   {
     // phrase: "audio editor",
     phrase: "audio tool",
-    extensionId: "dfmpaemifkgbnlgcccccnfjjkeiikeie",    annotations: [
+    extensionId: "dfmpaemifkgbnlgcccccnfjjkeiikeie", annotations: [
       { permission: "tabs", title: "Full Surveillance", description: "Every page you visit is reported to a remote server in real time" },
       { permission: "storage", title: "Remote Tab Redirect", description: "Server responses can force your active tab to navigate elsewhere" },
     ],
@@ -131,14 +131,14 @@ export const HERO_SLIDES: HeroSlide[] = [
   {
     // phrase: "YouTube tool",
     phrase: "video tool",
-    extensionId: "hmbnhhcgiecenbbkgdoaoafjpeaboine",    annotations: [
+    extensionId: "hmbnhhcgiecenbbkgdoaoafjpeaboine", annotations: [
       { permission: "declarativeNetRequest", title: "Remote Control Server", description: "Receives commands from a remote server to execute on your browser" },
       { permission: "<all_urls>", title: "Runs on Every Site", description: "Injected into all websites — far beyond its stated purpose" },
     ],
   },
   {
     phrase: "video downloader",
-    extensionId: "penndbmahnpapepljikkjmakcobdahne",    annotations: [
+    extensionId: "penndbmahnpapepljikkjmakcobdahne", annotations: [
       { permission: "<all_urls>", title: "Keylogging Code Found", description: "Contains keylogging and XHR hooking code in its source" },
       { permission: "tabs", title: "Ads Injected", description: "Injects ads and affiliate links across sites you visit" },
     ],
