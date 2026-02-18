@@ -1,17 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import type { ExtensionReport } from "@amibeingpwned/types";
 import { Badge } from "@amibeingpwned/ui/badge";
 
 import { CircuitTraces } from "~/components/circuit-traces";
 import { useHeroCycle } from "~/components/hero-cycle-context";
 import { HERO_SLIDES } from "~/components/hero-slides";
-import type { ReportMap } from "~/hooks/use-extension-database";
+import type { HeroSlide } from "~/components/hero-slides";
 import { formatUsers, riskConfig } from "~/lib/risk";
-
-interface ExtensionPreviewCardsProps {
-  reports: ReportMap;
-}
 
 const VISIBLE_COUNT = 4;
 const EXIT_DURATION = 600;
@@ -62,18 +57,16 @@ const isRisky = (risk: string) =>
   risk === "medium";
 
 function CardContent({
-  ext,
-  displayName,
+  slide,
   highlight,
   isFront,
 }: {
-  ext: ExtensionReport;
-  displayName: string;
+  slide: HeroSlide;
   highlight?: boolean;
   isFront?: boolean;
 }) {
-  const risk = riskConfig[ext.risk];
-  const allPerms = [...ext.permissions, ...ext.hostPermissions];
+  const risk = riskConfig[slide.risk];
+  const allPerms = [...slide.permissions, ...slide.hostPermissions];
 
   const sorted = [...allPerms].sort((a, b) => {
     const aS = isSensitivePerm(a) ? 0 : 1;
@@ -81,13 +74,13 @@ function CardContent({
     return aS - bS;
   });
   const shown = sorted.slice(0, 6);
-  const extIsRisky = isRisky(ext.risk);
+  const slideIsRisky = isRisky(slide.risk);
 
   return (
     <>
       <div className="mb-4 flex items-start justify-between gap-3">
         <h3 data-trace-obstacle className="text-card-foreground line-clamp-2 text-base font-semibold leading-snug">
-          {displayName}
+          {slide.name}
         </h3>
         <Badge data-trace-obstacle variant={risk.variant} className="shrink-0 text-xs">
           {risk.label}
@@ -95,7 +88,7 @@ function CardContent({
       </div>
 
       <p data-trace-obstacle className="text-muted-foreground mb-4 text-sm">
-        {formatUsers(ext.userCount)} users
+        {formatUsers(slide.userCount)} users
       </p>
 
       {shown.length > 0 && (
@@ -105,7 +98,7 @@ function CardContent({
           </p>
           <div className="flex flex-wrap gap-1.5">
             {shown.map((p) => {
-              const dangerous = extIsRisky && isSensitivePerm(p);
+              const dangerous = slideIsRisky && isSensitivePerm(p);
               return (
                 <span
                   key={p}
@@ -132,13 +125,13 @@ function CardContent({
   );
 }
 
-export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
+export function ExtensionPreviewCards() {
   const { slideIndex, pause, resume } = useHeroCycle();
 
   // Build the visible window: current front card + 3 behind it (wrapping)
   const visible = useMemo(() => {
     const count = Math.min(VISIBLE_COUNT, HERO_SLIDES.length);
-    const cards: { ext: ExtensionReport; anonName: string; slot: number }[] = [];
+    const cards: { slide: HeroSlide; slot: number }[] = [];
 
     for (let i = 0; i < count; i++) {
       const idx =
@@ -146,16 +139,14 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
         HERO_SLIDES.length;
       const slide = HERO_SLIDES[idx];
       if (!slide) continue;
-      const ext = reports.get(slide.extensionId);
-      if (!ext) continue;
-      cards.push({ ext, anonName: slide.anonName, slot: i });
+      cards.push({ slide, slot: i });
     }
 
     return cards;
-  }, [slideIndex, reports]);
+  }, [slideIndex]);
 
   // Track leaving card
-  const [leaving, setLeaving] = useState<{ ext: ExtensionReport; anonName: string } | null>(null);
+  const [leaving, setLeaving] = useState<HeroSlide | null>(null);
   const prevSlideRef = useRef(slideIndex);
 
   useEffect(() => {
@@ -166,19 +157,17 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
       (prevSlideRef.current + HERO_SLIDES.length) % HERO_SLIDES.length;
     const oldSlide = HERO_SLIDES[oldFrontIdx];
     if (oldSlide) {
-      const ext = reports.get(oldSlide.extensionId);
-      if (ext) {
-        setLeaving({ ext, anonName: oldSlide.anonName });
-        setTimeout(() => setLeaving(null), EXIT_DURATION);
-      }
+      setLeaving(oldSlide);
+      setTimeout(() => setLeaving(null), EXIT_DURATION);
     }
 
     prevSlideRef.current = slideIndex;
-  }, [slideIndex, reports]);
+  }, [slideIndex]);
 
   // Delayed highlight for the front card
   const [highlighted, setHighlighted] = useState(false);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: reset highlight then re-enable after delay
     setHighlighted(false);
     const id = setTimeout(() => setHighlighted(true), 800);
     return () => clearTimeout(id);
@@ -219,14 +208,14 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
         }
       `}</style>
       <div ref={containerRef} className="relative h-[440px] w-[480px]" onMouseEnter={pause} onMouseLeave={resume}>
-        {visible.map(({ ext, anonName, slot }) => {
+        {visible.map(({ slide, slot }) => {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           const t = (cardTransforms[slot] ?? cardTransforms[0])!;
           const isFront =
             slot === VISIBLE_COUNT - 1 || slot === visible.length - 1;
           return (
             <div
-              key={ext.extensionId}
+              key={slide.name}
               data-card-front={isFront || undefined}
               className="border-border bg-card absolute inset-x-[70px] top-[30px] h-[380px] rounded-xl border p-6 shadow-lg transition-all duration-500 ease-out"
               style={{
@@ -234,20 +223,20 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
                 zIndex: slot,
               }}
             >
-              <CardContent ext={ext} displayName={anonName} highlight={isFront && highlighted} isFront={isFront} />
+              <CardContent slide={slide} highlight={isFront && highlighted} isFront={isFront} />
             </div>
           );
         })}
         {leaving && (
           <div
-            key={`leaving-${leaving.ext.extensionId}`}
+            key={`leaving-${leaving.name}`}
             className="border-border bg-card absolute inset-x-[70px] top-[30px] h-[380px] rounded-xl border p-6 shadow-lg"
             style={{
               zIndex: VISIBLE_COUNT + 1,
               animation: `card-exit ${EXIT_DURATION}ms ease-in forwards`,
             }}
           >
-            <CardContent ext={leaving.ext} displayName={leaving.anonName} highlight />
+            <CardContent slide={leaving} highlight />
           </div>
         )}
         {annotations.length > 0 && wideEnough && (

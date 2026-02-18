@@ -11,7 +11,7 @@ import { navigate } from "~/router";
 
 const SHOW_DATABASE = false;
 
-function HeroSection({ reports }: { reports: ReportMap }) {
+function HeroSection() {
   return (
     <header className="mx-auto flex min-h-screen max-w-6xl items-center px-6">
       <div className="flex w-full flex-col md:flex-row md:items-center md:justify-between">
@@ -36,7 +36,7 @@ function HeroSection({ reports }: { reports: ReportMap }) {
           </div> */}
         </div>
         <div className="hidden flex-1 md:block">
-          <ExtensionPreviewCards reports={reports} />
+          <ExtensionPreviewCards />
         </div>
       </div>
     </header>
@@ -63,7 +63,7 @@ function App({ reports }: { reports: ReportMap }) {
     <div className="bg-background min-h-screen">
       {/* Hero */}
       <HeroCycleProvider>
-        <HeroSection reports={reports} />
+        <HeroSection />
       </HeroCycleProvider>
 
       {/* Nav */}
