@@ -155,7 +155,7 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
   }, [slideIndex, reports]);
 
   // Track leaving card
-  const [leaving, setLeaving] = useState<ExtensionReport | null>(null);
+  const [leaving, setLeaving] = useState<{ ext: ExtensionReport; anonName: string } | null>(null);
   const prevSlideRef = useRef(slideIndex);
 
   useEffect(() => {
@@ -168,7 +168,7 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
     if (oldSlide) {
       const ext = reports.get(oldSlide.extensionId);
       if (ext) {
-        setLeaving(ext);
+        setLeaving({ ext, anonName: oldSlide.anonName });
         setTimeout(() => setLeaving(null), EXIT_DURATION);
       }
     }
@@ -234,20 +234,20 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
                 zIndex: slot,
               }}
             >
-              <CardContent ext={ext} highlight={isFront && highlighted} isFront={isFront} />
+              <CardContent ext={ext} displayName={anonName} highlight={isFront && highlighted} isFront={isFront} />
             </div>
           );
         })}
         {leaving && (
           <div
-            key={`leaving-${leaving.extensionId}`}
+            key={`leaving-${leaving.ext.extensionId}`}
             className="border-border bg-card absolute inset-x-[70px] top-[30px] h-[380px] rounded-xl border p-6 shadow-lg"
             style={{
               zIndex: VISIBLE_COUNT + 1,
               animation: `card-exit ${EXIT_DURATION}ms ease-in forwards`,
             }}
           >
-            <CardContent ext={leaving} highlight />
+            <CardContent ext={leaving.ext} displayName={leaving.anonName} highlight />
           </div>
         )}
         {annotations.length > 0 && wideEnough && (
