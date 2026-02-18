@@ -63,10 +63,12 @@ const isRisky = (risk: string) =>
 
 function CardContent({
   ext,
+  displayName,
   highlight,
   isFront,
 }: {
   ext: ExtensionReport;
+  displayName: string;
   highlight?: boolean;
   isFront?: boolean;
 }) {
@@ -85,7 +87,7 @@ function CardContent({
     <>
       <div className="mb-4 flex items-start justify-between gap-3">
         <h3 data-trace-obstacle className="text-card-foreground line-clamp-2 text-base font-semibold leading-snug">
-          {ext.name}
+          {displayName}
         </h3>
         <Badge data-trace-obstacle variant={risk.variant} className="shrink-0 text-xs">
           {risk.label}
@@ -136,7 +138,7 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
   // Build the visible window: current front card + 3 behind it (wrapping)
   const visible = useMemo(() => {
     const count = Math.min(VISIBLE_COUNT, HERO_SLIDES.length);
-    const cards: { ext: ExtensionReport; slot: number }[] = [];
+    const cards: { ext: ExtensionReport; anonName: string; slot: number }[] = [];
 
     for (let i = 0; i < count; i++) {
       const idx =
@@ -146,7 +148,7 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
       if (!slide) continue;
       const ext = reports.get(slide.extensionId);
       if (!ext) continue;
-      cards.push({ ext, slot: i });
+      cards.push({ ext, anonName: slide.anonName, slot: i });
     }
 
     return cards;
@@ -217,7 +219,7 @@ export function ExtensionPreviewCards({ reports }: ExtensionPreviewCardsProps) {
         }
       `}</style>
       <div ref={containerRef} className="relative h-[440px] w-[480px]" onMouseEnter={pause} onMouseLeave={resume}>
-        {visible.map(({ ext, slot }) => {
+        {visible.map(({ ext, anonName, slot }) => {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           const t = (cardTransforms[slot] ?? cardTransforms[0])!;
           const isFront =
