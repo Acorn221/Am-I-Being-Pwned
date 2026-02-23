@@ -149,7 +149,7 @@ function TestimonialCard({
   return (
     <div className="w-full sm:max-w-xl" style={style}>
       <div
-        className="rounded-xl p-[2px]"
+        className="rounded-xl p-0.5"
         style={{ background: "linear-gradient(135deg, #FF6600, #FF9A3C)" }}
       >
         <figure className="bg-card flex h-full flex-col rounded-[11px] p-8">
