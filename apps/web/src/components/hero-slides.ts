@@ -22,18 +22,18 @@ export interface HeroSlide {
 }
 
 /**
- * Self-contained hero slide data — no extension IDs or database lookups.
+ * Self-contained hero slide data - no extension IDs or database lookups.
  * All data sourced from our vulnerability reports; names are anonymised.
  *
- * Annotations focus on what the extension ACTUALLY DOES to the user — concrete,
- * verifiable behaviours. We never speculate about intent (e.g. "sold") — only
+ * Annotations focus on what the extension ACTUALLY DOES to the user - concrete,
+ * verifiable behaviours. We never speculate about intent (e.g. "sold") - only
  * state what the code does and where data goes.
  *
  * Ordered to lead with the most shocking examples and highest user counts.
  */
 export const HERO_SLIDES: HeroSlide[] = [
   {
-    phrase: "browser extension",
+    phrase: "Browser extensions",
     name: "Ad Block Plus Pro",
     risk: "critical",
     userCount: 700000,
@@ -44,21 +44,22 @@ export const HERO_SLIDES: HeroSlide[] = [
       { permission: "<all_urls>", title: "Cross-Device Tracking", description: "Your tracking ID syncs across all your devices via chrome.storage.sync" },
     ],
   },
+  // ngl no companies really will think free vpns are being used
+  // {
+  //   phrase: "Free VPN extensions",
+  //   name: "Free VPN Unlimited",
+  //   risk: "critical",
+  //   userCount: 600000,
+  //   permissions: ["tabs", "webRequest", "webRequestAuthProvider", "management", "webNavigation", "storage", "alarms", "unlimitedStorage", "proxy", "notifications", "privacy", "cookies", "scripting", "declarativeNetRequest", "declarativeNetRequestWithHostAccess", "declarativeNetRequestFeedback"],
+  //   hostPermissions: ["<all_urls>"],
+  //   annotations: [
+  //     { permission: "proxy", title: "You're an Exit Node", description: "Unknown traffic is routed through your home connection as a residential proxy" },
+  //     { permission: "management", title: "Kills Other Extensions", description: "Silently disables every other VPN so you can't switch away" },
+  //     { permission: "cookies", title: "Shopping Hijacked", description: "Injects affiliate codes into your purchases via a third-party ad network" },
+  //   ],
+  // },
   {
-    phrase: "free VPN",
-    name: "Free VPN Unlimited",
-    risk: "critical",
-    userCount: 600000,
-    permissions: ["tabs", "webRequest", "webRequestAuthProvider", "management", "webNavigation", "storage", "alarms", "unlimitedStorage", "proxy", "notifications", "privacy", "cookies", "scripting", "declarativeNetRequest", "declarativeNetRequestWithHostAccess", "declarativeNetRequestFeedback"],
-    hostPermissions: ["<all_urls>"],
-    annotations: [
-      { permission: "proxy", title: "You're an Exit Node", description: "Unknown traffic is routed through your home connection as a residential proxy" },
-      { permission: "management", title: "Kills Other Extensions", description: "Silently disables every other VPN so you can't switch away" },
-      { permission: "cookies", title: "Shopping Hijacked", description: "Injects affiliate codes into your purchases via a third-party ad network" },
-    ],
-  },
-  {
-    phrase: "search tool",
+    phrase: "Unvetted search tools",
     name: "Similar Sites Finder",
     risk: "high",
     userCount: 300000,
@@ -70,7 +71,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "ad blocker",
+    phrase: "Employee ad blockers",
     name: "Ad Speedup & Skipper",
     risk: "critical",
     userCount: 200000,
@@ -82,7 +83,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "screen time tracker",
+    phrase: "Productivity extensions",
     name: "Screen Time Tracker",
     risk: "critical",
     userCount: 200000,
@@ -94,7 +95,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "social media tool",
+    phrase: "Social media tools",
     name: "Tweet Manager Pro",
     risk: "critical",
     userCount: 40000,
@@ -106,8 +107,8 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "VPN extension",
-    name: "1-Click VPN Free",
+    phrase: "VPN extensions",
+    name: "Easy VPN Free",
     risk: "high",
     userCount: 8000000,
     permissions: ["alarms", "webRequest", "proxy", "storage", "unlimitedStorage", "webRequestAuthProvider"],
@@ -118,7 +119,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "media editor",
+    phrase: "Unmanaged media tools",
     name: "Movie Maker Studio",
     risk: "critical",
     userCount: 100000,
@@ -130,7 +131,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "new tab page",
+    phrase: "New tab extensions",
     name: "Infinite New Tab",
     risk: "high",
     userCount: 100000,
@@ -142,7 +143,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "notepad",
+    phrase: "Notepad extensions",
     name: "Notepad Online",
     risk: "high",
     userCount: 100000,
@@ -154,7 +155,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "document editor",
+    phrase: "Document editors",
     name: "Office Online Suite",
     risk: "critical",
     userCount: 90000,
@@ -166,7 +167,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "audio tool",
+    phrase: "Unvetted audio tools",
     name: "Audio Editor Studio",
     risk: "critical",
     userCount: 80000,
@@ -178,7 +179,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "video tool",
+    phrase: "Video extensions",
     name: "Auto Ad Skipper",
     risk: "high",
     userCount: 100000,
@@ -186,11 +187,11 @@ export const HERO_SLIDES: HeroSlide[] = [
     hostPermissions: ["<all_urls>"],
     annotations: [
       { permission: "declarativeNetRequest", title: "Remote Control Server", description: "Receives commands from a remote server to execute on your browser" },
-      { permission: "<all_urls>", title: "Runs on Every Site", description: "Injected into all websites — far beyond its stated purpose" },
+      { permission: "<all_urls>", title: "Runs on Every Site", description: "Injected into all websites - far beyond its stated purpose" },
     ],
   },
   {
-    phrase: "video downloader",
+    phrase: "Video downloaders",
     name: "Video Downloader HD",
     risk: "high",
     userCount: 100000,

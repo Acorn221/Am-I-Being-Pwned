@@ -49,7 +49,7 @@ export interface ExtensionReport {
   name: string;
   extensionId: string;
   risk: RiskLevel;
-  /** How this report was produced — "ai" or "manual" (human-reviewed) */
+  /** How this report was produced - "ai" or "manual" (human-reviewed) */
   reviewedBy?: ReviewSource;
   version: string;
   publisher: string;
@@ -75,14 +75,14 @@ export interface ExtensionReport {
   updatedAt: string;
 }
 
-/** The static JSON database — keyed by Chrome Web Store extension ID */
+/** The static JSON database - keyed by Chrome Web Store extension ID */
 export type ExtensionDatabase = Record<string, ExtensionReport>;
 
 // ---------------------------------------------------------------------------
 // Extension ↔ Web App messaging protocol (externally_connectable)
 // ---------------------------------------------------------------------------
 
-/** Minimal info about an installed extension — no icons, versions, descriptions */
+/** Minimal info about an installed extension - no icons, versions, descriptions */
 export interface InstalledExtensionInfo {
   id: string;
   name: string;

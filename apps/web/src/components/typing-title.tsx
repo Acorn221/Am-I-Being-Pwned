@@ -49,7 +49,7 @@ export function TypingTitle() {
         setDisplayText(fullText.slice(0, s.charIndex));
 
         if (s.charIndex >= fullText.length) {
-          // Finished typing — wait, then delete (or hold if paused)
+          // Finished typing - wait, then delete (or hold if paused)
           const annotationCount = slide.annotations?.length ?? 0;
           const pauseTime = PAUSE_AFTER_TYPED_BASE + annotationCount * PAUSE_PER_ANNOTATION;
           timeoutRef.current = setTimeout(() => {
@@ -68,7 +68,7 @@ export function TypingTitle() {
         setDisplayText(fullText.slice(0, s.charIndex));
 
         if (s.charIndex <= 0) {
-          // Finished deleting — advance to next slide, then start typing
+          // Finished deleting - advance to next slide, then start typing
           s.deleting = false;
           s.charIndex = 0;
           // eslint-disable-next-line @typescript-eslint/no-unsafe-call
@@ -96,7 +96,6 @@ export function TypingTitle() {
 
   return (
     <h1 className="text-foreground mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
-      Is my{" "}
       <span className="inline-grid align-baseline">
         <span className="text-primary col-start-1 row-start-1">
           {displayText}
@@ -110,7 +109,7 @@ export function TypingTitle() {
         </span>
       </span>
       <br />
-      spying on me?
+      are compromising your fleet.
     </h1>
   );
 }

@@ -107,10 +107,10 @@ export function ScanSection({
             <p className="text-muted-foreground text-sm">
               {scanRows.length} extension{scanRows.length !== 1 ? "s" : ""} found
               {dbLoading
-                ? " — checking against database..."
+                ? " - checking against database..."
                 : threatCount
-                  ? ` — ${threatCount} threat${threatCount > 1 ? "s" : ""} found`
-                  : " — no known threats"}
+                  ? ` - ${threatCount} threat${threatCount > 1 ? "s" : ""} found`
+                  : " - no known threats"}
             </p>
             <Button
               size="sm"

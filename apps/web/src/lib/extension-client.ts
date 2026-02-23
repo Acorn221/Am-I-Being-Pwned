@@ -12,7 +12,7 @@ export class ExtensionClient {
   }
 
   /**
-   * Detect the extension — tries the known ID first (fast), then falls back
+   * Detect the extension - tries the known ID first (fast), then falls back
    * to content script discovery (for dev builds with unstable IDs).
    * Stores the ID internally on success.
    */
@@ -37,7 +37,7 @@ export class ExtensionClient {
     const id = this.extensionId;
     if (!id) {
       return Promise.reject(
-        new Error("Extension not detected — call detect() first"),
+        new Error("Extension not detected - call detect() first"),
       );
     }
 

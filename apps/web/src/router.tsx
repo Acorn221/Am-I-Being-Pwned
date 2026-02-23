@@ -2,6 +2,8 @@ import { useLayoutEffect, useRef, useSyncExternalStore } from "react";
 
 import App from "~/App";
 import { FaqPage } from "~/components/faq-page";
+import { Footer } from "~/components/footer";
+import { Navbar } from "~/components/navbar";
 import { ReportPage } from "~/components/report-page";
 import { useExtensionDatabase } from "~/hooks/use-extension-database";
 
@@ -54,12 +56,22 @@ export function Router() {
         <App reports={reports} />
       </div>
       {extensionId && (
-        <ReportPage
-          extensionId={extensionId}
-          ext={reports.get(extensionId)}
-        />
+        <div className="bg-background min-h-screen">
+          <Navbar />
+          <ReportPage
+            extensionId={extensionId}
+            ext={reports.get(extensionId)}
+          />
+          <Footer />
+        </div>
       )}
-      {isFaq && <FaqPage />}
+      {isFaq && (
+        <div className="bg-background min-h-screen">
+          <Navbar />
+          <FaqPage />
+          <Footer />
+        </div>
+      )}
     </>
   );
 }
