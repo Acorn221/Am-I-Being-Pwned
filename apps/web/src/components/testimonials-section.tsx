@@ -10,15 +10,15 @@ const TESTIMONIALS = [
     avatar: "/imgs/nang.png",
     badgeIcon: "/imgs/yc_icon.svg",
   },
-  {
-    quote:
-      "I was shocked to find out that my productivity extension had been spying on me, every website I visited was sent to some random server. Am I Being Pwned saved us from major potential issues by catching this.",
-    name: "Kip Parker",
-    role: "Co-Founder of General Reasoning",
-    // badge: "YC F24",
-    // avatar: "/imgs/nang.png", // TODO
-    // badgeIcon: "/imgs/yc_icon.svg",
-  },
+  // {
+  //   quote:
+  //     "I was shocked to find out that my productivity extension had been spying on me, every website I visited was sent to some random server. Am I Being Pwned saved us from major potential issues by catching this.",
+  //   name: "Kip Parker",
+  //   role: "Co-Founder of General Reasoning",
+  //   // badge: "YC F24",
+  //   // avatar: "/imgs/nang.png", // TODO
+  //   // badgeIcon: "/imgs/yc_icon.svg",
+  // },
   // {
   // quote:
   // "I ",
