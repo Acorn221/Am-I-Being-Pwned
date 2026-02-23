@@ -44,19 +44,20 @@ export const HERO_SLIDES: HeroSlide[] = [
       { permission: "<all_urls>", title: "Cross-Device Tracking", description: "Your tracking ID syncs across all your devices via chrome.storage.sync" },
     ],
   },
-  {
-    phrase: "Free VPN extensions",
-    name: "Free VPN Unlimited",
-    risk: "critical",
-    userCount: 600000,
-    permissions: ["tabs", "webRequest", "webRequestAuthProvider", "management", "webNavigation", "storage", "alarms", "unlimitedStorage", "proxy", "notifications", "privacy", "cookies", "scripting", "declarativeNetRequest", "declarativeNetRequestWithHostAccess", "declarativeNetRequestFeedback"],
-    hostPermissions: ["<all_urls>"],
-    annotations: [
-      { permission: "proxy", title: "You're an Exit Node", description: "Unknown traffic is routed through your home connection as a residential proxy" },
-      { permission: "management", title: "Kills Other Extensions", description: "Silently disables every other VPN so you can't switch away" },
-      { permission: "cookies", title: "Shopping Hijacked", description: "Injects affiliate codes into your purchases via a third-party ad network" },
-    ],
-  },
+  // ngl no companies really will think free vpns are being used
+  // {
+  //   phrase: "Free VPN extensions",
+  //   name: "Free VPN Unlimited",
+  //   risk: "critical",
+  //   userCount: 600000,
+  //   permissions: ["tabs", "webRequest", "webRequestAuthProvider", "management", "webNavigation", "storage", "alarms", "unlimitedStorage", "proxy", "notifications", "privacy", "cookies", "scripting", "declarativeNetRequest", "declarativeNetRequestWithHostAccess", "declarativeNetRequestFeedback"],
+  //   hostPermissions: ["<all_urls>"],
+  //   annotations: [
+  //     { permission: "proxy", title: "You're an Exit Node", description: "Unknown traffic is routed through your home connection as a residential proxy" },
+  //     { permission: "management", title: "Kills Other Extensions", description: "Silently disables every other VPN so you can't switch away" },
+  //     { permission: "cookies", title: "Shopping Hijacked", description: "Injects affiliate codes into your purchases via a third-party ad network" },
+  //   ],
+  // },
   {
     phrase: "Unvetted search tools",
     name: "Similar Sites Finder",
