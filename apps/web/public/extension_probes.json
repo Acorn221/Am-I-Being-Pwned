@@ -1,0 +1,2072 @@
+{
+  "efaidnbmnnnibpcajpcglclefindmkaj": {
+    "name": "Adobe Acrobat: PDF edit, convert, sign tools",
+    "users": 339000000,
+    "risk": "MEDIUM",
+    "version": "26.1.2.1",
+    "summary": "Legitimate Adobe PDF extension with 339M users. Loads and executes remote JavaScript from Adobe's CDN via innerHTML injection, creating supply chain risk if CDN compromised. Also has CustomEvent SSRF patterns and outdated jQuery.",
+    "probe_resource": "browser/images/acrobat_dc_appicon_128.png",
+    "flags": [
+      "all_urls",
+      "cookie_access",
+      "extensive_permissions",
+      "innerHTML_injection",
+      "remote_code_execution_cdn",
+      "remote_config"
+    ]
+  },
+  "llbcnfanfmjhpedaedhbcnpgeepdnnok": {
+    "name": "Online Security",
+    "users": 13000000,
+    "risk": "MEDIUM",
+    "version": "7.4.5",
+    "summary": "ReasonLabs enterprise security extension with 13M users. Performs URL scanning, download monitoring, malicious extension detection. Collects browsing history, cookies, downloads, and installed extensions, transmitting to ReasonLabs infrastructure. Uses native messaging for endpoint protection.",
+    "probe_resource": "assets/icons/icon-128.png"
+  },
+  "aopddeflghjljihihabdclejbojaomaf": {
+    "name": "AnyDoc Translator - Translate Web and PDF",
+    "users": 7000000,
+    "risk": "MEDIUM",
+    "version": "1.4.10",
+    "summary": "Translation extension by WPS (Kingsoft) that transmits documents and web content to WPS servers and Microsoft Translator API for translation services.",
+    "probe_resource": "public/images/login-icon.png",
+    "flags": [
+      "fetch_hooking",
+      "xhr_hooking"
+    ]
+  },
+  "difoiogjjojoaoomphldepapgpbgkhkb": {
+    "name": "Sider: Chat with all AI: GPT-5, Claude, DeepSeek, Gemini, Grok",
+    "users": 5000000,
+    "risk": "MEDIUM",
+    "version": "5.25.5",
+    "summary": "AI assistant sidebar for multiple models (ChatGPT, Claude, Gemini). Transmits usage telemetry to sider.ai servers and reads OpenAI cookies for integration.",
+    "probe_resource": "assets/ad-chrome-icon-2UI4Q2FZ.png"
+  },
+  "golbdgciocipijcnkhfjbljaepchclbc": {
+    "name": "\u5938\u514b\u7f51\u76d8-\u7f51\u9875\u55c5\u63a2",
+    "users": 3000000,
+    "risk": "MEDIUM",
+    "version": "1.2.4",
+    "summary": "Quark Pan companion extension that sniffs downloadable resources from all web pages and redirects them to the Quark Pan desktop app via native messaging. The extension intercepts HTTP request/response cookies and passes them to the local native app, and transmits download URLs and page context to Quark analytics servers. A/B test config and blacklists are fetched remotely from pan.quark.cn.",
+    "probe_resource": "insert.js",
+    "flags": [
+      "remote_config",
+      "postmessage_no_origin",
+      "data_exfiltration",
+      "cookie_harvesting"
+    ]
+  },
+  "iiipkionnkhdcficbbpionjlfmnjgnlg": {
+    "name": "Trend Micro Toolbar for Enterprise",
+    "users": 3000000,
+    "risk": "MEDIUM",
+    "version": "0.0.0.22",
+    "summary": "Enterprise monitoring tool that tracks file uploads/downloads and web reputation via native messaging. Collects browsing data, user emails, and cloud storage activity for corporate DLP purposes.",
+    "probe_resource": "assets/icons/icon-128.png",
+    "flags": [
+      "data_exfiltration",
+      "remote_config"
+    ]
+  },
+  "mfidniedemcgceagapgdekdbmanojomk": {
+    "name": "Coupert - Automatic Coupon Finder & Cashback",
+    "users": 3000000,
+    "risk": "MEDIUM",
+    "version": "6.17.89",
+    "summary": "Cashback/coupon extension that transmits checkout page HTML to eventmonitoringpro.com, includes all tab URLs in analytics, and auto-accepts GDPR dialogs. Behaviors extend beyond typical coupon service and lack clear disclosure.",
+    "probe_resource": "font/iconfont.ttf",
+    "flags": [
+      "remote_config",
+      "data_exfiltration",
+      "cookie_harvesting",
+      "postmessage_no_origin"
+    ]
+  },
+  "ohhcpmplhhiiaoiddkfboafbhiknefdf": {
+    "name": "Trend Micro Toolbar",
+    "users": 3000000,
+    "risk": "MEDIUM",
+    "version": "17.0.1894.0",
+    "summary": "Trend Micro security toolbar that sends visited URLs to Trend Micro threat rating servers and encrypted email content for fraud analysis (opt-in feature). Cookie access used for social media privacy scanning.",
+    "probe_resource": "images/icon_rating_Risk.gif",
+    "flags": [
+      "data_exfiltration",
+      "remote_config",
+      "cookie_harvesting"
+    ]
+  },
+  "pachckjkecffpdphbpmfolblodfkgbhl": {
+    "name": "vidIQ Vision for YouTube",
+    "users": 3000000,
+    "risk": "MEDIUM",
+    "version": "3.171.1",
+    "summary": "Legitimate commercial YouTube analytics extension that collects TikTok video metadata and viewing behavior, transmitting crowdsourced data to api.vidiq.com/scraping/tiktok.",
+    "probe_resource": "images/checkmark-icon.png",
+    "flags": [
+      "fetch_hooking",
+      "remote_config",
+      "data_exfiltration"
+    ]
+  },
+  "bhahdfjamnjafbgghnaomlafjnmbimfj": {
+    "name": "Gaggle",
+    "users": 2000000,
+    "risk": "MEDIUM",
+    "version": "3.2.5.1",
+    "summary": "Enterprise K-12 web filtering and activity monitoring tool deployed by school districts. Monitors all form input fields for keyword phrases, captures screenshots and geolocation data, transmits full page text to classification API, and collects enterprise device telemetry. All behaviors are administrator-configured and consistent with the stated monitoring purpose.",
+    "probe_resource": "assets/_commonjsHelpers-BosuxZz1.js",
+    "flags": [
+      "data_exfiltration",
+      "remote_config"
+    ]
+  },
+  "dmghijelimhndkbmpgbldicpogfkceaj": {
+    "name": "Dark Mode",
+    "users": 2000000,
+    "risk": "MEDIUM",
+    "version": "0.5.4",
+    "summary": "Legitimate dark theme extension with postMessage handler vulnerability lacking origin validation. Could allow malicious sites to trigger unintended dark mode application via cross-frame messaging. No data exfiltration.",
+    "probe_resource": "data/content_script/custom/accounts.css",
+    "flags": [
+      "postmessage_no_origin"
+    ]
+  },
+  "fckonodhlfjlkndmedanenhgdnbopbmh": {
+    "name": "WalkMe Extension",
+    "users": 2000000,
+    "risk": "MEDIUM",
+    "version": "4.0.296",
+    "summary": "Enterprise digital adoption platform that collects broad cross-site behavioral telemetry (URL, tab title, keydown/mouse/scroll counts, system ID) transmitted to WalkMe's event collector on all visited websites, and dynamically loads code from CDN without integrity verification.",
+    "probe_resource": "assets/chatbot/3.82.7/assets/bot-icon-circle.a5249d9ad6cea5693a27941c27afdea8.png",
+    "flags": [
+      "data_exfiltration",
+      "remote_config"
+    ]
+  },
+  "fjnbnpbmkenffdnngjfgmeleoegfcffe": {
+    "name": "Stylish - Custom themes for any website",
+    "users": 2000000,
+    "risk": "HIGH",
+    "version": "3.4.10",
+    "summary": "Transmits full URL of every page visited to userstylesapi.com servers with persistent device identifier on each navigation. For authenticated users, additionally sends display name and email to Mixpanel.",
+    "probe_resource": "index.html",
+    "flags": [
+      "data_exfiltration",
+      "remote_config",
+      "externally_connectable"
+    ]
+  },
+  "ghlpmldmjjhmdgmneoaibbegkjjbonbk": {
+    "name": "Blocksi Enterprise Edition",
+    "users": 2000000,
+    "risk": "MEDIUM",
+    "version": "4.3.22",
+    "summary": "Enterprise classroom monitoring tool that captures screenshots, logs full browsing history (URLs, searches, YouTube titles), transmits GPS coordinates, and provides real-time teacher control via WebSocket to Blocksi servers.",
+    "probe_resource": "images/icons/chatBubble.svg",
+    "flags": [
+      "remote_config",
+      "data_exfiltration",
+      "extension_enumeration"
+    ]
+  },
+  "honjcnefekfnompampcpmcdadibmjhlk": {
+    "name": "LanSchool Web Helper",
+    "users": 2000000,
+    "risk": "MEDIUM",
+    "version": "9.2.0.2",
+    "summary": "Enterprise classroom management tool that implements keystroke capture, screen capture, browsing history monitoring, and URL filtering. All capabilities are gated behind validation against a hardcoded whitelist of LanSchool extension IDs and are consistent with the disclosed educational monitoring purpose.",
+    "probe_resource": "style.css",
+    "flags": [
+      "keylogging",
+      "remote_config",
+      "externally_connectable"
+    ]
+  },
+  "jddgbeighonaipjikdnfdpiefhoomlae": {
+    "name": "\u042e\u0411\u0443\u0441\u0442 - VPN \u0434\u043b\u044f YouTube. \u041e\u0431\u0445\u043e\u0434 \u0431\u043b\u043e\u043a\u0438\u0440\u043e\u0432\u043a\u0438 \u042e\u0442\u0443\u0431 \u0431\u0435\u0437 \u0412\u041f\u041d. VPN \u0434\u043b\u044f \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0430",
+    "users": 2000000,
+    "risk": "MEDIUM",
+    "version": "8.9.0",
+    "summary": "VPN for YouTube unblocking. Disables competing extensions, extensive analytics (Google Analytics + Sentry), remote configuration, ad/content injection on YouTube, and excessive permissions. Standard VPN conflict management but privacy-invasive tracking.",
+    "probe_resource": "fonts/CyGrotesk/*.otf",
+    "flags": [
+      "ad_injection",
+      "affiliate_fraud",
+      "cookie_harvesting",
+      "data_exfiltration",
+      "dynamic_eval",
+      "dynamic_function",
+      "dynamic_window_open",
+      "extension_enumeration",
+      "keylogging",
+      "postmessage_no_origin",
+      "remote_config"
+    ]
+  },
+  "jpkfgepcmmchgfbjblnodjhldacghenp": {
+    "name": "Pie Adblock - A Powerful Free Ad Blocker",
+    "users": 2000000,
+    "risk": "MEDIUM",
+    "version": "1.33.2",
+    "summary": "Pie Adblock is a legitimate ad blocker with a rewards/cashback business model that collects usage analytics via Segment and includes a capability to disable other ad blockers when triggered via its externally_connectable interface from pie.org. Analytics collection is largely opt-outable and accompanied by inline transparency statements in the code.",
+    "probe_resource": "assets/icons/active/icon48.png",
+    "flags": [
+      "remote_config",
+      "data_exfiltration",
+      "extension_enumeration"
+    ]
+  },
+  "mkhjobnjhllkhekbbedlkmgcglgaeidc": {
+    "name": "iboss Cloud Connector",
+    "users": 2000000,
+    "risk": "MEDIUM",
+    "version": "1.0.140",
+    "summary": "Enterprise web filtering proxy deployed via managed policy. Transmits device identity (email, serial, hostname, IP), tab screenshots, and typed keywords to iboss infrastructure. Disclosed monitoring for enterprise use.",
+    "probe_resource": "static/css/main.c38282bf.css",
+    "flags": [
+      "data_exfiltration",
+      "remote_config"
+    ]
+  },
+  "ohedcglhbbfdgaogjhcclacoccbagkjg": {
+    "name": "\u0410\u0434\u0430\u043f\u0442\u0435\u0440 \u0420\u0443\u0442\u043e\u043a\u0435\u043d \u041f\u043b\u0430\u0433\u0438\u043d",
+    "users": 2000000,
+    "risk": "MEDIUM",
+    "version": "1.1.0.0",
+    "summary": "Legitimate browser-to-native-app bridge for Rutoken cryptographic hardware with postMessage security issue and broad permissions.",
+    "probe_resource": "webpage.js",
+    "flags": [
+      "postmessage_no_origin"
+    ]
+  },
+  "pchfckkccldkbclgdepkaonamkignanh": {
+    "name": "\u0412\u0438\u0437\u0443\u0430\u043b\u044c\u043d\u044b\u0435 \u0437\u0430\u043a\u043b\u0430\u0434\u043a\u0438",
+    "users": 2000000,
+    "risk": "MEDIUM",
+    "version": "3.0.6",
+    "summary": "Official Yandex new-tab replacement extension that reads browsing history, top sites, and geolocation to populate visual bookmarks, and transmits usage statistics and click events to Yandex servers with a persistent GUID; data collection is consistent with disclosed functionality but scope is broad.",
+    "probe_resource": "icons/128.png",
+    "flags": [
+      "remote_config",
+      "data_exfiltration",
+      "postmessage_no_origin",
+      "dynamic_tab_url"
+    ]
+  },
+  "cimpffimgeipdhnhjohpbehjkcdpjolg": {
+    "name": "Watch2Gether",
+    "users": 1000000,
+    "risk": "MEDIUM",
+    "version": "10.6",
+    "summary": "Watch2Gether is a legitimate video synchronization extension with postMessage handlers that lack origin validation, presenting a moderate security concern.",
+    "probe_resource": "controls.html",
+    "flags": [
+      "postmessage_no_origin",
+      "dynamic_tab_url"
+    ]
+  },
+  "cmeakgjggjdlcpncigglobpjbkabhmjl": {
+    "name": "Steam Inventory Helper",
+    "users": 1000000,
+    "risk": "MEDIUM",
+    "version": "2.9.10",
+    "summary": "Steam trading tool with extensive features and broad permissions. Exposes extension ID to web pages and has wide externally_connectable surface. Legitimate functionality but significant attack surface.",
+    "probe_resource": "assets/app-icons/cs2_dark.svg",
+    "flags": [
+      "dynamic_eval"
+    ]
+  },
+  "cppjkneekbjaeellbfkmgnhonkkjfpdn": {
+    "name": "Clear Cache",
+    "users": 1000000,
+    "risk": "MEDIUM",
+    "version": "2.3.4.4",
+    "summary": "Cache cleaner with premium features that authenticates to clearcache.io servers for license validation and payment processing via AWS Cognito and Paddle. Unexpected network activity for a cache tool.",
+    "probe_resource": "pages/offscreen/keepalive/index.html",
+    "flags": [
+      "third_party_authentication",
+      "license_validation",
+      "premium_features",
+      "payment_integration",
+      "sandbox_unsafe_eval",
+      "aws_cognito_integration"
+    ]
+  },
+  "epbobagokhieoonfplomdklollconnkl": {
+    "name": "Scribbr Citation Generator",
+    "users": 1000000,
+    "risk": "MEDIUM",
+    "version": "43.22",
+    "summary": "Academic citation tool that transmits page content and tab data to third-party analytics (Sentry error tracking, Amplitude) and implements postMessage handlers without origin validation.",
+    "probe_resource": "pdf-injection.js",
+    "flags": [
+      "postmessage_no_origin",
+      "externally_connectable"
+    ]
+  },
+  "epnhoepnmfjdbjjfanpjklemanhkjgil": {
+    "name": "Pendo Launcher",
+    "users": 1000000,
+    "risk": "MEDIUM",
+    "version": "5.57.4",
+    "summary": "Enterprise digital adoption platform that injects content scripts on all URLs with extensive analytics capabilities and broad permissions for employee monitoring and training purposes.",
+    "probe_resource": "agent/guide.css",
+    "flags": [
+      "data_exfiltration",
+      "dynamic_function",
+      "postmessage_no_origin"
+    ]
+  },
+  "fggkaccpbmombhnjkjokndojfgagejfb": {
+    "name": "Tactiq: AI note taker for Google Meet, Zoom and MS Teams",
+    "users": 1000000,
+    "risk": "MEDIUM",
+    "version": "3.1.4849",
+    "summary": "Meeting transcription extension that hooks WebRTC/XHR on meeting platforms to capture captions, intercepts Google Meet network requests, and transmits extensive usage telemetry to Mixpanel and Datadog analytics.",
+    "probe_resource": "images/tabler-icon-cloud-lock.svg",
+    "flags": [
+      "dynamic_eval",
+      "dynamic_function"
+    ]
+  },
+  "gohjpllcolmccldfdggmamodembldgpc": {
+    "name": "Shimeji Browser Extension",
+    "users": 1000000,
+    "risk": "MEDIUM",
+    "version": "2.0.5",
+    "summary": "Novelty extension adding animated characters to web pages. Implements external message listener without origin validation and uses dynamic HTML injection, creating XSS risks.",
+    "probe_resource": "fonts/balsamiq-sans-v12-cyrillic_cyrillic-ext_latin_latin-ext-700.woff2",
+    "flags": [
+      "postmessage_no_origin",
+      "externally_connectable"
+    ]
+  },
+  "goobgennebinldhonaajgafidboenlkl": {
+    "name": "ProctorU",
+    "users": 1000000,
+    "risk": "MEDIUM",
+    "version": "1.145.0",
+    "summary": "Legitimate remote exam proctoring service with extensive system monitoring capabilities including screen capture, system resource access, geolocation, clipboard access, browsing data management, and cookie manipulation. These capabilities align with the stated exam monitoring purpose and are disclosed through privacy policy and terms of service.",
+    "probe_resource": "assets/img/edit-icon.svg",
+    "flags": [
+      "data_exfiltration",
+      "dynamic_function"
+    ]
+  },
+  "hbapdpeemoojbophdfndmlgdhppljgmp": {
+    "name": "Keywords Everywhere - Keyword Tool",
+    "users": 1000000,
+    "risk": "MEDIUM",
+    "version": "11.48",
+    "summary": "SEO keyword research tool that transmits search queries and API keys to keywordseverywhere.com servers. Contains postMessage handlers lacking origin validation (XSS risk) and harvests YouTube cookies for API authentication.",
+    "probe_resource": "img/icon128.png",
+    "flags": [
+      "cookie_harvesting",
+      "fetch_hooking",
+      "postmessage_no_origin",
+      "remote_config",
+      "xhr_hooking"
+    ]
+  },
+  "hkdmdpdhfaamhgaojpelccmeehpfljgf": {
+    "name": "Video Downloader Plus",
+    "users": 1000000,
+    "risk": "MEDIUM",
+    "version": "3.0.2",
+    "summary": "Video downloader that transmits user login tokens to developer servers at vidow.io for authentication, reads cookies from all sites, and validates premium features server-side.",
+    "probe_resource": "icons/128.png",
+    "flags": [
+      "login_token_transmission",
+      "cookie_access",
+      "premium_features",
+      "network_monitoring"
+    ]
+  },
+  "hoklmmgfnpapgjgcpechhaamimifchmp": {
+    "name": "Similarweb - Website Traffic & SEO Checker",
+    "users": 1000000,
+    "risk": "CRITICAL",
+    "version": "6.12.17",
+    "summary": "Similarweb extension monitors WebSocket, XMLHttpRequest, and Fetch API calls across visited websites to collect traffic analytics data for its market intelligence service.",
+    "probe_resource": "images/icon128.png",
+    "flags": [
+      "fetch_hooking",
+      "xhr_hooking",
+      "data_exfiltration"
+    ]
+  },
+  "iheobagjkfklnlikgihanlhcddjoihkg": {
+    "name": "Securly for Chromebooks",
+    "users": 1000000,
+    "risk": "MEDIUM",
+    "version": "3.0.7",
+    "summary": "Enterprise student monitoring and filtering tool that collects extensive browsing data, cookies, geolocation, and transmits to Securly servers. Behavior is disclosed and consistent with K-12 device management purpose.",
+    "probe_resource": "icon-16-px-close.svg",
+    "flags": [
+      "data_exfiltration",
+      "cookie_harvesting",
+      "remote_config"
+    ]
+  },
+  "ijejnggjjphlenbhmjhhgcdpehhacaal": {
+    "name": "Screen Recorder and Screenshot Tool for Chrome",
+    "users": 1000000,
+    "risk": "MEDIUM",
+    "version": "4.3.5",
+    "summary": "Screen recording extension with overly broad permissions including debugger API and host access to all sites, though core functionality appears legitimate.",
+    "probe_resource": "assets/icons/128.png"
+  },
+  "kohfgcgbkjodfcfkcackpagifgbcmimk": {
+    "name": "NaturalReader - AI Text to Speech",
+    "users": 1000000,
+    "risk": "MEDIUM",
+    "version": "7.0.12",
+    "summary": "Legitimate text-to-speech service with external message handlers lacking origin validation and broad permissions.",
+    "probe_resource": "assets/bootstrap-material-design-icons/css/material-icons.css",
+    "flags": [
+      "postmessage_no_origin",
+      "externally_connectable"
+    ]
+  },
+  "lanhpcaapacdmofkjpkahckmlkljcdhh": {
+    "name": "\u91d1\u5c71\u6536\u85cf\u52a9\u624b",
+    "users": 1000000,
+    "risk": "MEDIUM",
+    "version": "2.0.7",
+    "summary": "Legitimate web clipper extension from Kingsoft/WPS with two high-severity postMessage vulnerabilities that allow malicious websites to establish unauthorized MessageChannel communication with the extension. Uses broad permissions (*://*/*) and cookies access, but data flows are limited to first-party Kingsoft domains. No evidence of malicious data exfiltration or third-party tracking. Recommended for users who trust the WPS ecosystem, pending vulnerability fixes.",
+    "probe_resource": "kdocs/contentScripts/style.css",
+    "flags": [
+      "postmessage_no_origin",
+      "obfuscated_code",
+      "cookie_manipulation",
+      "broad_host_permissions"
+    ]
+  },
+  "lhjgbnkciekganmfcnlofjnobhffapjg": {
+    "name": "Obsidian Security",
+    "users": 1000000,
+    "risk": "MEDIUM",
+    "version": "1.14.1",
+    "summary": "Enterprise security product that monitors for phishing, malicious applications, and suspicious browser activity. Collects browsing history, installed extensions, cookies, and authentication flows. Uses ONNX WASM for local ML-based phishing detection. Extensive surveillance appropriate for managed enterprise environments.",
+    "probe_resource": "blocked.html",
+    "flags": [
+      "csp_unsafe_inline",
+      "dynamic_eval",
+      "dynamic_function",
+      "keylogging",
+      "wasm_binary"
+    ]
+  },
+  "lpfemeioodjbpieminkklglpmhlngfcn": {
+    "name": "WebChatGPT: Prompt library with web access",
+    "users": 1000000,
+    "risk": "HIGH",
+    "version": "4.1.72",
+    "summary": "ChatGPT enhancement extension that removes CSP headers, modifies cross-origin request headers, transmits encrypted user analytics to third-party servers, and includes undisclosed embedded advertisements.",
+    "probe_resource": "assets/icons/icon128.png",
+    "flags": [
+      "remote_config",
+      "data_exfiltration",
+      "ad_injection"
+    ]
+  },
+  "mbckjcfnjmoiinpgddefodcighgikkgn": {
+    "name": "AVG SafePrice",
+    "users": 1000000,
+    "risk": "MEDIUM",
+    "version": "24.18.2.825",
+    "summary": "Shopping extension that applies coupons automatically and fetches remote configuration from Azure blob storage. Uses broad permissions and injects content across all websites.",
+    "probe_resource": "*.svg",
+    "flags": [
+      "remote_config",
+      "affiliate_injection"
+    ]
+  },
+  "mhkgegcmcapcgmnnloigolapjkajgfmd": {
+    "name": "Browser Security Plus",
+    "users": 1000000,
+    "risk": "MEDIUM",
+    "version": "2.30",
+    "summary": "Enterprise browser management extension with legitimate but extensive monitoring capabilities including browsing history collection, web metering, download/upload filtering, and browser settings surveillance.",
+    "probe_resource": "data-extractor.js",
+    "flags": [
+      "postmessage_no_origin",
+      "data_exfiltration"
+    ]
+  },
+  "ncibgoaomkmdpilpocfeponihegamlic": {
+    "name": "Web eID",
+    "users": 1000000,
+    "risk": "CRITICAL",
+    "version": "2.3.0",
+    "summary": "Legitimate government-backed electronic identification extension for Estonian eID cards with open-source codebase and proper native messaging architecture.",
+    "probe_resource": "token-signing-page-script.js"
+  },
+  "njgehaondchbmjmajphnhlojfnbfokng": {
+    "name": "Video Downloader PLUS",
+    "users": 1000000,
+    "risk": "HIGH",
+    "version": "6.5.5",
+    "summary": "Video downloader extension that transmits browsing activity (tab URLs and referrers) to developer's server (videodetect.fdown.net) without explicit disclosure. Uses management permission for extension enumeration.",
+    "probe_resource": "assets/images/clipboard_icon.png",
+    "flags": [
+      "data_exfiltration",
+      "extension_enumeration"
+    ]
+  },
+  "nmmicjeknamkfloonkhhcjmomieiodli": {
+    "name": "YouTube Summary with ChatGPT & Claude",
+    "users": 1000000,
+    "risk": "MEDIUM",
+    "version": "2.0.23",
+    "summary": "Legitimate YouTube summary tool with extensive content script access and Firebase backend. Contains hardcoded Firebase API keys and uses third-party backend for AI summarization.",
+    "probe_resource": "assets/browser-polyfill-45feeee0.js",
+    "flags": [
+      "third_party_backend",
+      "hardcoded_credentials",
+      "broad_content_scripts"
+    ]
+  },
+  "odoanpnonilogofggaohhkdkdgbhdljp": {
+    "name": "CK-Authenticator G3",
+    "users": 1000000,
+    "risk": "MEDIUM",
+    "version": "5.0",
+    "summary": "Enterprise web filter authenticator using WebAssembly for credential encryption. WASM requires unsafe-eval CSP bypass, uses hardcoded private IPs for auth servers, and has broad webRequest permissions.",
+    "probe_resource": "img/ckauth19x.png",
+    "flags": [
+      "wasm_usage",
+      "unsafe_eval_csp",
+      "hardcoded_ip_addresses",
+      "user_agent_modification",
+      "http_auth_injection",
+      "identity_email_access"
+    ]
+  },
+  "ohcpnigalekghcmgcdcenkpelffpdolg": {
+    "name": "ColorPick Eyedropper",
+    "users": 1000000,
+    "risk": "MEDIUM",
+    "version": "0.0.3.3",
+    "summary": "Color picker extension that sends user color selections to vidsbee.com without adequate disclosure. Implements external message handlers without origin validation.",
+    "probe_resource": "img/icon16.png",
+    "flags": [
+      "data_exfiltration",
+      "postmessage_no_origin"
+    ]
+  },
+  "oiiaigjnkhngdbnoookogelabohpglmd": {
+    "name": "HubSpot Sales",
+    "users": 1000000,
+    "risk": "MEDIUM",
+    "version": "3.0.0.39731",
+    "summary": "Legitimate enterprise CRM tool that intercepts Gmail compose data, tracks email opens/clicks, and transmits interaction data to HubSpot servers. Extensive permissions support CRM features including email tracking, contact management, and sales automation.",
+    "probe_resource": "img/notification-icons/icon-mute.png",
+    "flags": [
+      "xhr_hooking",
+      "data_exfiltration",
+      "remote_config"
+    ]
+  },
+  "pcblbflgdkdfdjpjifeppkljdnaekohj": {
+    "name": "Brisk Teaching \u2013 AI Assistant for Teachers",
+    "users": 1000000,
+    "risk": "MEDIUM",
+    "version": "1.0.346",
+    "summary": "Education technology extension that transmits user data to third-party analytics service (Datadog) and implements YouTube token capture functionality.",
+    "probe_resource": "assets/boost_writing_modal_icons.png",
+    "flags": [
+      "externally_connectable"
+    ]
+  },
+  "alhgpfoeiimagjlnfekdhkjlkiomcapa": {
+    "name": "Apollo.io: Free B2B Phone Number & Email Finder",
+    "users": 900000,
+    "risk": "MEDIUM",
+    "version": "13.0.0",
+    "summary": "B2B sales intelligence tool that transmits browsing data, email interactions, and contact information to Apollo.io servers for CRM integration and lead tracking.",
+    "probe_resource": "img/apollo-icon-white-extension.svg",
+    "flags": [
+      "ad_injection",
+      "affiliate_fraud",
+      "cookie_harvesting",
+      "data_exfiltration",
+      "dynamic_eval",
+      "dynamic_function",
+      "dynamic_import",
+      "dynamic_tab_url",
+      "dynamic_window_open",
+      "fetch_hooking",
+      "keylogging",
+      "postmessage_no_origin",
+      "remote_config",
+      "xhr_hooking"
+    ]
+  },
+  "cmdgdghfledlbkbciggfjblphiafkcgg": {
+    "name": "SBlock - Super Ad Blocker",
+    "users": 900000,
+    "risk": "MEDIUM",
+    "version": "1.7.15",
+    "summary": "Ad blocker that provides legitimate blocking functionality but collects detailed ad metadata from Facebook, YouTube, and social platforms, transmitting it to addon.sblock.pro servers for advertising intelligence research. Not disclosed to users.",
+    "probe_resource": "presentation/js/icon.js",
+    "flags": [
+      "ad_intelligence_collection",
+      "postmessage_no_origin_check",
+      "third_party_analytics",
+      "facebook_api_scraping",
+      "user_demographics_collection"
+    ]
+  },
+  "gjalhnomhafafofonpdihihjnbafkipc": {
+    "name": "Szafir SDK Web",
+    "users": 900000,
+    "risk": "MEDIUM",
+    "version": "0.0.17.2",
+    "summary": "Legitimate Polish e-signature SDK with a postMessage vulnerability allowing untrusted web pages to send arbitrary commands to native messaging host without origin validation.",
+    "probe_resource": "version.js",
+    "flags": [
+      "postmessage_no_origin"
+    ]
+  },
+  "ligfpkgaijhppilphabeoligampecpce": {
+    "name": "INISAFE SmartManagerEX",
+    "users": 900000,
+    "risk": "HIGH",
+    "version": "1.0.2.3",
+    "summary": "Native messaging bridge extension with broad host permissions (*://*/*) that enables arbitrary native code execution through a privileged messaging interface. Contains dynamic callback execution vulnerability where callback names from native host are invoked via window[callback](), creating potential for code execution if the native host is compromised.",
+    "probe_resource": "contentscript.js",
+    "flags": [
+      "dynamic_function",
+      "code_injection",
+      "externally_connectable"
+    ]
+  },
+  "mjnbclmflcpookeapghfhapeffmpodij": {
+    "name": "UltraSurf Security, Privacy & Unblock VPN",
+    "users": 900000,
+    "risk": "HIGH",
+    "version": "1.8.6",
+    "summary": "VPN that transmits all visited URLs, referrers, and timestamps to UltraSurf analytics servers with persistent user IDs, and uninstalls competing proxy extensions without consent.",
+    "probe_resource": "injected_content.js",
+    "flags": [
+      "dynamic_eval",
+      "dynamic_function",
+      "extension_enumeration",
+      "residential_proxy_vendor"
+    ]
+  },
+  "icadabneccecohhaonmhgbjelhgodfaa": {
+    "name": "CrossWarpEX \ud655\uc7a5",
+    "users": 800000,
+    "risk": "MEDIUM",
+    "version": "1.0.2.8",
+    "summary": "Enterprise native messaging bridge with dynamic function invocation vulnerability via window[] accessor in callback handler, though risk is limited to users who intentionally install the companion native application.",
+    "probe_resource": "contentscript.js",
+    "flags": [
+      "dynamic_function"
+    ]
+  },
+  "lppkeogbkjlmmbjenbogdndlgmpiddda": {
+    "name": "Ntko office document control browser plug-in.",
+    "users": 800000,
+    "risk": "HIGH",
+    "version": "1.8.7",
+    "summary": "Native messaging bridge with broad host permissions that transmits cookies and session data to native application without user consent. Insecure postMessage implementation allows any website to trigger native messaging connections.",
+    "probe_resource": "icons/ntko.png",
+    "flags": [
+      "cookie_harvesting",
+      "postmessage_no_origin",
+      "data_exfiltration"
+    ]
+  },
+  "gbdjcgalliefpinpmggefbloehmmknca": {
+    "name": "Ad block & Adblocker - No Ads extension",
+    "users": 700000,
+    "risk": "CRITICAL",
+    "version": "1.9.3",
+    "summary": "Functional ad blocker that transmits every visited URL with a persistent user UUID to smartadblocker.com on every page load, with no user disclosure or opt-out. The UUID is stored in chrome.storage.sync (cross-device). The exfiltration endpoint is the domain of a separate extension (Smart Adblocker), suggesting a shared data-collection backend across multiple extensions. Remote filter rule updates and Twitch ad-skipping are standard ad-blocker behaviour.",
+    "probe_resource": "js/b.js",
+    "flags": [
+      "postmessage_no_origin",
+      "remote_config",
+      "browsing_history_exfil",
+      "persistent_tracking",
+      "cross_device_tracking"
+    ]
+  },
+  "laankejkbhbdhmipfmgcngdelahlfoji": {
+    "name": "StayFocusd \u2013 Website Blocker & Focus Timer & Shorts Blocker",
+    "users": 700000,
+    "risk": "CRITICAL",
+    "version": "4.4.3",
+    "summary": "StayFocusd v4.4.3 is a website blocking/productivity extension with 600k+ users that exfiltrates all URLs visited by the user and has infrastructure to remotely enable scraping of user AI chats.",
+    "probe_resource": "icon-128.png",
+    "flags": [
+      "data_exfiltration",
+      "dynamic_function",
+      "fetch_hooking",
+      "keylogging",
+      "remote_config",
+      "xhr_hooking"
+    ]
+  },
+  "nbcojefnccbanplpoffopkoepjmhgdgh": {
+    "name": "Hoxx VPN Proxy",
+    "users": 700000,
+    "risk": "MEDIUM",
+    "version": "3.50.6",
+    "summary": "Legitimate VPN with remote configuration, XOR-encrypted communications, and WASM crypto. Standard VPN permissions and behavior patterns. Medium risk due to weak custom encryption and remote config dependencies.",
+    "probe_resource": "resources/flags/ad.png",
+    "externally_connectable": {
+      "matches": [
+        "<all_urls>"
+      ]
+    },
+    "flags": [
+      "csp_unsafe_inline",
+      "data_exfiltration",
+      "dynamic_function",
+      "dynamic_tab_url",
+      "extension_enumeration",
+      "keylogging",
+      "postmessage_no_origin",
+      "remote_config",
+      "residential_proxy_vendor",
+      "wasm_binary"
+    ]
+  },
+  "adlpodnneegcnbophopdmhedicjbcgco": {
+    "name": "Free VPN for Chrome - Troywell VPN",
+    "users": 600000,
+    "risk": "CRITICAL",
+    "version": "5.0.3",
+    "summary": "Troywell VPN operates residential proxy infrastructure routing third-party traffic through user connections, disables competing VPN extensions, and injects aggressive affiliate/coupon scripts into all websites. Transmits browsing data and cookies to CityAds affiliate network with remote kill-switch capabilities.",
+    "probe_resource": "icons/arrow-right.svg",
+    "flags": [
+      "affiliate_fraud",
+      "cookie_harvesting",
+      "data_exfiltration",
+      "dynamic_eval",
+      "dynamic_function",
+      "dynamic_tab_url",
+      "dynamic_window_open",
+      "extension_enumeration",
+      "extension_killing",
+      "postmessage_no_origin",
+      "remote_config",
+      "remote_kill_switch",
+      "residential_proxy_infrastructure",
+      "residential_proxy_vendor"
+    ]
+  },
+  "bafijghppfhdpldihckdcadbcobikaca": {
+    "name": "Keyword Surfer",
+    "users": 600000,
+    "risk": "MEDIUM",
+    "version": "6.5.1",
+    "summary": "SEO keyword research tool that transmits Google search queries and browsing activity to SurferSEO servers to provide search volume data and keyword insights.",
+    "probe_resource": "lib/assets/surfer-logo.png",
+    "flags": [
+      "fetch_hooking"
+    ]
+  },
+  "cpgaheeihidjmolbakklolchdplenjai": {
+    "name": "Turbo Downloader for Instagram",
+    "users": 600000,
+    "risk": "MEDIUM",
+    "version": "4.12.15",
+    "summary": "Instagram downloader with postMessage handlers lacking origin validation. Legitimate functionality for downloading Instagram content, but improper message handling could allow malicious sites to trigger unintended actions.",
+    "probe_resource": "icons/close_black_24dp.svg",
+    "flags": [
+      "vuln:postmessage_no_origin"
+    ]
+  },
+  "elpmkbbdldhoiggkjfpgibmjioncklbn": {
+    "name": "Translate for Chrome -Translator, Dictionary",
+    "users": 500000,
+    "risk": "MEDIUM",
+    "version": "1.0.4",
+    "summary": "Translation extension sends user-uploaded images and device UUIDs to third-party backend (backenster.com) without encryption. Contains postMessage handler without origin validation allowing DOM manipulation.",
+    "probe_resource": "helpers/icons/280.svg",
+    "flags": [
+      "third_party_telemetry",
+      "postmessage_no_origin_check",
+      "uuid_tracking"
+    ]
+  },
+  "jajikjbellknnfcomfjjinfjokihcfoi": {
+    "name": "Adblock for YouTube & Chrome - All Block",
+    "users": 500000,
+    "risk": "MEDIUM",
+    "version": "3.3.0",
+    "summary": "Ad blocker (uBlock Origin Lite fork) with link safety checker that transmits browsing data to third-party service.allblock.app for URL scanning without clear disclosure.",
+    "probe_resource": "web_accessible_resources/2x2.png",
+    "flags": [
+      "privacy:url_collection",
+      "privacy:third_party_analytics",
+      "feature:link_scanning"
+    ]
+  },
+  "jkncabbipkgbconhaajbapbhokpbgkdc": {
+    "name": "Cegid Peoplenet ClickOnce launcher",
+    "users": 500000,
+    "risk": "MEDIUM",
+    "version": "2.0",
+    "summary": "Enterprise extension for ClickOnce app launching. Downloads and prompts execution of native binary (m4clickoncehelper.exe) on install. Excessive <all_urls> permission for stated functionality. Native messaging bridge to local binary.",
+    "probe_resource": "images/download_all.png",
+    "flags": [
+      "dynamic_tab_url"
+    ]
+  },
+  "mhmphnocemakkjdampibehejoaleebpo": {
+    "name": "SuperNova SWF Enabler",
+    "users": 500000,
+    "risk": "MEDIUM",
+    "version": "0.93",
+    "summary": "Flash player extension using Ruffle WASM emulator. Transmits stored user identifiers (gamerguid, partnerid) to developer servers (getsupernova.com) for usage tracking. Has postMessage handlers without origin validation.",
+    "probe_resource": "images/icon-16x16.png",
+    "flags": [
+      "vuln:postmessage_no_origin",
+      "privacy:usage_tracking",
+      "native_messaging"
+    ]
+  },
+  "oalnnpgcgikdnenhjigoaencbppcmgel": {
+    "name": "LexiFlow",
+    "users": 500000,
+    "risk": "MEDIUM",
+    "version": "1.2.12",
+    "summary": "Literacy support extension from Texthelp providing text-to-speech and word prediction. Transmits data to texthelp.com and lingapps.dk for authentication and dictionary services. Has 11 of 13 postMessage handlers without origin validation.",
+    "probe_resource": "assets/fonts/inter/inter-v18-latin-100.woff2",
+    "flags": [
+      "keylogging",
+      "postmessage_no_origin",
+      "wasm_binary"
+    ]
+  },
+  "aefalnopbcachhkjnihfjgglnjdegicg": {
+    "name": "uPerform\u00ae In-application Help",
+    "users": 400000,
+    "risk": "MEDIUM",
+    "version": "5.43.170.2535",
+    "summary": "Enterprise help system extension with postMessage vulnerability allowing XSS attacks from malicious web pages. Uses native messaging to communicate with local host application.",
+    "probe_resource": "InAppCsh/style/jqueryui/images/ui-icons_000_256x240.png",
+    "flags": [
+      "postmessage_no_origin"
+    ]
+  },
+  "agjnjboanicjcpenljmaaigopkgdnihi": {
+    "name": "PreMiD",
+    "users": 400000,
+    "risk": "MEDIUM",
+    "version": "2.12.3",
+    "summary": "Discord Rich Presence extension with postMessage handlers lacking origin validation and developer mode WebSocket feature. Contains WASM code. Legitimate functionality with security implementation flaws.",
+    "probe_resource": "icons/PreMiD.png",
+    "flags": [
+      "postmessage_no_origin",
+      "wasm",
+      "developer_backdoor",
+      "analytics_telemetry"
+    ]
+  },
+  "appcnhiefcidclcdjeahgklghghihfok": {
+    "name": "Google Meet Attendance List",
+    "users": 400000,
+    "risk": "MEDIUM",
+    "version": "5.2.1",
+    "summary": "Google Meet attendance tracker that transmits participant data to meetlist.io servers. PostMessage handlers lack origin validation, creating potential attack surface.",
+    "probe_resource": "icons/logo-24.png",
+    "flags": [
+      "postmessage_no_origin",
+      "fetch_hooking",
+      "xhr_hooking",
+      "externally_connectable"
+    ]
+  },
+  "cmkdbmfndkfgebldhnkbfhlneefdaaip": {
+    "name": "WhatRuns",
+    "users": 400000,
+    "risk": "CRITICAL",
+    "version": "1.8.20",
+    "summary": "Tech-stack identification tool that transmits browsing data (URLs, titles, DOM content) to whatruns.com and shopper.com. Monitors AI chat prompts with debounced input tracking. PostMessage vulnerability allows DOM manipulation.",
+    "probe_resource": "images/default-icon.png",
+    "flags": [
+      "postmessage_no_origin",
+      "extensive_data_collection",
+      "third_party_data_sharing"
+    ]
+  },
+  "dgjbaljgolmlcmmklmmeafecikidmjpi": {
+    "name": "Adblock Ad Blocker Pro",
+    "users": 400000,
+    "risk": "CRITICAL",
+    "version": "2.0.14",
+    "summary": "Malicious spyware disguised as ad blocker. Exfiltrates complete encrypted browsing history (URLs, referrers, timestamps, tab activity) to adblox.org every 10 seconds. Implements persistent user tracking via UUID. Server-controlled post-install tab injection enables monetization. Contains legitimate ad-blocking features as trojan horse. AES-GCM encrypted exfiltration (key: gH7kL9rT2vXe1qMz) to api_v1/safe_search1.php defeats network inspection. Tracks 400,000 users with no privacy disclosure.",
+    "probe_resource": "img/icon_128_gray.png",
+    "flags": [
+      "data_exfiltration",
+      "remote_config",
+      "fetch_hooking",
+      "xhr_hooking",
+      "postmessage_no_origin",
+      "dynamic_function"
+    ]
+  },
+  "fnmihdojmnkclgjpcoonokmkhjpjechg": {
+    "name": "Smart Sidebar: Chat GPT, Claude & DeepSeek",
+    "users": 400000,
+    "risk": "HIGH",
+    "version": "2.0.0",
+    "summary": "Unvalidated postMessage listener allows any website to inject content and trigger requests. Reads full page content (text, forms, documents) from all sites and transmits to gapier.com and aitopia.ai servers. Grants externally_connectable access to vendor domains.",
+    "probe_resource": "aitopia/assets/ai_logo/png/arrowicon.png",
+    "flags": [
+      "postmessage_no_origin",
+      "data_exfiltration",
+      "remote_config",
+      "code_injection",
+      "dynamic_function"
+    ]
+  },
+  "gbojkjpincgojijodbnliimgeggnomai": {
+    "name": "FortiDLP Browser Extension",
+    "users": 400000,
+    "risk": "MEDIUM",
+    "version": "3.5.6",
+    "summary": "Enterprise DLP tool that monitors browsing activity, uploads, clipboard, credentials, and storage changes. Disclosed purpose but extensive surveillance permissions and missing origin validation on postMessage.",
+    "probe_resource": "icon128.png",
+    "flags": [
+      "postmessage_no_origin",
+      "cookie_harvesting"
+    ]
+  },
+  "gjknjjomckknofjidppipffbpoekiipm": {
+    "name": "VPN Free - Betternet Unlimited VPN Proxy",
+    "users": 400000,
+    "risk": "MEDIUM",
+    "version": "7.1.5",
+    "summary": "Free VPN extension with typical proxy/VPN permissions. Uses management permission to detect conflicting extensions but no evidence of malicious data exfiltration.",
+    "probe_resource": "icon-32.png",
+    "flags": [
+      "extension_enumeration"
+    ]
+  },
+  "imgpenhngnbnmhdkpdfnfhdpmfgmihdn": {
+    "name": "IObit Surfing Protection",
+    "users": 400000,
+    "risk": "MEDIUM",
+    "version": "3.1.6",
+    "summary": "Security extension with native messaging integration that communicates with local software. All URL scanning is delegated to native host application, preventing full assessment of external data transmission.",
+    "probe_resource": "Plugin/img/icon_e_big.png",
+    "flags": [
+      "remote_config"
+    ]
+  },
+  "kaibcgikagnkfgjnibflebpldakfhfih": {
+    "name": "CS2 Trader - Steam Trading Enhancer",
+    "users": 400000,
+    "risk": "MEDIUM",
+    "version": "3.5.3",
+    "summary": "Steam trading enhancement tool that extracts Steam API keys and access tokens for legitimate CS2 item trading. Communicates only with Steam and csgotrader.app servers. No third-party tracking detected.",
+    "probe_resource": "js/injectToPage/CreatePriceHistoryGraph.js",
+    "flags": [
+      "dynamic_eval",
+      "dynamic_function",
+      "wasm_binary"
+    ]
+  },
+  "lijhjhlnfifgoabbihoobnfapogkcjgk": {
+    "name": "Scrible Extension",
+    "users": 400000,
+    "risk": "MEDIUM",
+    "version": "2.0.7",
+    "summary": "Legitimate web annotation tool with unvalidated postMessage handlers that could allow malicious websites to trigger extension functionality.",
+    "probe_resource": "images/Favicon32.png",
+    "flags": [
+      "postmessage_no_origin"
+    ]
+  },
+  "lnbmbgocenenhhhdojdielgnmeflbnfb": {
+    "name": "SellerSprite - Amazon Research Tool",
+    "users": 400000,
+    "risk": "MEDIUM",
+    "version": "5.0.1",
+    "summary": "Amazon seller research tool that harvests TikTok data via fetch hooking (video lists, profiles, shop data) and injects prompts into 6 AI platforms (ChatGPT, Claude, Gemini, DeepSeek, Grok, Doubao). Collects Amazon seller data for competitive analysis.",
+    "probe_resource": "assets/iconfont-BiQ1tn51.ttf",
+    "flags": [
+      "data_exfiltration",
+      "fetch_hooking"
+    ]
+  },
+  "mcebeofpilippmndlpcghpmghcljajna": {
+    "name": "Lusha - Easily find B2B contact information",
+    "users": 400000,
+    "risk": "MEDIUM",
+    "version": "10.5.4",
+    "summary": "Legitimate B2B contact finder with postMessage origin validation vulnerabilities and disclosed data collection to lusha.co services.",
+    "probe_resource": "images/lushaIcon2.png",
+    "flags": [
+      "postmessage_no_origin",
+      "extension_storage_exfil",
+      "optional_broad_host"
+    ]
+  },
+  "nbllaikcjebbpdemmekhnciekkjodlla": {
+    "name": "SkrivaText",
+    "users": 400000,
+    "risk": "MEDIUM",
+    "version": "1.2.10",
+    "summary": "Swedish/English writing assistant by Texthelp that transmits OAuth tokens to idp.texthelp.com. Has 14 postMessage handlers without origin validation, allowing malicious iframes to potentially inject commands into extension UI components.",
+    "probe_resource": "views/action-popup.html",
+    "flags": [
+      "vuln:postmessage_no_origin",
+      "auth:oauth_flow"
+    ]
+  },
+  "pdmhilamamchgnnipghbjakjpbenbcdj": {
+    "name": "Impero Education Pro",
+    "users": 400000,
+    "risk": "MEDIUM",
+    "version": "1.1.13",
+    "summary": "Enterprise classroom monitoring extension that connects to local WebSocket server (localhost:30019) to receive filtering policies. Sends page HTML/DOM to local server for analysis. Appropriate for disclosed education/MDM use.",
+    "probe_resource": "block.html",
+    "flags": [
+      "websocket_communication",
+      "content_extraction",
+      "page_replacement",
+      "localhost_connection"
+    ]
+  },
+  "allahmdcdojnlikmpkdpcopgmjfdafch": {
+    "name": "CK-Express TP",
+    "users": 300000,
+    "risk": "MEDIUM",
+    "version": "3.2",
+    "summary": "Enterprise content filtering solution that collects user email, device serial numbers, and browsing metadata. Insecure postMessage handler creates potential XSS risk. Data collection appears disclosed for enterprise filtering purposes.",
+    "probe_resource": "img/ck19x.png",
+    "flags": [
+      "enterprise_monitoring",
+      "postmessage_vulnerability",
+      "wasm_usage",
+      "user_email_collection",
+      "device_fingerprinting"
+    ]
+  },
+  "bckjlihkmgolmgkchbpiponapgjenaoa": {
+    "name": "Jungle Scout",
+    "users": 300000,
+    "risk": "HIGH",
+    "version": "9.2.6",
+    "summary": "Amazon product research tool exposing externally_connectable message API to junglescout.com domains, allowing arbitrary URL fetch via extension permissions (SSRF risk).",
+    "probe_resource": "images/128.png",
+    "flags": [
+      "data_exfiltration",
+      "dynamic_function",
+      "xss"
+    ]
+  },
+  "bnompdfnhdbgdaoanapncknhmckenfog": {
+    "name": "Email Tracker + Pixelblock Detector & Blocker",
+    "users": 300000,
+    "risk": "MEDIUM",
+    "version": "5.0.52",
+    "summary": "Email tracking extension that monitors Gmail/Outlook/Yahoo webmail, injects tracking pixels, rewrites clicked links, and transmits email metadata to emailtracker.website servers for read receipt tracking.",
+    "probe_resource": "image/icon/desktop.png",
+    "flags": [
+      "data_exfiltration",
+      "fetch_hooking",
+      "xhr_hooking"
+    ]
+  },
+  "chlffgpmiacpedhhbkiomidkjlcfhogd": {
+    "name": "Pushbullet",
+    "users": 300000,
+    "risk": "MEDIUM",
+    "version": "366",
+    "summary": "Pushbullet is a legitimate cross-device notification and messaging extension with three postMessage handlers in the bundled forge.min.js cryptography library that lack origin validation, creating potential for cross-site scripting attacks if malicious sites can interact with extension pages.",
+    "probe_resource": "icon_128.png",
+    "flags": [
+      "vuln:postmessage_no_origin"
+    ]
+  },
+  "eefedolmcildfckjamddopaplfiiankl": {
+    "name": "ScreenPal - Screen Recorder & Video Editor",
+    "users": 300000,
+    "risk": "MEDIUM",
+    "version": "3.1.8",
+    "summary": "Legitimate screen recording extension from ScreenPal with postMessage XSS vulnerability. Handlers process untrusted data without origin validation and assign to innerHTML. All permissions justified by recording functionality.",
+    "probe_resource": "app/checkWhich.html",
+    "flags": [
+      "document_write",
+      "dynamic_function",
+      "postmessage_no_origin"
+    ]
+  },
+  "hamlakigaoomkpddnpnbjkhdfppbnjjh": {
+    "name": "Mimecast Incydr",
+    "users": 300000,
+    "risk": "MEDIUM",
+    "version": "1.47.0",
+    "summary": "Legitimate enterprise DLP solution (Mimecast Incydr) that monitors file uploads, clipboard operations, and browsing activity on all websites. Invasive capabilities are expected and disclosed for insider risk management in corporate environments.",
+    "probe_resource": "images/icon128.png",
+    "flags": [
+      "data_exfiltration",
+      "cookie_harvesting",
+      "clipboard_monitoring",
+      "remote_config"
+    ]
+  },
+  "jdogphakondfdmcanpapfahkdomaicfa": {
+    "name": "CKAuthenticator",
+    "users": 300000,
+    "risk": "HIGH",
+    "version": "2.1.4",
+    "summary": "Enterprise authentication tool that modifies User-Agent headers and communicates with hardcoded IP addresses. Uses Native Client (NaCl) modules for cryptographic operations and sends encrypted user email + IP data to remote servers.",
+    "probe_resource": "img/ckauth19x.png",
+    "flags": [
+      "data_exfiltration",
+      "remote_config"
+    ]
+  },
+  "kekahkplibinaibelipdcikofmedafmb": {
+    "name": "ClickOnce for Google Chrome",
+    "users": 300000,
+    "risk": "MEDIUM",
+    "version": "2.1",
+    "summary": "Legitimate ClickOnce utility that uses native messaging with a bundled Windows executable and broad webRequest permissions. Concerns include automatic download of .exe files, training users to execute files from extensions, and large attack surface from all-URL interception capabilities.",
+    "probe_resource": "blank.gif"
+  },
+  "kfhgpagdjjoieckminnmigmpeclkdmjm": {
+    "name": "Automatic Twitch: Drops, Moments and Points",
+    "users": 300000,
+    "risk": "MEDIUM",
+    "version": "1.6.3",
+    "summary": "Twitch automation extension with disclosed feature set (channel points, drops, moments). Two postMessage handlers lack origin validation. Analytics include Google Analytics with hardcoded API secret. Developer donation tracking to buymeacoffee.com is benign. All network activity aligns with stated functionality.",
+    "probe_resource": "icon/actions/action_19_disabled.png",
+    "flags": [
+      "vuln:postmessage_no_origin",
+      "analytics:google_analytics",
+      "network:third_party_api"
+    ]
+  },
+  "kiodaajmphnkcajieajajinghpejdjai": {
+    "name": "Popup Blocker Pro",
+    "users": 300000,
+    "risk": "MEDIUM",
+    "version": "2.0.5",
+    "summary": "Popup blocker that transmits browsing data (full URLs, script inventories from visited pages) to popup-blocker.org servers when users click feedback, plus postMessage vulnerability without origin validation.",
+    "probe_resource": "assets/images/icon128Hide.png",
+    "flags": [
+      "undisclosed_data_collection",
+      "postmessage_origin_check",
+      "remote_telemetry"
+    ]
+  },
+  "lgbjhdkjmpgjgcbcdlhkokkckpjmedgc": {
+    "name": "DualSafe Password Manager & Digital Vault",
+    "users": 300000,
+    "risk": "HIGH",
+    "version": "1.4.35",
+    "summary": "Password manager that disables Chrome native password features, captures credentials on all pages, and transmits them (encrypted) to developer servers including suspicious backup domains (kxvrqpr2.xyz, lywsrqs3.xyz).",
+    "probe_resource": "inject/images/confirm__purchase_icon.svg",
+    "flags": [
+      "document_write",
+      "dynamic_eval",
+      "keylogging",
+      "postmessage_no_origin",
+      "remote_config"
+    ]
+  },
+  "necpbmbhhdiplmfhmjicabdeighkndkn": {
+    "name": "Similar Sites - Discover Related Websites",
+    "users": 300000,
+    "risk": "HIGH",
+    "version": "7.3.17",
+    "summary": "Website recommendation extension that intercepts all XHR/fetch/WebSocket traffic, scrubs PII from URLs, monitors file uploads, and transmits encrypted telemetry to similarsites.com with remote config kill switch.",
+    "probe_resource": "images/email-icon.svg",
+    "flags": [
+      "data_exfiltration",
+      "dynamic_function",
+      "fetch_hooking",
+      "keylogging",
+      "remote_config",
+      "xhr_hooking"
+    ]
+  },
+  "nfmlkliedggdodlbgghmmchhgckjoaml": {
+    "name": "Spotify Ad Blocker - Blockify",
+    "users": 300000,
+    "risk": "HIGH",
+    "version": "1.9.0",
+    "summary": "Ad-blocking extension that deploys automated YouTube comment spam system (1,130-line script), transmits user data to insights.getblockify.com, and exposes 5 postMessage handlers with weak origin validation.",
+    "probe_resource": "frame/icon.svg",
+    "flags": [
+      "data_exfiltration",
+      "postmessage_no_origin",
+      "remote_config",
+      "automated_spam",
+      "hidden_iframe",
+      "user_tracking",
+      "dark_patterns"
+    ]
+  },
+  "alcgpfgkdjbabelklflpfkooadcfgoao": {
+    "name": "Fabasoft Client",
+    "users": 200000,
+    "risk": "MEDIUM",
+    "version": "25.11.0.74",
+    "summary": "Enterprise document management extension with native messaging that lacks origin validation on postMessage handlers, creating potential XSS risk.",
+    "probe_resource": "installed.js",
+    "flags": [
+      "postmessage_no_origin",
+      "cookie_harvesting"
+    ]
+  },
+  "cmllgdnjnkbapbchnebiedipojhmnjej": {
+    "name": "Adaware AdBlock",
+    "users": 200000,
+    "risk": "MEDIUM",
+    "version": "4.2.1",
+    "summary": "Rebadged uBlock Origin Lite with undisclosed telemetry to Lavasoft servers tracking install parameters, daily activity, browser fingerprinting, and user metadata.",
+    "probe_resource": "web_accessible_resources/2x2.png",
+    "flags": [
+      "data_exfiltration",
+      "remote_config"
+    ]
+  },
+  "elfaihghhjjoknimpccccmkioofjjfkf": {
+    "name": "StayFree - Website Blocker, Web Usage Stats, Shorts Blocker",
+    "users": 200000,
+    "risk": "CRITICAL",
+    "version": "2.5.6",
+    "summary": "StayFree v2.5.6 is a \"website blocker & screen time tracker\" extension that is owned by Sensor Tower, a mobile/web analytics and ad intelligence co...",
+    "probe_resource": "fallback-icon.png",
+    "flags": [
+      "data_exfiltration",
+      "dynamic_function",
+      "fetch_hooking",
+      "keylogging",
+      "remote_config",
+      "xhr_hooking"
+    ]
+  },
+  "fpkbnjejghdcncegfglnapabnljcimdc": {
+    "name": "Ad Block Wonder - stop ads & Popups",
+    "users": 200000,
+    "risk": "HIGH",
+    "version": "3.7",
+    "summary": "Ad blocker that collects browsing data (tab domains, UTM parameters from Chrome Web Store tabs) and transmits to wonderadblock.com servers. Has postMessage handler without proper origin validation.",
+    "probe_resource": "popup/js/icon.js",
+    "flags": [
+      "remote_config",
+      "data_exfiltration",
+      "postmessage_no_origin"
+    ]
+  },
+  "gefpceefdmmojbgmfmnkeanmpclobjgj": {
+    "name": "\u5065\u5eb7\u63d0\u9192",
+    "users": 200000,
+    "risk": "CRITICAL",
+    "version": "1.0.13",
+    "summary": "Health reminder with hidden search hijacking that redirects searches through xianyang888.com, transmits URLs and tracking data to remote server. Affiliate injection via undisclosed remote config.",
+    "probe_resource": "js/jquery.js",
+    "flags": [
+      "data_exfiltration",
+      "remote_config",
+      "affiliate_injection",
+      "dynamic_tab_url"
+    ]
+  },
+  "gkkdmjjodidppndkbkhhknakbeflbomf": {
+    "name": "Selectext: Copy Text From Videos",
+    "users": 200000,
+    "risk": "MEDIUM",
+    "version": "3.1.19",
+    "summary": "Video OCR extension with legitimate functionality but contains unsafe postMessage handlers lacking origin validation across 10+ instances, creating exploitable attack surface for malicious websites. Also sends video screenshots and usage telemetry with cookies to api.selectext.app.",
+    "probe_resource": "images/email-icon.png",
+    "flags": [
+      "postmessage_no_origin",
+      "data_exfiltration"
+    ]
+  },
+  "goficmpcgcnombioohjcgdhbaloknabb": {
+    "name": "Note Board - Sticky Notes App",
+    "users": 200000,
+    "risk": "MEDIUM",
+    "version": "9.0.33",
+    "summary": "Sticky notes extension that silently injects Amazon affiliate tags into user-created links for undisclosed monetization. Syncs notes to Firebase servers and uses OAuth with Google.",
+    "probe_resource": "appimg/link_icon.png",
+    "flags": [
+      "ad_injection",
+      "affiliate_fraud"
+    ]
+  },
+  "gphandlahdpffmccakmbngmbjnjiiahp": {
+    "name": "PDF Editor for Chrome:Edit, Fill, Sign, Print",
+    "users": 200000,
+    "risk": "HIGH",
+    "version": "0.5.5",
+    "summary": "PDF editor that uploads all PDF file contents (base64-encoded) and URLs to pdffiller.com servers across all websites. Scrapes Gmail sender addresses and subject lines when processing email attachments.",
+    "probe_resource": "img/icon-fill.png",
+    "flags": [
+      "data_exfiltration",
+      "privacy:email_metadata",
+      "privacy:file_upload"
+    ]
+  },
+  "hecgknieibccghjmmhhckdfeobjoffdf": {
+    "name": "Calabrio Analytics Plugin",
+    "users": 200000,
+    "risk": "MEDIUM",
+    "version": "0.2.0.7",
+    "summary": "Enterprise contact center monitoring tool that captures all form field interactions, XHR responses, and browsing activity on every website, transmitting data to local native application via nativeMessaging.",
+    "probe_resource": "script.js",
+    "flags": [
+      "data_exfiltration",
+      "xhr_hooking",
+      "keylogging"
+    ]
+  },
+  "hldjnlbobkdkghfidgoecgmklcemanhm": {
+    "name": "Web Highlights: PDF & Web Highlighter + Notes & AI Summary",
+    "users": 200000,
+    "risk": "MEDIUM",
+    "version": "12.0.2",
+    "summary": "Highlighting tool that integrates GiveFreely affiliate SDK to track browsing on 2000+ merchant sites and generate affiliate URLs. Collects geolocation via MaxMind API and monitors page loads via webRequest.",
+    "probe_resource": "@webhighlights/shared-components/dist/favicon/index.js",
+    "flags": [
+      "ad_injection",
+      "affiliate_fraud",
+      "data_exfiltration",
+      "dynamic_eval",
+      "dynamic_function",
+      "dynamic_import",
+      "dynamic_tab_url",
+      "dynamic_window_open",
+      "keylogging",
+      "postmessage_no_origin",
+      "remote_config",
+      "wasm_binary"
+    ]
+  },
+  "inhcgfpbfdjbjogdfjbclgolkmhnooop": {
+    "name": "AI Sidebar with Deepseek, ChatGPT, Claude and more.",
+    "users": 200000,
+    "risk": "MEDIUM",
+    "version": "1.6.5",
+    "summary": "AI chat interface with postMessage XSS vulnerability from missing origin validation. Chat messages written to innerHTML sinks without sanitization, allowing arbitrary code execution.",
+    "probe_resource": "aitopia/assets/images/icon128.png",
+    "flags": [
+      "postmessage_no_origin",
+      "xss",
+      "externally_connectable"
+    ]
+  },
+  "likadllkkidlligfcdhfnnbkjigdkmci": {
+    "name": "QR Code Reader",
+    "users": 200000,
+    "risk": "MEDIUM",
+    "version": "2.0.3",
+    "summary": "QR code scanner and generator that transmits user URLs and data to third-party shortening services (hybridapps.net, amazonspot.net) without clear disclosure. Includes remote notification system and Google Analytics tracking. Hardcoded cryptographic credentials.",
+    "probe_resource": "css/icons.css",
+    "flags": [
+      "data_exfiltration",
+      "remote_config"
+    ]
+  },
+  "mfpddejbpnbjkjoaicfedaljnfeollkh": {
+    "name": "Delinea Web Password Filler",
+    "users": 200000,
+    "risk": "MEDIUM",
+    "version": "3.11.9",
+    "summary": "Enterprise password manager with weak CSP allowing unsafe-inline styles and postMessage handlers without comprehensive origin validation, though legitimately integrates with native Delinea desktop applications.",
+    "probe_resource": "icons/128-icon-active.png",
+    "flags": [
+      "csp_unsafe_inline",
+      "postmessage_no_origin"
+    ]
+  },
+  "ncldcbhpeplkfijdhnoepdgdnmjkckij": {
+    "name": "iGuge",
+    "users": 200000,
+    "risk": "HIGH",
+    "version": "2.3.9",
+    "summary": "VPN/proxy extension that forcibly disables competing extensions without user consent, including specific targeting of Tampermonkey. Uses remote-controlled whitelist and routes traffic through operator-controlled infrastructure.",
+    "probe_resource": "img/128ico.png",
+    "flags": [
+      "extension_enumeration",
+      "remote_config",
+      "data_exfiltration"
+    ]
+  },
+  "ajiejmhbejpdgkkigpddefnjmgcbkenk": {
+    "name": "Clipboard Manager and Text Expander - Clipboard History Pro",
+    "users": 100000,
+    "risk": "HIGH",
+    "version": "3.60.0",
+    "summary": "This clipboard manager extension demonstrates legitimate functionality with appropriate security practices for its stated purpose. The extension us...",
+    "probe_resource": "ckeditor-inject.js"
+  },
+  "bohahkiiknkelflnjjlipnaeapefmjbh": {
+    "name": "Note Anywhere",
+    "users": 100000,
+    "risk": "MEDIUM",
+    "version": "1.1.5",
+    "summary": "Note Anywhere collects user notes, page URLs, titles, and favicons, transmitting this data to myatoms.io servers hourly for cloud sync. Users must opt-in, but broad permissions enable automatic collection.",
+    "probe_resource": "assets/icons/note_sticky_icon_48.png",
+    "flags": [
+      "data_exfiltration"
+    ]
+  },
+  "feeonheemodpkdckaljcjogdncpiiban": {
+    "name": "Zuvu AI: The Ultimate AI Agent Sidebar for Google Search & Beyond",
+    "users": 100000,
+    "risk": "HIGH",
+    "version": "3.0.0",
+    "summary": "AI sidebar that transmits full page content and complete chat history to third-party proxy (agent-ai-proxy-production.up.railway.app) sitting between user and OpenRouter API, enabling data logging.",
+    "probe_resource": "manifest.json",
+    "flags": [
+      "csp_unsafe_inline",
+      "data_exfiltration",
+      "dynamic_eval",
+      "dynamic_function",
+      "postmessage_no_origin",
+      "wasm_binary"
+    ]
+  },
+  "gojogohjgpelafgaeejgelmplndppifh": {
+    "name": "Unlimited Email Tracker by Snov.io",
+    "users": 100000,
+    "risk": "MEDIUM",
+    "version": "6.0.34",
+    "summary": "Gmail tracking extension that injects tracking pixels and wraps links in emails, transmitting email metadata, recipients, and interaction data to Snov.io servers.",
+    "probe_resource": "img/32x32.png",
+    "flags": [
+      "dynamic_eval",
+      "dynamic_function"
+    ]
+  },
+  "hpcgabhdlnapolkkjpejieegfpehfdok": {
+    "name": "Media Harvest : X (twitter) Media Downloader",
+    "users": 100000,
+    "risk": "MEDIUM",
+    "version": "4.5.2",
+    "summary": "Twitter/X media downloader that intercepts Twitter API responses and webpack bundler via XHR/page context hooking to extract media metadata. No external data transmission detected.",
+    "probe_resource": "static/TEST.data",
+    "flags": [
+      "cookie_harvesting",
+      "data_exfiltration",
+      "dynamic_function",
+      "keylogging",
+      "xhr_hooking"
+    ]
+  },
+  "jhgpmfdfgihdclapmppfeddggkidnoid": {
+    "name": "AdSparo - AdLibrary Ad Finder & Ad spy Tool",
+    "users": 100000,
+    "risk": "MEDIUM",
+    "version": "1.0.20",
+    "summary": "Marketing intelligence tool for Facebook Ad Library. Harvests JWT auth tokens from adsparo.com, tracks ad browsing patterns and current domains. Transmits collected data to adsparo.com API. Automatically opens tabs on install/update.",
+    "probe_resource": "images/icon128.png",
+    "flags": [
+      "cookie_harvesting",
+      "data_exfiltration",
+      "dynamic_function",
+      "remote_config",
+      "xss"
+    ]
+  },
+  "kkfocohhekldeddhkllgofalggnlhhae": {
+    "name": "BigSeller- Product Scraper & Promotion Management",
+    "users": 100000,
+    "risk": "MEDIUM",
+    "version": "3.44.2",
+    "summary": "BigSeller is a legitimate commercial e-commerce product scraping tool designed to help sellers copy product listings from competitor marketplaces i...",
+    "probe_resource": "static/fontsIcon/fonts/iconfont.eot",
+    "flags": [
+      "data_exfiltration",
+      "fetch_hooking",
+      "xhr_hooking"
+    ]
+  },
+  "ljdobmomdgdljniojadhoplhkpialdid": {
+    "name": "Katalon Recorder (Selenium tests generator)",
+    "users": 100000,
+    "risk": "MEDIUM",
+    "version": "7.1.0",
+    "summary": "Selenium test recorder and automation tool (open source, Apache 2.0). Uses FingerprintJS Pro for persistent browser fingerprinting and aggressive analytics tracking to Katalon servers. Legitimate developer tool with privacy concerns.",
+    "probe_resource": "katalon/authenticated.html",
+    "flags": [
+      "dynamic_eval",
+      "postmessage_no_origin"
+    ]
+  },
+  "lkeokcighogdliiajgbbdjibidaaeang": {
+    "name": "Screen & Webcam recorder - Flonnect",
+    "users": 100000,
+    "risk": "MEDIUM",
+    "version": "8.1.1",
+    "summary": "Screen and webcam recorder with bug reporting features. Intercepts all network traffic (POST bodies, headers, responses), console logs, and navigation events when optional webRequest permission is granted. Stores comprehensive activity logs for bug reproduction.",
+    "probe_resource": "Images/afterdeleteicon.svg",
+    "flags": [
+      "dynamic_function"
+    ]
+  },
+  "mbcghjiodcjankhkllfohcgnckhdbkmi": {
+    "name": "Privacy Extension For WhatsApp Web - wabulk.net",
+    "users": 100000,
+    "risk": "MEDIUM",
+    "version": "3.3.16",
+    "summary": "Privacy extension for WhatsApp Web with blur/lock features. Communicates with third-party APIs, uses remote configuration, and accesses WhatsApp Web internals. No malicious behavior detected but includes data collection mechanisms.",
+    "probe_resource": "assets/ionicons.13d29fa1.ttf",
+    "flags": [
+      "dynamic_window_open"
+    ]
+  },
+  "meffljleomgifbbcffejnmhjagncfpbd": {
+    "name": "Infinite Dashboard - New Tab like no other",
+    "users": 100000,
+    "risk": "HIGH",
+    "version": "4.1.1",
+    "summary": "New tab extension that harvests all chat.openai.com cookies (including session tokens) to enable ChatGPT API access through the extension interface.",
+    "probe_resource": "assets/css/icons.css",
+    "flags": [
+      "cookie_harvesting",
+      "data_exfiltration",
+      "dynamic_function",
+      "remote_config"
+    ]
+  },
+  "pamnlaoeobcmhkliljfaofekeddpmfoh": {
+    "name": "Web to PDF",
+    "users": 100000,
+    "risk": "MEDIUM",
+    "version": "3.3.5",
+    "summary": "Legitimate PDF converter with third-party monetization (paywall/analytics) sending usage telemetry but no sensitive data exfiltration detected.",
+    "externally_connectable": {
+      "matches": [
+        "<all_urls>"
+      ]
+    },
+    "flags": [
+      "remote_config",
+      "data_exfiltration"
+    ]
+  },
+  "penndbmahnpapepljikkjmakcobdahne": {
+    "name": "Video Downloader Pro",
+    "users": 100000,
+    "risk": "HIGH",
+    "version": "1.1.11",
+    "summary": "Video downloader that sends video configuration data (URLs, titles, CDN info) to third-party server vimego.io for processing. Hooks XMLHttpRequest and modifies security headers on social media platforms.",
+    "probe_resource": "icons/circle.png",
+    "flags": [
+      "ad_injection",
+      "cookie_harvesting",
+      "csp_unsafe_inline",
+      "data_exfiltration",
+      "dynamic_function",
+      "dynamic_tab_url",
+      "dynamic_window_open",
+      "keylogging",
+      "remote_config",
+      "wasm_binary",
+      "xhr_hooking",
+      "xss"
+    ]
+  },
+  "iidnankcocecmgpcafggbgbmkbcldmno": {
+    "name": "Prompt Security Browser Extension",
+    "users": 90000,
+    "risk": "HIGH",
+    "version": "7.0.15",
+    "summary": "Enterprise DLP tool that monitors AI chat inputs to prevent data leakage. CRITICAL: externally_connectable allows ANY website to invoke extension APIs (callProtectApi, callMcpApi) without origin validation. Intercepts user input to AI platforms, transmits to Prompt Security servers.",
+    "externally_connectable": {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ]
+    },
+    "flags": [
+      "cookie_harvesting",
+      "fetch_hooking",
+      "postmessage_no_origin",
+      "xhr_hooking",
+      "external_api_exposure",
+      "data_exfiltration"
+    ]
+  },
+  "cijidiollmnkegoghpfobabpecdkeiah": {
+    "name": "Hippo Video: Video and Screen Recorder",
+    "users": 80000,
+    "risk": "MEDIUM",
+    "version": "4.0.43",
+    "summary": "Screen recording extension with LinkedIn cookie harvesting (optional, requires user consent), broad host permissions, and AWS telemetry logging. Legitimate functionality but extensive data access capabilities.",
+    "probe_resource": "assets/img/extension/extension-pin-icon.png",
+    "flags": [
+      "dynamic_function"
+    ]
+  },
+  "apacadmkljmohmjgefhficgiijnnmelk": {
+    "name": "Turbo Ad Finder 2.0",
+    "users": 70000,
+    "risk": "HIGH",
+    "version": "4.7",
+    "summary": "Facebook ad scraping tool that intercepts GraphQL API responses and transmits ad data (IDs, content, targeting, creatives) to TurboAdFinder servers for ad research purposes.",
+    "probe_resource": "icon.png",
+    "flags": [
+      "data_exfiltration",
+      "dynamic_function",
+      "dynamic_window_open",
+      "extension_enumeration",
+      "xhr_hooking"
+    ]
+  },
+  "bjibimlhliikdlklncdgkpdmgkpieplj": {
+    "name": "Vmaker - Free Screen Recorder",
+    "users": 70000,
+    "risk": "HIGH",
+    "version": "5.2.0",
+    "summary": "Screen recording extension with CRITICAL externally_connectable misconfiguration allowing any website to trigger recording via <all_urls> match pattern, creating privilege escalation risk.",
+    "probe_resource": "static/media/element_blur_icon.svg",
+    "externally_connectable": {
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  },
+  "honjoefhlidgdidlcdbipobjnoliiaid": {
+    "name": "Troywell VPN Lite - unlimited VPN proxy",
+    "users": 60000,
+    "risk": "CRITICAL",
+    "version": "4.0.5",
+    "summary": "Residential proxy vendor + extension killer + CityAds affiliate fraud. Disables competing VPNs, sells user bandwidth as proxy nodes.",
+    "probe_resource": "icons/arrow-right.svg",
+    "flags": [
+      "residential_proxy_vendor",
+      "affiliate_fraud",
+      "data_exfiltration",
+      "remote_config",
+      "cookie_harvesting"
+    ]
+  },
+  "lnddbhdmiciimpkbilgpklcglkdegdkg": {
+    "name": "Simplescraper \u2014 a fast and free web scraper",
+    "users": 60000,
+    "risk": "MEDIUM",
+    "version": "2.1.3",
+    "summary": "Web scraping extension with legitimate functionality. Uses Firebase auth, Google Gemini API, and Chrome debugger API. Exposes API keys in client code and requests broad debugger permissions for network interception.",
+    "probe_resource": "assets/logo-1024-885b8d70.png"
+  },
+  "pbhpcbdjngblklnibanbkgkogjmbjeoe": {
+    "name": "Image Translator - Comics Translator | Manga Translator",
+    "users": 60000,
+    "risk": "MEDIUM",
+    "version": "6.7.7",
+    "summary": "Image Translator is a legitimate image translation extension with privacy concerns due to third-party telemetry integration and excessive permissio...",
+    "probe_resource": "src/public/images/128px.png",
+    "flags": [
+      "document_write",
+      "dynamic_eval",
+      "dynamic_function"
+    ]
+  },
+  "pkoccklolohdacbfooifnpebakpbeipc": {
+    "name": "Activate Enable Right Click & Copy",
+    "users": 60000,
+    "risk": "MEDIUM",
+    "version": "6.5.1",
+    "summary": "Enables copy/paste on restricted websites with OCR capabilities. Opens promotional sites on install/uninstall for affiliate tracking. Includes promotional content in popup for other extensions.",
+    "probe_resource": "data/engine/index.html",
+    "flags": [
+      "affiliate_fraud",
+      "dynamic_function",
+      "wasm_binary"
+    ]
+  },
+  "acmbnbijebmjfmihfinfipebhcmgbghi": {
+    "name": "Video Downloader Web",
+    "users": 50000,
+    "risk": "MEDIUM",
+    "version": "1.0.7",
+    "summary": "Video downloader with hardcoded Twitter API bearer token, harvests Facebook DTSG and Twitter CSRF tokens, and removes X-Frame-Options headers on Facebook to bypass clickjacking protection.",
+    "probe_resource": "images/logo1.png",
+    "flags": [
+      "csp_unsafe_inline",
+      "war_js_html_all_urls"
+    ]
+  },
+  "dcidojkknfgophlmohhpdlmoiegfbkdd": {
+    "name": "WA Contacts Extractor",
+    "users": 50000,
+    "risk": "HIGH",
+    "version": "2.1.38",
+    "summary": "WhatsApp contact extractor that harvests phone numbers, names, messages, and location data from WhatsApp Web, storing locally and sending to OAuth-authenticated backend via Google Identity integration.",
+    "probe_resource": "assets/i.js",
+    "flags": [
+      "dynamic_function"
+    ]
+  },
+  "fpcobpnccdedokpllpeefhkgcddaejfl": {
+    "name": "Supernormal: AI Meeting Notes",
+    "users": 50000,
+    "risk": "MEDIUM",
+    "version": "4.0.62",
+    "summary": "AI meeting notes extension that captures Google Meet transcriptions by intercepting WebRTC data channels and harvesting SAPISID cookies for Google API authentication. Legitimate but invasive surveillance of meeting content.",
+    "probe_resource": "icons/icon128.png",
+    "flags": [
+      "dynamic_function"
+    ]
+  },
+  "lmeddoobegbaiopohmpmmobpnpjifpii": {
+    "name": "Open in Firefox\u2122 Browser",
+    "users": 50000,
+    "risk": "MEDIUM",
+    "version": "0.5.0",
+    "summary": "Utility that opens Chrome tabs in Firefox browser using native messaging to execute system commands. Includes user-configurable custom validation scripts that execute in page context. No malicious behavior detected.",
+    "probe_resource": "data/redirect/index.html"
+  },
+  "mfacblegickmnfpaebakfnlbfhpoegin": {
+    "name": "Papers by ReadCube",
+    "users": 50000,
+    "risk": "HIGH",
+    "version": "6.3.4",
+    "summary": "Academic reference manager with postMessage handler lacking origin validation and background worker acting as unrestricted fetch proxy for arbitrary requests.",
+    "probe_resource": "inject.html",
+    "flags": [
+      "csp_unsafe_inline",
+      "dynamic_function"
+    ]
+  },
+  "hoeiookpkijlnjdafhaclpdbfflelmci": {
+    "name": "QR Code Generator",
+    "users": 40000,
+    "risk": "HIGH",
+    "version": "1.0.5",
+    "summary": "QR code generator with excessive permissions (<all_urls>, content scripts on all sites) far beyond what the functionality requires. Dangerous permission model creates unnecessary attack surface.",
+    "probe_resource": "assets/icons/icon-256.png",
+    "flags": [
+      "ad_injection",
+      "data_exfiltration",
+      "keylogging",
+      "xss"
+    ]
+  },
+  "hpmllfbpmmhjncbfofmkkgomjpfaocca": {
+    "name": "AutoTDK - SEO Search Keyword Tool",
+    "users": 40000,
+    "risk": "MEDIUM",
+    "version": "1.2.5",
+    "summary": "SEO tool that transmits user-selected text to developer servers at autotdk.com for AI content detection, with content script access to all URLs.",
+    "probe_resource": "assets/img/icon1.png",
+    "flags": [
+      "cookie_harvesting",
+      "data_exfiltration",
+      "dynamic_function",
+      "dynamic_window_open",
+      "extension_enumeration",
+      "keylogging"
+    ]
+  },
+  "ihnfmldlpdipgnliolhfffenpcmjgnif": {
+    "name": "OCR Editor - Text from Image",
+    "users": 40000,
+    "risk": "MEDIUM",
+    "version": "3.2.4",
+    "summary": "OCR tool that extracts text from images. Sends captured images to developer's backend.ocreditor.com server for processing. Free tier with premium features.",
+    "probe_resource": "load.gif",
+    "flags": [
+      "data_exfiltration"
+    ]
+  },
+  "lhciigpkocgkbnbjimbbiejpfijdbcag": {
+    "name": "Action Model",
+    "users": 40000,
+    "risk": "MEDIUM",
+    "version": "0.23.0",
+    "summary": "Browser automation extension built with Plasmo framework that allows recording and automating browser interactions. Uses PostHog analytics and communicates with actionmodel.com servers. Overly broad externally_connectable allows any HTTPS site to message extension.",
+    "probe_resource": "ar.7df47fd4.js",
+    "externally_connectable": {
+      "matches": [
+        "*://localhost/*",
+        "https://*/*"
+      ]
+    }
+  },
+  "lholmjphdehllbpdoiejoolbejkjcpba": {
+    "name": "Shopee Fans - Shopee Seller Assistant",
+    "users": 40000,
+    "risk": "HIGH",
+    "version": "8.7.5",
+    "summary": "Shopee seller tool that intercepts all HTTP requests/responses on major e-commerce platforms (Shopee, Amazon, AliExpress, etc.), forwarding intercepted data via postMessage.",
+    "probe_resource": "assets/fonts/element-icons.ttf",
+    "flags": [
+      "dynamic_function",
+      "fetch_hooking",
+      "remote_config",
+      "xhr_hooking"
+    ]
+  },
+  "peaiabjigdmcjiigljknblkdmllgmklp": {
+    "name": "Vidline Screen Recorder",
+    "users": 40000,
+    "risk": "MEDIUM",
+    "version": "0.2.1",
+    "summary": "Vidline Screen Recorder is a legitimate screen recording extension that allows users to capture screen, tab, and camera video with audio. The exten...",
+    "probe_resource": "logo.png"
+  },
+  "fagmaopcbeobbfhkeodicjekiniefdlo": {
+    "name": "Copy Text Easily",
+    "users": 30000,
+    "risk": "MEDIUM",
+    "version": "2.7.1",
+    "summary": "Legitimate clipboard manager with privacy concerns: system-wide clipboard monitoring every 700ms when Pro enabled can capture sensitive data (passwords, tokens); unlimited local storage; runs on all sites.",
+    "probe_resource": "images/bookmark-manager.png"
+  },
+  "hdemabfejemmmicoabglpocdmmkjphpo": {
+    "name": "Decodo(Smartproxy) Extension",
+    "users": 30000,
+    "risk": "MEDIUM",
+    "version": "8.10.0",
+    "summary": "Smartproxy extension accepts proxy configuration commands from external websites (dashboard.decodo.com) via externally_connectable, allowing remote control of user's proxy settings and network routing.",
+    "probe_resource": "__plasmo_hmr_proxy__",
+    "flags": [
+      "postmessage_no_origin",
+      "residential_proxy_vendor"
+    ]
+  },
+  "ngkjielajlecigijlijjkhkhlhmmcgfh": {
+    "name": "Troywell VPN Pro - High-speed and safe VPN",
+    "users": 30000,
+    "risk": "CRITICAL",
+    "version": "4.0.5",
+    "summary": "VPN extension that forcibly disables competing extensions, operates residential proxy infrastructure, and harvests shopping data",
+    "probe_resource": "icons/arrow-right.svg",
+    "flags": [
+      "affiliate_fraud",
+      "cookie_harvesting",
+      "data_exfiltration",
+      "dynamic_function",
+      "extension_enumeration",
+      "residential_proxy_vendor"
+    ]
+  },
+  "afdfpkhbdpioonfeknablodaejkklbdn": {
+    "name": "Sidebarr - Bookmarks, Apps and more",
+    "users": 20000,
+    "risk": "MEDIUM",
+    "version": "2.1.4",
+    "summary": "Bookmark manager with AI chat using hardcoded OpenAI API key. Implements user tracking with unique persistent identifiers and usage telemetry. Remote configuration capabilities not disclosed to users.",
+    "probe_resource": "chrome://favicon/*",
+    "flags": [
+      "dynamic_function",
+      "dynamic_tab_url",
+      "remote_config",
+      "war_js_html_all_urls"
+    ]
+  },
+  "fmhbdohlogekfmknbhfpbeiphcldcfji": {
+    "name": "Red Shield VPN",
+    "users": 20000,
+    "risk": "MEDIUM",
+    "version": "1.0.315",
+    "summary": "Functional VPN extension with anti-competitive behavior (disables other proxy extensions) and encrypted DNS infrastructure for API domain resolution. No data harvesting or malicious functionality detected.",
+    "probe_resource": "assets/icons/icon128_off.png",
+    "externally_connectable": {
+      "matches": [
+        "<all_urls>"
+      ]
+    },
+    "flags": [
+      "extension_enumeration"
+    ]
+  },
+  "hfjnppljknigdnnpocjjgdcfmnodoafe": {
+    "name": "Browserflow - Web Scraping & Web Automation",
+    "users": 20000,
+    "risk": "HIGH",
+    "version": "1.0.6",
+    "summary": "Web automation tool with cross-frame postMessage handler that lacks origin validation, allowing any website in iframes to extract page content, trigger DOM manipulation, and access sensitive data from all visited pages.",
+    "probe_resource": "assets/logo.svg"
+  },
+  "kdngfaamkbbkdbemejnlkmjfpmndjdmb": {
+    "name": "AI Detector and Human Writing Report - Originality.ai",
+    "users": 20000,
+    "risk": "MEDIUM",
+    "version": "0.0.6",
+    "summary": "AI content detection tool that fetches Google Docs revision history and transmits document content to originality.ai servers for analysis. Contains stored XSS vulnerability via unsanitized revision content.",
+    "probe_resource": "assets/welcome_1-BnyeJ2vw.png",
+    "flags": [
+      "cookie_harvesting",
+      "csp_unsafe_inline",
+      "data_exfiltration",
+      "xss"
+    ]
+  },
+  "lklimgabcbcgnpdmhcgeomcpigimjdfe": {
+    "name": "Bunny VPN",
+    "users": 20000,
+    "risk": "MEDIUM",
+    "version": "1.7.2",
+    "summary": "Legitimate Russian VPN/proxy extension with HTTP-only backend communication exposing user data. Hardcoded API key, unencrypted payment data transmission, and reliance on third-party proxy infrastructure. No malware detected, but significant privacy concerns due to insecure communication channels.",
+    "probe_resource": "landing.css",
+    "flags": [
+      "ad_injection",
+      "dynamic_tab_url",
+      "hardcoded_credentials",
+      "insecure_communication",
+      "keylogging",
+      "privacy_concerns",
+      "remote_config",
+      "residential_proxy_vendor",
+      "third_party_backend"
+    ]
+  },
+  "mnfchpadaikneonajggpooeppnmdolhc": {
+    "name": "TorGuard VPN Extension",
+    "users": 20000,
+    "risk": "MEDIUM",
+    "version": "3.0",
+    "summary": "Legitimate commercial VPN extension with medium-severity security vulnerabilities: HTTP remote configuration endpoints, weak XOR password encryption, and hardcoded external IP in CSP. No malicious behavior detected, but security implementation creates MITM attack surface.",
+    "probe_resource": "images/icon/120.png",
+    "flags": [
+      "ad_injection",
+      "csp_misconfiguration",
+      "data_exfiltration",
+      "insecure_http_config",
+      "remote_config",
+      "weak_encryption",
+      "xhr_hooking"
+    ]
+  },
+  "olafhgbhkkgkbbonieapkchffalihpic": {
+    "name": "Video Downloader Global - videos & streams",
+    "users": 20000,
+    "risk": "CRITICAL",
+    "version": "1.2.6",
+    "summary": "Video downloader with user feedback mechanism that transmits tab URL, email, and comments to statsforusers.com when users submit technical feedback. Contains 24 data transmission flows detected by static analysis.",
+    "probe_resource": "assets/images/pops/img_bg.png",
+    "flags": [
+      "data_exfiltration",
+      "privacy_violation",
+      "suspicious_network_activity",
+      "obfuscation"
+    ]
+  },
+  "aadlckelcockpdgplkdllgokjnckncll": {
+    "name": "AWAX",
+    "users": 10000,
+    "risk": "MEDIUM",
+    "version": "1.3.31",
+    "summary": "Ad blocker built on uBlock Origin Lite with licensing system that transmits device fingerprint (user agent, email, device ID) to awaxtech.com. Includes remote kill switch capability via activation validation.",
+    "probe_resource": "web_accessible_resources/2x2.png",
+    "flags": [
+      "remote_config",
+      "war_js_html_all_urls",
+      "data_exfiltration"
+    ]
+  },
+  "dccefjeoofjkdjodbkkbncjcipagdnad": {
+    "name": "Japanese IO",
+    "users": 10000,
+    "risk": "MEDIUM",
+    "version": "0.14.1",
+    "summary": "Japanese language learning extension with unauthenticated external message handler allowing localhost:5000 to force user logout and clear authentication state.",
+    "probe_resource": "images/icons/close.svg",
+    "flags": [
+      "data_exfiltration",
+      "dynamic_function",
+      "xss"
+    ]
+  },
+  "jgcndlaikgkhpbcekabcmnfeiaelgaon": {
+    "name": "MeetGeek: AI Meeting Notes, Transcripts & Screen Recording",
+    "users": 10000,
+    "risk": "HIGH",
+    "version": "1.6.0",
+    "summary": "Meeting recorder with hardcoded shared API token in all bundles, background script SSRF via unvalidated message-driven fetch, and static OAuth state enabling CSRF. Transmits meeting transcripts to meetgeek.ai servers.",
+    "probe_resource": "assets/img/empty-transcript-card.svg",
+    "flags": [
+      "csp_unsafe_inline",
+      "dynamic_function",
+      "xss"
+    ]
+  },
+  "klokphhomfboclhpijjcgbpdjoccaagc": {
+    "name": "Flash Copilot - Powered by DeepSeek",
+    "users": 10000,
+    "risk": "CRITICAL",
+    "version": "11.5.0",
+    "summary": "Chinese productivity extension that steals ChatGPT session tokens to read/delete user conversations. Harvests 10,000 history entries, captures page screenshots, transmits telemetry to kjeek.com. Uses hardcoded AES keys. Legitimate features (translation, bookmarks) but excessive data collection.",
+    "probe_resource": "images/icon.png",
+    "flags": [
+      "ad_injection",
+      "data_exfiltration",
+      "dynamic_function",
+      "extension_enumeration"
+    ]
+  },
+  "hklhhkchffegjfojbofhfkckjidfbjhe": {
+    "name": "Free VPN for Chrome: Secure VPN Proxy in One Click",
+    "users": 6000,
+    "risk": "CRITICAL",
+    "version": "1.0.1",
+    "summary": "Residential proxy scheme disguised as VPN. Routes ALL traffic through 9 unverified proxy servers on suspicious TLDs (.space, .club, .site). Blocks Chrome security updates (clients*.google.com), Safe Browsing, and googleapis.com. Makes false AES-256 encryption claims. No credential harvesting or keylogging, but enables full MITM and traffic monetization. Pre-stages unused SweetAlert2 on all pages.",
+    "probe_resource": "img/connect/icon128.png",
+    "flags": [
+      "residential_proxy_vendor",
+      "data_exfiltration"
+    ]
+  },
+  "ndnjhdibigaajocbimcalfpncnniaogo": {
+    "name": "Free VPN Next Pro - Best VPN and Website Unblocker",
+    "users": 2000,
+    "risk": "CRITICAL",
+    "version": "1.7.126",
+    "summary": "Residential proxy network disguised as VPN. Critical vulnerabilities: P2P exit node enrollment routes third-party traffic through users' IPs, external message handler leaks auth tokens and proxy credentials to any subdomain, server-controlled SSRF mechanism with response exfiltration, Google Analytics proxy bypass exposes real IPs. Not traditional malware but exhibits residential proxy vendor patterns.",
+    "probe_resource": "static/shared/assets/icon128.png",
+    "flags": [
+      "cookie_harvesting",
+      "credential_harvesting",
+      "data_exfiltration",
+      "dynamic_tab_url",
+      "privacy_violation",
+      "remote_config",
+      "residential_proxy_vendor",
+      "ssrf"
+    ]
+  },
+  "phocdjaabgnnlodikhaedcpajkignhoa": {
+    "name": "Free unlimited VPN - Secure proxy",
+    "users": 2000,
+    "risk": "CRITICAL",
+    "version": "1.0.2",
+    "summary": "HIGH-risk VPN extension routing all traffic through 10 untrusted proxy servers with suspicious domains. Critical privacy violation: unknown operators intercept all browsing. Tab tracking, dormant ad injection code. No active malware but severe privacy/security risk.",
+    "probe_resource": "img/connect/icon128.png",
+    "flags": [
+      "ad_injection",
+      "data_exfiltration",
+      "dormant_ad_injection",
+      "dynamic_function",
+      "dynamic_tab_url",
+      "excessive_permissions",
+      "keylogging",
+      "privacy_violation",
+      "residential_proxy_vendor",
+      "tab_tracking"
+    ]
+  },
+  "ahdfccamgdjdlkedlodkogiecdggbkpa": {
+    "name": "\u6d77\u5996\u52a0\u901f\u5668-Ai ChatGPT,\u514d\u8d39\u4ee3\u7406,\u514d\u8d39VPN",
+    "users": 941,
+    "risk": "HIGH",
+    "version": "3.1.2",
+    "summary": "VPN extension that aggressively disables competing extensions (including Tampermonkey), intercepts navigation for free users, and transmits tracking data to developer servers.",
+    "probe_resource": "img/128ico.png",
+    "flags": [
+      "fetch_hooking",
+      "remote_config"
+    ]
+  }
+}

@@ -4,6 +4,7 @@ export interface DetectedExtension {
   id: string;
   name: string;
   risk: string;
+  version: string | null;
   summary: string;
   flags: string[];
 }

@@ -15,25 +15,23 @@ self.addEventListener("message", async (event) => {
     const detected = [];
 
     for (const [id, info] of Object.entries(data)) {
-      const resources = info.probe_resources;
-      if (!resources?.length) continue;
+      const resource = info.probe_resource;
+      if (!resource) continue;
 
-      for (const resource of resources) {
-        try {
-          const r = await fetch(`chrome-extension://${id}/${resource}`);
-          if (r.ok) {
-            detected.push({
-              id,
-              name: info.name,
-              risk: info.risk,
-              summary: info.summary,
-              flags: info.flags ?? [],
-            });
-            break;
-          }
-        } catch {
-          // Not installed or not accessible
+      try {
+        const r = await fetch(`chrome-extension://${id}/${resource}`);
+        if (r.ok) {
+          detected.push({
+            id,
+            name: info.name,
+            risk: info.risk,
+            version: info.version ?? null,
+            summary: info.summary,
+            flags: info.flags ?? [],
+          });
         }
+      } catch {
+        // Not installed or not accessible
       }
     }
 

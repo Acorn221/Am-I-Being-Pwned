@@ -14,6 +14,16 @@ export {
   CardHeader,
   CardTitle,
 } from "./card";
+export {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./dialog";
 export { DropdownMenu } from "./dropdown-menu";
 export {
   Field,

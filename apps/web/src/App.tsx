@@ -11,7 +11,15 @@ import {
   X,
 } from "lucide-react";
 
-import { Button } from "@amibeingpwned/ui";
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@amibeingpwned/ui";
 
 import type { DetectedExtension } from "~/hooks/use-extension-probe";
 import type { ReportMap } from "~/hooks/use-extension-database";
@@ -251,35 +259,31 @@ const RISK_DOT: Record<string, string> = {
 
 function ScanModal({
   detected,
+  open,
   onClose,
 }: {
   detected: DetectedExtension[];
+  open: boolean;
   onClose: () => void;
 }) {
-  const sorted = [...detected].sort(
-    (a, b) =>
-      riskRank(a.risk) - riskRank(b.risk),
-  );
+  const sorted = [...detected].sort((a, b) => riskRank(a.risk) - riskRank(b.risk));
 
   return (
-    <div
-      className="fixed inset-0 z-100 flex items-center justify-center p-4"
-      style={{ backgroundColor: "oklch(0 0 0 / 0.7)" }}
-    >
-      <div className="border-border bg-card w-full max-w-lg rounded-2xl border shadow-2xl">
-        <div className="border-border border-b px-6 py-5">
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden">
+        <DialogHeader className="border-border border-b px-6 py-5 text-left">
           <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-red-500/15">
             <ShieldAlert className="h-5 w-5 text-red-400" />
           </div>
-          <h2 className="text-foreground text-lg font-semibold">
+          <DialogTitle>
             {detected.length} threat{detected.length !== 1 ? "s" : ""} detected
             on this browser
-          </h2>
-          <p className="text-muted-foreground mt-1 text-sm">
+          </DialogTitle>
+          <DialogDescription>
             We found flagged extensions installed right now. Here's what we
             know.
-          </p>
-        </div>
+          </DialogDescription>
+        </DialogHeader>
 
         <ul className="divide-border max-h-72 divide-y overflow-y-auto">
           {sorted.map((e) => (
@@ -306,11 +310,11 @@ function ScanModal({
           ))}
         </ul>
 
-        <div className="border-border border-t px-6 py-4">
+        <DialogFooter className="border-border flex-col items-start border-t px-6 py-4 sm:flex-col">
           <p className="text-muted-foreground mb-3 text-xs">
             This is one device. Imagine this across your entire fleet.
           </p>
-          <div className="flex gap-3">
+          <div className="flex w-full gap-3">
             <Button size="sm" asChild className="flex-1">
               <a
                 href="https://calendar.app.google/ErKTbbbDDHzjAEESA"
@@ -324,9 +328,9 @@ function ScanModal({
               Dismiss
             </Button>
           </div>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -502,12 +506,11 @@ function App({ reports }: { reports: ReportMap }) {
         </div>
       </nav>
 
-      {showModal && (
-        <ScanModal
-          detected={threats}
-          onClose={() => setModalDismissed(true)}
-        />
-      )}
+      <ScanModal
+        detected={threats}
+        open={showModal}
+        onClose={() => setModalDismissed(true)}
+      />
 
       <ScanResultsSection detected={detected} probing={probing} />
 
