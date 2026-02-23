@@ -136,30 +136,31 @@ function ThreatCarousel() {
         `}</style>
         <div className="relative h-64 overflow-hidden rounded-xl">
           {/* Outgoing card */}
-          {prevIndex !== null && (() => {
-            const prev = THREATS[prevIndex];
-            if (!prev) return null;
-            return (
-              <div
-                className="border-border bg-card absolute inset-0 rounded-xl border p-8"
-                style={{
-                  animation: `${direction === "forward" ? "slide-out-left" : "slide-out-right"} ${SLIDE_DURATION}ms ease forwards`,
-                }}
-              >
-                <prev.icon className="text-primary mb-5 h-7 w-7" />
-                <h3 className="text-foreground mb-3 text-xl font-semibold">
-                  {prev.title}
-                </h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  {prev.desc}
-                </p>
-              </div>
-            );
-          })()}
+          {prevIndex !== null &&
+            (() => {
+              const prev = THREATS[prevIndex];
+              if (!prev) return null;
+              return (
+                <div
+                  className="border-border bg-card absolute inset-0 rounded-xl border p-8"
+                  style={{
+                    animation: `${direction === "forward" ? "slide-out-left" : "slide-out-right"} ${SLIDE_DURATION}ms ease forwards`,
+                  }}
+                >
+                  <prev.icon className="text-primary mb-5 h-7 w-7" />
+                  <h3 className="text-foreground mb-3 text-xl font-semibold">
+                    {prev.title}
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {prev.desc}
+                  </p>
+                </div>
+              );
+            })()}
 
           {/* Incoming card */}
           <div
-            className={`border-border bg-card h-full rounded-xl border p-8${prevIndex !== null ? " absolute inset-0" : ""}`}
+            className={`border-border bg-card h-full rounded-xl border p-8${prevIndex !== null ? "absolute inset-0" : ""}`}
             style={
               prevIndex !== null
                 ? {
@@ -347,7 +348,7 @@ function App({ reports }: { reports: ReportMap }) {
             What we detect
           </h2>
           <p className="text-muted-foreground mb-10 text-sm">
-            Five categories of malicious behaviour, all found in real extensions
+            Five categories of malicious behavior, all found in real extensions
             on the Chrome Web Store.
           </p>
           <ThreatCarousel />
