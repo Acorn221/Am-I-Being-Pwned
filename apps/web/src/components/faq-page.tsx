@@ -77,7 +77,7 @@ const FAQ_SECTIONS: { heading: string; items: { q: string; a: string }[] }[] = [
       },
       {
         q: "How current is the risk intelligence?",
-        a: "Our database is updated continuously. Enterprise customers receive weekly digest reports and real-time alerts whenever a new Critical or High severity finding is identified across their fleet.",
+        a: "Our database is updated continuously as we receive new extension IDs to scan from customers.",
       },
     ],
   },
@@ -98,7 +98,7 @@ const FAQ_SECTIONS: { heading: string; items: { q: string; a: string }[] }[] = [
       },
       {
         q: "Why not build this capability in-house?",
-        a: "Deep extension analysis requires dedicated security researchers, static analysis tooling, continuous database maintenance, and the ability to keep pace with a constantly-evolving threat landscape. Our service delivers broader coverage -updated daily -at a fraction of the cost and time of an equivalent internal programme. Most customers break even within the first quarter.",
+        a: "Deep extension analysis requires dedicated security researchers, static analysis tooling, continuous database maintenance, and the ability to keep pace with a constantly-evolving threat landscape. Our service delivers broader coverage, updated daily, at a fraction of the cost and time of an equivalent internal programme.",
       },
     ],
   },

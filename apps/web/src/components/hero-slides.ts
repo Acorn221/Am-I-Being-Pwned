@@ -108,7 +108,7 @@ export const HERO_SLIDES: HeroSlide[] = [
   },
   {
     phrase: "VPN extensions",
-    name: "1-Click VPN Free",
+    name: "Easy VPN Free",
     risk: "high",
     userCount: 8000000,
     permissions: ["alarms", "webRequest", "proxy", "storage", "unlimitedStorage", "webRequestAuthProvider"],

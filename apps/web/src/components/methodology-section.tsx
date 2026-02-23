@@ -31,9 +31,10 @@ export function MethodologySection() {
               </li>
               <li>
                 The real threat: some of the most dangerous extensions we've
-                found had <strong>zero suspicious permissions</strong>. The
-                malicious behaviour was buried in obfuscated JS, phoning home to
-                a remote server, hidden behind a legitimate-looking UI.
+                found had <strong>zero suspicious permissions</strong> given
+                their genuine functionality. The malicious behaviour was buried
+                in obfuscated JS, phoning home to a remote server, hidden behind
+                a legitimate-looking UI.
               </li>
             </ul>
           </div>
