@@ -10,7 +10,7 @@ const FAQ_SECTIONS: { heading: string; items: { q: string; a: string }[] }[] = [
       },
       {
         q: "How is this different from Chrome Web Store's built-in review?",
-        a: "The Web Store screens extensions against known malware signatures. It does not audit for covert data exfiltration, session hijacking, code injection, network tampering, or exploitable CVEs in extension dependencies. We do. Many of the extensions we have flagged were and remain -available on the Web Store.",
+        a: "The Web Store screens extensions against known malware signatures. It does not audit for covert data exfiltration, session hijacking, code injection, network tampering, or exploitable CVEs in extension dependencies. We do. Many of the extensions we have flagged were and remain available on the Web Store.",
       },
       {
         q: "What types of risk do you identify?",
@@ -18,7 +18,7 @@ const FAQ_SECTIONS: { heading: string; items: { q: string; a: string }[] }[] = [
       },
       {
         q: "How accurate are the findings?",
-        a: "Critical and High severity findings are reviewed by our security researchers before publication. Medium findings are AI-assisted and are clearly labelled as such in every report. Where we have made a mistake, we correct it promptly contact hello@amibeingpwned.com.",
+        a: "Any notable finding which could harm the security of your business is reviewed manually by our security researchers before you see the report. We use a combination of conventional static analysis and decompilation tools alongside a custom built agentic LLM workflow to review the code from the extensions, any findings which can potentially be problematic are flagged for human review. We take care to minimize false positives, and we provide detailed evidence and confidence levels for each finding so you can make informed decisions.",
       },
     ],
   },
@@ -26,12 +26,8 @@ const FAQ_SECTIONS: { heading: string; items: { q: string; a: string }[] }[] = [
     heading: "Data privacy & security",
     items: [
       {
-        q: "What data does the scan collect?",
-        a: "Only extension IDs and metadata such as the version installed. No browsing history, page content, credentials, or personally identifiable information is ever collected or transmitted.",
-      },
-      {
-        q: "Does the partial scan on your homepage send data to your servers?",
-        a: "No. The homepage scan runs entirely in the browser via a service worker. Nothing is transmitted to our servers. It checks the extensions installed in your current browser against a locally-loaded snapshot of our database.",
+        q: "When we receive a list, how is it securely handled when we run a scan?",
+        a: "Lists of extensions are encrypted in transit and at rest, then we never associate them with any identifiable user information.",
       },
       {
         q: "What data does the enterprise product collect?",

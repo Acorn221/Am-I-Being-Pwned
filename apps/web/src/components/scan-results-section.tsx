@@ -61,7 +61,7 @@ export function ScanResultsSection({
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
           <div className="flex items-center gap-2">
             <span className="flex h-2 w-2 shrink-0 rounded-full bg-green-500" />
-            <span className="text-muted-foreground text-xs">
+            <span className="text-muted-foreground text-sm">
               Partial scan complete - no known threats found across{" "}
               {checkedCount} checked extensions. A full audit may surface more.
             </span>
