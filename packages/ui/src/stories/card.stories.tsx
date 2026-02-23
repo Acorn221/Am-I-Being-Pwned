@@ -41,7 +41,9 @@ export const WithAction: Story = {
     <Card className="w-[350px]">
       <CardHeader>
         <CardTitle>Card Title</CardTitle>
-        <CardDescription>Card with an action button in the header.</CardDescription>
+        <CardDescription>
+          Card with an action button in the header.
+        </CardDescription>
         <CardAction>
           <Button variant="outline" size="sm">
             Edit

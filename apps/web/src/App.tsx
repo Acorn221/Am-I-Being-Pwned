@@ -8,11 +8,14 @@ import {
   ShieldAlert,
   Syringe,
   Wifi,
+  X,
 } from "lucide-react";
 
 import { Button } from "@amibeingpwned/ui";
 
+import type { DetectedExtension } from "~/hooks/use-extension-probe";
 import type { ReportMap } from "~/hooks/use-extension-database";
+import { useExtensionProbe } from "~/hooks/use-extension-probe";
 import { ExtensionPreviewCards } from "~/components/extension-preview-cards";
 import { HeroCycleProvider } from "~/components/hero-cycle-context";
 // import { OneTimeScan } from "~/components/one-time-scan";
@@ -229,6 +232,174 @@ function ThreatCarousel() {
   );
 }
 
+const RISK_STYLES: Record<string, string> = {
+  CRITICAL: "bg-red-500/15 text-red-400 border-red-500/30",
+  HIGH: "bg-orange-500/15 text-orange-400 border-orange-500/30",
+  MEDIUM: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
+};
+
+const RISK_PRIORITY = ["CRITICAL", "HIGH", "MEDIUM", "LOW"];
+const riskRank = (risk: string) => {
+  const i = RISK_PRIORITY.indexOf(risk);
+  return i === -1 ? 99 : i;
+};
+const RISK_DOT: Record<string, string> = {
+  CRITICAL: "bg-red-500",
+  HIGH: "bg-orange-500",
+  MEDIUM: "bg-yellow-500",
+};
+
+function ScanModal({
+  detected,
+  onClose,
+}: {
+  detected: DetectedExtension[];
+  onClose: () => void;
+}) {
+  const sorted = [...detected].sort(
+    (a, b) =>
+      riskRank(a.risk) - riskRank(b.risk),
+  );
+
+  return (
+    <div
+      className="fixed inset-0 z-100 flex items-center justify-center p-4"
+      style={{ backgroundColor: "oklch(0 0 0 / 0.7)" }}
+    >
+      <div className="border-border bg-card w-full max-w-lg rounded-2xl border shadow-2xl">
+        <div className="border-border border-b px-6 py-5">
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-red-500/15">
+            <ShieldAlert className="h-5 w-5 text-red-400" />
+          </div>
+          <h2 className="text-foreground text-lg font-semibold">
+            {detected.length} threat{detected.length !== 1 ? "s" : ""} detected
+            on this browser
+          </h2>
+          <p className="text-muted-foreground mt-1 text-sm">
+            We found flagged extensions installed right now. Here's what we
+            know.
+          </p>
+        </div>
+
+        <ul className="divide-border max-h-72 divide-y overflow-y-auto">
+          {sorted.map((e) => (
+            <li key={e.id} className="flex items-start gap-3 px-6 py-4">
+              <span
+                className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${(RISK_DOT[e.risk] ?? "bg-yellow-500")}`}
+              />
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`rounded border px-1.5 py-0.5 text-xs font-medium ${(RISK_STYLES[e.risk] ?? RISK_STYLES.MEDIUM)}`}
+                  >
+                    {e.risk}
+                  </span>
+                  <span className="text-foreground truncate text-sm font-medium">
+                    {e.name}
+                  </span>
+                </div>
+                <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+                  {e.summary.split(". ")[0]}.
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        <div className="border-border border-t px-6 py-4">
+          <p className="text-muted-foreground mb-3 text-xs">
+            This is one device. Imagine this across your entire fleet.
+          </p>
+          <div className="flex gap-3">
+            <Button size="sm" asChild className="flex-1">
+              <a
+                href="https://calendar.app.google/ErKTbbbDDHzjAEESA"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Book a Demo
+              </a>
+            </Button>
+            <Button size="sm" variant="outline" onClick={onClose}>
+              Dismiss
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ScanResultsSection({
+  detected,
+  probing,
+}: {
+  detected: DetectedExtension[];
+  probing: boolean;
+}) {
+  const [dismissed, setDismissed] = useState(false);
+
+  if (dismissed) return null;
+  if (probing) {
+    return (
+      <div className="border-border/50 border-b">
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-6 py-3">
+          <span className="relative flex h-2 w-2 shrink-0">
+            <span className="bg-primary absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" />
+            <span className="bg-primary relative inline-flex h-2 w-2 rounded-full" />
+          </span>
+          <span className="text-muted-foreground text-xs">
+            Scanning your browser extensions...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (detected.length === 0) return null;
+
+  const sorted = [...detected].sort(
+    (a, b) =>
+      riskRank(a.risk) - riskRank(b.risk),
+  );
+
+  return (
+    <div className="border-border/50 border-b bg-red-500/5">
+      <div className="mx-auto max-w-6xl px-6 py-4">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="h-4 w-4 shrink-0 text-red-400" />
+            <span className="text-foreground text-sm font-medium">
+              {detected.length} flagged extension
+              {detected.length !== 1 ? "s" : ""} on this browser
+            </span>
+          </div>
+          <button
+            onClick={() => setDismissed(true)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {sorted.map((e) => (
+            <span
+              key={e.id}
+              className={`inline-flex items-center gap-1.5 rounded border px-2 py-1 text-xs ${(RISK_STYLES[e.risk] ?? RISK_STYLES.MEDIUM)}`}
+            >
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${(RISK_DOT[e.risk] ?? "bg-yellow-500")}`}
+              />
+              <span className="font-medium">{e.risk}</span>
+              <span className="opacity-75">{e.name}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function HeroSection() {
   return (
     <header className="mx-auto flex min-h-screen max-w-6xl items-center px-6">
@@ -268,6 +439,14 @@ function HeroSection() {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function App({ reports }: { reports: ReportMap }) {
+  const { detected, probing } = useExtensionProbe();
+  const [modalDismissed, setModalDismissed] = useState(false);
+
+  const threats = detected.filter(
+    (e) => e.risk === "CRITICAL" || e.risk === "HIGH",
+  );
+  const showModal = !probing && !modalDismissed && threats.length > 0;
+
   // TODO: re-enable when database is back
   // const stats = useMemo(() => {
   //   const entries = [...reports.values()];
@@ -322,6 +501,15 @@ function App({ reports }: { reports: ReportMap }) {
           </div>
         </div>
       </nav>
+
+      {showModal && (
+        <ScanModal
+          detected={threats}
+          onClose={() => setModalDismissed(true)}
+        />
+      )}
+
+      <ScanResultsSection detected={detected} probing={probing} />
 
       {/* Stats - commented out until database is re-enabled */}
       {/* <div className="border-border/50 border-y">

@@ -1,5 +1,5 @@
-import type { CSSProperties } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
+import type { CSSProperties } from "react";
 
 import { Badge } from "../badge";
 import { Button } from "../button";
@@ -27,9 +27,9 @@ import {
   FieldError,
   FieldGroup,
   FieldLabel,
+  FieldLegend,
   FieldSeparator,
   FieldSet,
-  FieldLegend,
 } from "../field";
 import { Input } from "../input";
 import { Label } from "../label";
@@ -127,7 +127,10 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 export const Moodboard: Story = {
   render: () => (
-    <div className="dark min-h-screen" style={{ ...(deepVars as CSSProperties) }}>
+    <div
+      className="dark min-h-screen"
+      style={{ ...(deepVars as CSSProperties) }}
+    >
       {/* Scanline overlay */}
       <div
         className="pointer-events-none fixed inset-0 z-50 opacity-[0.018]"
@@ -139,20 +142,27 @@ export const Moodboard: Story = {
       <div
         className="pointer-events-none fixed inset-0 z-40"
         style={{
-          background: "radial-gradient(ellipse 80% 70% at center, transparent 50%, oklch(0 0 0 / 0.25) 100%)",
+          background:
+            "radial-gradient(ellipse 80% 70% at center, transparent 50%, oklch(0 0 0 / 0.25) 100%)",
         }}
       />
 
       <div
         className="relative min-h-screen"
-        style={{ backgroundColor: "var(--background)", color: "var(--foreground)" }}
+        style={{
+          backgroundColor: "var(--background)",
+          color: "var(--foreground)",
+        }}
       >
         {/* ================================================================ */}
         {/* TOP NAV BAR                                                      */}
         {/* ================================================================ */}
         <nav
           className="sticky top-0 z-30 border-b px-6 py-3"
-          style={{ backgroundColor: "var(--card)", borderColor: "var(--border)" }}
+          style={{
+            backgroundColor: "var(--card)",
+            borderColor: "var(--border)",
+          }}
         >
           <div className="mx-auto flex max-w-7xl items-center justify-between">
             <div className="flex items-center gap-3">
@@ -188,7 +198,9 @@ export const Moodboard: Story = {
                   <DropdownMenuItem>API Keys</DropdownMenuItem>
                   <DropdownMenuItem>Billing</DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem variant="destructive">Sign Out</DropdownMenuItem>
+                  <DropdownMenuItem variant="destructive">
+                    Sign Out
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -202,7 +214,10 @@ export const Moodboard: Story = {
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <StatusDot color={GREEN} />
-              <span className="text-xs font-medium uppercase tracking-widest" style={{ color: GREEN_DIM }}>
+              <span
+                className="text-xs font-medium tracking-widest uppercase"
+                style={{ color: GREEN_DIM }}
+              >
                 System Online &mdash; All monitors active
               </span>
             </div>
@@ -213,8 +228,9 @@ export const Moodboard: Story = {
               Security Dashboard
             </h1>
             <p className="text-muted-foreground max-w-2xl text-lg">
-              Real-time breach monitoring, credential exposure tracking, and threat intelligence
-              for your organization. AIBP Deep theme - night shift edition.
+              Real-time breach monitoring, credential exposure tracking, and
+              threat intelligence for your organization. AIBP Deep theme - night
+              shift edition.
             </p>
             <div className="flex items-center gap-3 pt-2">
               <Button>Run Full Scan</Button>
@@ -233,27 +249,61 @@ export const Moodboard: Story = {
             <SectionTitle>Key Metrics</SectionTitle>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                { title: "Total Breaches", value: "12", delta: "+3", deltaColor: AMBER, desc: "Last 30 days" },
-                { title: "Accounts Monitored", value: "47", delta: "+5", deltaColor: GREEN, desc: "Across 8 domains" },
-                { title: "Credentials Exposed", value: "2,841", delta: "-12%", deltaColor: GREEN, desc: "vs. last month" },
-                { title: "Risk Score", value: "73", delta: "High", deltaColor: AMBER, desc: "4 actions needed" },
+                {
+                  title: "Total Breaches",
+                  value: "12",
+                  delta: "+3",
+                  deltaColor: AMBER,
+                  desc: "Last 30 days",
+                },
+                {
+                  title: "Accounts Monitored",
+                  value: "47",
+                  delta: "+5",
+                  deltaColor: GREEN,
+                  desc: "Across 8 domains",
+                },
+                {
+                  title: "Credentials Exposed",
+                  value: "2,841",
+                  delta: "-12%",
+                  deltaColor: GREEN,
+                  desc: "vs. last month",
+                },
+                {
+                  title: "Risk Score",
+                  value: "73",
+                  delta: "High",
+                  deltaColor: AMBER,
+                  desc: "4 actions needed",
+                },
               ].map((kpi) => (
                 <Card key={kpi.title}>
                   <CardHeader className="pb-0">
-                    <CardDescription className="text-xs">{kpi.title}</CardDescription>
+                    <CardDescription className="text-xs">
+                      {kpi.title}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <p
                       className="text-3xl font-bold"
-                      style={{ textShadow: `0 0 16px oklch(0.84 0.204 154 / 0.12)` }}
+                      style={{
+                        textShadow: `0 0 16px oklch(0.84 0.204 154 / 0.12)`,
+                      }}
                     >
                       {kpi.value}
                     </p>
                     <div className="mt-1 flex items-center gap-2">
-                      <Badge variant="outline" className="text-[10px]" style={{ color: kpi.deltaColor }}>
+                      <Badge
+                        variant="outline"
+                        className="text-[10px]"
+                        style={{ color: kpi.deltaColor }}
+                      >
                         {kpi.delta}
                       </Badge>
-                      <span className="text-muted-foreground text-[10px]">{kpi.desc}</span>
+                      <span className="text-muted-foreground text-[10px]">
+                        {kpi.desc}
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
@@ -274,19 +324,28 @@ export const Moodboard: Story = {
                     <CardTitle className="text-sm font-semibold">
                       Critical - New Credential Dump Detected
                     </CardTitle>
-                    <Badge variant="destructive" className="ml-auto text-[10px]">
+                    <Badge
+                      variant="destructive"
+                      className="ml-auto text-[10px]"
+                    >
                       Critical
                     </Badge>
                   </div>
                   <CardDescription>
-                    5 monitored accounts found in paste &quot;combo_2026_feb.txt&quot; - discovered 23 minutes ago. Immediate action required.
+                    5 monitored accounts found in paste
+                    &quot;combo_2026_feb.txt&quot; - discovered 23 minutes ago.
+                    Immediate action required.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex gap-2">
                     <Button size="sm">Investigate</Button>
-                    <Button size="sm" variant="outline">Notify Users</Button>
-                    <Button size="sm" variant="ghost">Snooze 1h</Button>
+                    <Button size="sm" variant="outline">
+                      Notify Users
+                    </Button>
+                    <Button size="sm" variant="ghost">
+                      Snooze 1h
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -320,7 +379,8 @@ export const Moodboard: Story = {
                     </Badge>
                   </div>
                   <CardDescription>
-                    All 18 affected credentials have been rotated. Closed by admin@example.com.
+                    All 18 affected credentials have been rotated. Closed by
+                    admin@example.com.
                   </CardDescription>
                 </CardHeader>
               </Card>
@@ -337,11 +397,15 @@ export const Moodboard: Story = {
               <Card className="lg:col-span-2">
                 <CardHeader>
                   <CardTitle>Breach Discovery Timeline</CardTitle>
-                  <CardDescription>Monthly breach detections - last 12 months</CardDescription>
+                  <CardDescription>
+                    Monthly breach detections - last 12 months
+                  </CardDescription>
                   <CardAction>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button size="sm" variant="ghost">12M</Button>
+                        <Button size="sm" variant="ghost">
+                          12M
+                        </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem>7 Days</DropdownMenuItem>
@@ -353,25 +417,53 @@ export const Moodboard: Story = {
                   </CardAction>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-end gap-1.5" style={{ height: 140 }}>
-                    {[18, 12, 32, 8, 45, 22, 38, 15, 52, 28, 35, 65].map((v, i) => (
-                      <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                        <span className="text-muted-foreground text-[9px]">{v}</span>
+                  <div
+                    className="flex items-end gap-1.5"
+                    style={{ height: 140 }}
+                  >
+                    {[18, 12, 32, 8, 45, 22, 38, 15, 52, 28, 35, 65].map(
+                      (v, i) => (
                         <div
-                          className="w-full rounded-t transition-all"
-                          style={{
-                            height: `${(v / 65) * 100}%`,
-                            background: v > 40 ? AMBER : GREEN,
-                            boxShadow: `0 0 ${v > 40 ? 10 : 6}px ${v > 40 ? AMBER.replace(")", " / 0.3)") : GREEN.replace(")", " / 0.2)")}`,
-                            opacity: 0.7 + (v / 65) * 0.3,
-                          }}
-                        />
-                      </div>
-                    ))}
+                          key={i}
+                          className="flex flex-1 flex-col items-center gap-1"
+                        >
+                          <span className="text-muted-foreground text-[9px]">
+                            {v}
+                          </span>
+                          <div
+                            className="w-full rounded-t transition-all"
+                            style={{
+                              height: `${(v / 65) * 100}%`,
+                              background: v > 40 ? AMBER : GREEN,
+                              boxShadow: `0 0 ${v > 40 ? 10 : 6}px ${v > 40 ? AMBER.replace(")", " / 0.3)") : GREEN.replace(")", " / 0.2)")}`,
+                              opacity: 0.7 + (v / 65) * 0.3,
+                            }}
+                          />
+                        </div>
+                      ),
+                    )}
                   </div>
                   <div className="mt-2 flex justify-between">
-                    {["Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb"].map((m) => (
-                      <span key={m} className="text-muted-foreground flex-1 text-center text-[9px]">{m}</span>
+                    {[
+                      "Mar",
+                      "Apr",
+                      "May",
+                      "Jun",
+                      "Jul",
+                      "Aug",
+                      "Sep",
+                      "Oct",
+                      "Nov",
+                      "Dec",
+                      "Jan",
+                      "Feb",
+                    ].map((m) => (
+                      <span
+                        key={m}
+                        className="text-muted-foreground flex-1 text-center text-[9px]"
+                      >
+                        {m}
+                      </span>
                     ))}
                   </div>
                 </CardContent>
@@ -388,51 +480,91 @@ export const Moodboard: Story = {
                     <div className="relative">
                       <svg width={130} height={130} viewBox="0 0 130 130">
                         {/* Background ring */}
-                        <circle cx={65} cy={65} r={52} fill="none" stroke="var(--muted)" strokeWidth={14} />
+                        <circle
+                          cx={65}
+                          cy={65}
+                          r={52}
+                          fill="none"
+                          stroke="var(--muted)"
+                          strokeWidth={14}
+                        />
                         {/* Segments - drawn as stroke-dasharray arcs */}
                         <circle
-                          cx={65} cy={65} r={52}
-                          fill="none" stroke={RED} strokeWidth={14}
+                          cx={65}
+                          cy={65}
+                          r={52}
+                          fill="none"
+                          stroke={RED}
+                          strokeWidth={14}
                           strokeDasharray={`${0.35 * 327} ${327}`}
                           strokeDashoffset={0}
                           transform="rotate(-90 65 65)"
-                          style={{ filter: `drop-shadow(0 0 4px ${RED.replace(")", " / 0.5)")})` }}
+                          style={{
+                            filter: `drop-shadow(0 0 4px ${RED.replace(")", " / 0.5)")})`,
+                          }}
                         />
                         <circle
-                          cx={65} cy={65} r={52}
-                          fill="none" stroke={AMBER} strokeWidth={14}
-                          strokeDasharray={`${0.40 * 327} ${327}`}
+                          cx={65}
+                          cy={65}
+                          r={52}
+                          fill="none"
+                          stroke={AMBER}
+                          strokeWidth={14}
+                          strokeDasharray={`${0.4 * 327} ${327}`}
                           strokeDashoffset={`${-0.35 * 327}`}
                           transform="rotate(-90 65 65)"
-                          style={{ filter: `drop-shadow(0 0 4px ${AMBER.replace(")", " / 0.4)")})` }}
+                          style={{
+                            filter: `drop-shadow(0 0 4px ${AMBER.replace(")", " / 0.4)")})`,
+                          }}
                         />
                         <circle
-                          cx={65} cy={65} r={52}
-                          fill="none" stroke={GREEN} strokeWidth={14}
+                          cx={65}
+                          cy={65}
+                          r={52}
+                          fill="none"
+                          stroke={GREEN}
+                          strokeWidth={14}
                           strokeDasharray={`${0.25 * 327} ${327}`}
                           strokeDashoffset={`${-0.75 * 327}`}
                           transform="rotate(-90 65 65)"
-                          style={{ filter: `drop-shadow(0 0 4px ${GREEN.replace(")", " / 0.3)")})` }}
+                          style={{
+                            filter: `drop-shadow(0 0 4px ${GREEN.replace(")", " / 0.3)")})`,
+                          }}
                         />
                       </svg>
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <span className="text-2xl font-bold">142</span>
-                        <span className="text-muted-foreground text-[10px]">Total</span>
+                        <span className="text-muted-foreground text-[10px]">
+                          Total
+                        </span>
                       </div>
                     </div>
                   </div>
                   <div className="mt-3 space-y-1.5">
                     {[
-                      { label: "Critical / High", pct: 35, color: RED, count: 50 },
+                      {
+                        label: "Critical / High",
+                        pct: 35,
+                        color: RED,
+                        count: 50,
+                      },
                       { label: "Medium", pct: 40, color: AMBER, count: 57 },
                       { label: "Low", pct: 25, color: GREEN, count: 35 },
                     ].map((s) => (
-                      <div key={s.label} className="flex items-center justify-between text-xs">
+                      <div
+                        key={s.label}
+                        className="flex items-center justify-between text-xs"
+                      >
                         <div className="flex items-center gap-2">
-                          <div className="h-2 w-2 rounded-full" style={{ background: s.color }} />
+                          <div
+                            className="h-2 w-2 rounded-full"
+                            style={{ background: s.color }}
+                          />
                           <span>{s.label}</span>
                         </div>
-                        <span className="text-muted-foreground">{s.count} ({s.pct}%)</span>
+                        <span className="text-muted-foreground">
+                          {s.count} ({s.pct}%)
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -445,7 +577,9 @@ export const Moodboard: Story = {
               <Card>
                 <CardHeader>
                   <CardTitle>Top Exposed Services</CardTitle>
-                  <CardDescription>By compromised account count</CardDescription>
+                  <CardDescription>
+                    By compromised account count
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {[
@@ -458,9 +592,14 @@ export const Moodboard: Story = {
                     <div key={svc.name} className="space-y-1">
                       <div className="flex justify-between text-sm">
                         <span className="font-medium">{svc.name}</span>
-                        <span className="text-muted-foreground">{svc.count}</span>
+                        <span className="text-muted-foreground">
+                          {svc.count}
+                        </span>
                       </div>
-                      <div className="h-1.5 overflow-hidden rounded-full" style={{ background: "var(--muted)" }}>
+                      <div
+                        className="h-1.5 overflow-hidden rounded-full"
+                        style={{ background: "var(--muted)" }}
+                      >
                         <div
                           className="h-full rounded-full transition-all"
                           style={{
@@ -491,14 +630,23 @@ export const Moodboard: Story = {
                     <div key={dt.name} className="space-y-1">
                       <div className="flex justify-between text-sm">
                         <span className="font-medium">{dt.name}</span>
-                        <span className="text-muted-foreground">{dt.count}</span>
+                        <span className="text-muted-foreground">
+                          {dt.count}
+                        </span>
                       </div>
-                      <div className="h-1.5 overflow-hidden rounded-full" style={{ background: "var(--muted)" }}>
+                      <div
+                        className="h-1.5 overflow-hidden rounded-full"
+                        style={{ background: "var(--muted)" }}
+                      >
                         <div
                           className="h-full rounded-full transition-all"
                           style={{
                             width: `${dt.pct}%`,
-                            background: dt.name.includes("plaintext") ? RED : dt.pct > 50 ? AMBER : GREEN,
+                            background: dt.name.includes("plaintext")
+                              ? RED
+                              : dt.pct > 50
+                                ? AMBER
+                                : GREEN,
                             boxShadow: `0 0 6px ${dt.name.includes("plaintext") ? RED.replace(")", " / 0.4)") : GREEN.replace(")", " / 0.2)")}`,
                           }}
                         />
@@ -523,10 +671,15 @@ export const Moodboard: Story = {
                 </CardDescription>
                 <CardAction>
                   <div className="flex gap-2">
-                    <Input placeholder="Filter..." className="h-7 w-40 text-xs" />
+                    <Input
+                      placeholder="Filter..."
+                      className="h-7 w-40 text-xs"
+                    />
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button size="sm" variant="outline">Severity</Button>
+                        <Button size="sm" variant="outline">
+                          Severity
+                        </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem>All</DropdownMenuItem>
@@ -537,7 +690,9 @@ export const Moodboard: Story = {
                         <DropdownMenuItem>Low</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                    <Button size="sm" variant="secondary">Export CSV</Button>
+                    <Button size="sm" variant="secondary">
+                      Export CSV
+                    </Button>
                   </div>
                 </CardAction>
               </CardHeader>
@@ -557,33 +712,122 @@ export const Moodboard: Story = {
                   </TableHeader>
                   <TableBody>
                     {[
-                      { id: 1, service: "LinkedIn", email: "john@example.com", date: "2026-02-14", data: "Email, Password hash, Phone", severity: "Critical" as const, status: "Unresolved" },
-                      { id: 2, service: "Dropbox", email: "john@example.com", date: "2026-01-22", data: "Email, Password hash", severity: "High" as const, status: "Investigating" },
-                      { id: 3, service: "Adobe", email: "jane@example.com", date: "2025-12-18", data: "Email, Encrypted password", severity: "Medium" as const, status: "Resolved" },
-                      { id: 4, service: "Canva", email: "jane@example.com", date: "2025-11-30", data: "Email, Name, Location", severity: "High" as const, status: "Unresolved" },
-                      { id: 5, service: "Twitter/X", email: "john@example.com", date: "2025-11-02", data: "Email, Phone", severity: "Medium" as const, status: "Resolved" },
-                      { id: 6, service: "Notion", email: "admin@example.com", date: "2025-10-15", data: "Email, API tokens", severity: "Critical" as const, status: "Resolved" },
-                      { id: 7, service: "Slack", email: "dev@example.com", date: "2025-09-08", data: "Email, OAuth tokens", severity: "High" as const, status: "Resolved" },
-                      { id: 8, service: "npm", email: "dev@example.com", date: "2025-08-22", data: "Email, Password hash", severity: "Low" as const, status: "Resolved" },
+                      {
+                        id: 1,
+                        service: "LinkedIn",
+                        email: "john@example.com",
+                        date: "2026-02-14",
+                        data: "Email, Password hash, Phone",
+                        severity: "Critical" as const,
+                        status: "Unresolved",
+                      },
+                      {
+                        id: 2,
+                        service: "Dropbox",
+                        email: "john@example.com",
+                        date: "2026-01-22",
+                        data: "Email, Password hash",
+                        severity: "High" as const,
+                        status: "Investigating",
+                      },
+                      {
+                        id: 3,
+                        service: "Adobe",
+                        email: "jane@example.com",
+                        date: "2025-12-18",
+                        data: "Email, Encrypted password",
+                        severity: "Medium" as const,
+                        status: "Resolved",
+                      },
+                      {
+                        id: 4,
+                        service: "Canva",
+                        email: "jane@example.com",
+                        date: "2025-11-30",
+                        data: "Email, Name, Location",
+                        severity: "High" as const,
+                        status: "Unresolved",
+                      },
+                      {
+                        id: 5,
+                        service: "Twitter/X",
+                        email: "john@example.com",
+                        date: "2025-11-02",
+                        data: "Email, Phone",
+                        severity: "Medium" as const,
+                        status: "Resolved",
+                      },
+                      {
+                        id: 6,
+                        service: "Notion",
+                        email: "admin@example.com",
+                        date: "2025-10-15",
+                        data: "Email, API tokens",
+                        severity: "Critical" as const,
+                        status: "Resolved",
+                      },
+                      {
+                        id: 7,
+                        service: "Slack",
+                        email: "dev@example.com",
+                        date: "2025-09-08",
+                        data: "Email, OAuth tokens",
+                        severity: "High" as const,
+                        status: "Resolved",
+                      },
+                      {
+                        id: 8,
+                        service: "npm",
+                        email: "dev@example.com",
+                        date: "2025-08-22",
+                        data: "Email, Password hash",
+                        severity: "Low" as const,
+                        status: "Resolved",
+                      },
                     ].map((row) => (
                       <TableRow key={row.id}>
-                        <TableCell className="text-muted-foreground text-xs">{row.id}</TableCell>
-                        <TableCell className="font-medium">{row.service}</TableCell>
-                        <TableCell className="text-muted-foreground text-sm">{row.email}</TableCell>
+                        <TableCell className="text-muted-foreground text-xs">
+                          {row.id}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {row.service}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">
+                          {row.email}
+                        </TableCell>
                         <TableCell className="text-sm">{row.date}</TableCell>
-                        <TableCell className="text-muted-foreground max-w-48 truncate text-xs">{row.data}</TableCell>
+                        <TableCell className="text-muted-foreground max-w-48 truncate text-xs">
+                          {row.data}
+                        </TableCell>
                         <TableCell>
                           <Badge
-                            variant={row.severity === "Critical" || row.severity === "High" ? "destructive" : row.severity === "Medium" ? "default" : "secondary"}
+                            variant={
+                              row.severity === "Critical" ||
+                              row.severity === "High"
+                                ? "destructive"
+                                : row.severity === "Medium"
+                                  ? "default"
+                                  : "secondary"
+                            }
                             className="text-[10px]"
-                            style={row.severity === "Critical" ? { background: RED, boxShadow: glow(RED, 0.3) } : undefined}
+                            style={
+                              row.severity === "Critical"
+                                ? { background: RED, boxShadow: glow(RED, 0.3) }
+                                : undefined
+                            }
                           >
                             {row.severity}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
                           <Badge
-                            variant={row.status === "Resolved" ? "outline" : row.status === "Investigating" ? "secondary" : "ghost"}
+                            variant={
+                              row.status === "Resolved"
+                                ? "outline"
+                                : row.status === "Investigating"
+                                  ? "secondary"
+                                  : "ghost"
+                            }
                             className="text-[10px]"
                           >
                             {row.status}
@@ -592,7 +836,11 @@ export const Moodboard: Story = {
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button size="sm" variant="ghost" className="h-6 px-2 text-xs">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 px-2 text-xs"
+                              >
                                 ...
                               </Button>
                             </DropdownMenuTrigger>
@@ -601,7 +849,9 @@ export const Moodboard: Story = {
                               <DropdownMenuItem>Notify User</DropdownMenuItem>
                               <DropdownMenuItem>Mark Resolved</DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem variant="destructive">Dismiss</DropdownMenuItem>
+                              <DropdownMenuItem variant="destructive">
+                                Dismiss
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -614,8 +864,21 @@ export const Moodboard: Story = {
                 <div className="text-muted-foreground flex w-full items-center justify-between text-xs">
                   <span>Showing 8 of 142 breaches</span>
                   <div className="flex gap-1">
-                    <Button size="sm" variant="outline" className="h-6 px-2 text-xs" disabled>Prev</Button>
-                    <Button size="sm" variant="outline" className="h-6 px-2 text-xs">Next</Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-6 px-2 text-xs"
+                      disabled
+                    >
+                      Prev
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-6 px-2 text-xs"
+                    >
+                      Next
+                    </Button>
                   </div>
                 </div>
               </CardFooter>
@@ -631,30 +894,87 @@ export const Moodboard: Story = {
               <CardContent>
                 <div className="space-y-0">
                   {[
-                    { time: "2 min ago", action: "New breach detected", detail: "LinkedIn - john@example.com found in paste", color: RED, badge: "Critical" },
-                    { time: "23 min ago", action: "Scan completed", detail: "Full domain scan of example.com - 0 new exposures", color: GREEN, badge: "Info" },
-                    { time: "1 hour ago", action: "User notified", detail: "Password rotation email sent to jane@example.com", color: GREEN_MID, badge: "Action" },
-                    { time: "3 hours ago", action: "Breach resolved", detail: "Adobe breach - all affected credentials rotated", color: GREEN, badge: "Resolved" },
-                    { time: "6 hours ago", action: "Monitor added", detail: "New domain monitor: staging.example.com", color: GREEN_DIM, badge: "Config" },
-                    { time: "1 day ago", action: "API key rotated", detail: "Production API key regenerated by admin@example.com", color: GREEN_MID, badge: "Security" },
-                    { time: "2 days ago", action: "Report exported", detail: "Monthly breach report generated for January 2026", color: GREEN_DIM, badge: "Report" },
+                    {
+                      time: "2 min ago",
+                      action: "New breach detected",
+                      detail: "LinkedIn - john@example.com found in paste",
+                      color: RED,
+                      badge: "Critical",
+                    },
+                    {
+                      time: "23 min ago",
+                      action: "Scan completed",
+                      detail:
+                        "Full domain scan of example.com - 0 new exposures",
+                      color: GREEN,
+                      badge: "Info",
+                    },
+                    {
+                      time: "1 hour ago",
+                      action: "User notified",
+                      detail:
+                        "Password rotation email sent to jane@example.com",
+                      color: GREEN_MID,
+                      badge: "Action",
+                    },
+                    {
+                      time: "3 hours ago",
+                      action: "Breach resolved",
+                      detail: "Adobe breach - all affected credentials rotated",
+                      color: GREEN,
+                      badge: "Resolved",
+                    },
+                    {
+                      time: "6 hours ago",
+                      action: "Monitor added",
+                      detail: "New domain monitor: staging.example.com",
+                      color: GREEN_DIM,
+                      badge: "Config",
+                    },
+                    {
+                      time: "1 day ago",
+                      action: "API key rotated",
+                      detail:
+                        "Production API key regenerated by admin@example.com",
+                      color: GREEN_MID,
+                      badge: "Security",
+                    },
+                    {
+                      time: "2 days ago",
+                      action: "Report exported",
+                      detail:
+                        "Monthly breach report generated for January 2026",
+                      color: GREEN_DIM,
+                      badge: "Report",
+                    },
                   ].map((event, i) => (
                     <div key={i} className="flex gap-4 py-3">
                       {/* Timeline rail */}
                       <div className="flex flex-col items-center">
                         <StatusDot color={event.color} />
                         {i < 6 && (
-                          <div className="mt-1 h-full w-px" style={{ background: "var(--border)" }} />
+                          <div
+                            className="mt-1 h-full w-px"
+                            style={{ background: "var(--border)" }}
+                          />
                         )}
                       </div>
                       {/* Content */}
                       <div className="flex-1 space-y-1 pb-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium">{event.action}</span>
-                          <Badge variant="outline" className="text-[9px]">{event.badge}</Badge>
-                          <span className="text-muted-foreground ml-auto text-[10px]">{event.time}</span>
+                          <span className="text-sm font-medium">
+                            {event.action}
+                          </span>
+                          <Badge variant="outline" className="text-[9px]">
+                            {event.badge}
+                          </Badge>
+                          <span className="text-muted-foreground ml-auto text-[10px]">
+                            {event.time}
+                          </span>
                         </div>
-                        <p className="text-muted-foreground text-xs">{event.detail}</p>
+                        <p className="text-muted-foreground text-xs">
+                          {event.detail}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -675,14 +995,38 @@ export const Moodboard: Story = {
             <SectionTitle>Color Palette</SectionTitle>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6">
               {[
-                { name: "Background", bg: "bg-background", fg: "text-foreground" },
-                { name: "Primary", bg: "bg-primary", fg: "text-primary-foreground" },
-                { name: "Secondary", bg: "bg-secondary", fg: "text-secondary-foreground" },
-                { name: "Accent", bg: "bg-accent", fg: "text-accent-foreground" },
+                {
+                  name: "Background",
+                  bg: "bg-background",
+                  fg: "text-foreground",
+                },
+                {
+                  name: "Primary",
+                  bg: "bg-primary",
+                  fg: "text-primary-foreground",
+                },
+                {
+                  name: "Secondary",
+                  bg: "bg-secondary",
+                  fg: "text-secondary-foreground",
+                },
+                {
+                  name: "Accent",
+                  bg: "bg-accent",
+                  fg: "text-accent-foreground",
+                },
                 { name: "Muted", bg: "bg-muted", fg: "text-muted-foreground" },
-                { name: "Destructive", bg: "bg-destructive", fg: "text-destructive-foreground" },
+                {
+                  name: "Destructive",
+                  bg: "bg-destructive",
+                  fg: "text-destructive-foreground",
+                },
                 { name: "Card", bg: "bg-card", fg: "text-card-foreground" },
-                { name: "Popover", bg: "bg-popover", fg: "text-popover-foreground" },
+                {
+                  name: "Popover",
+                  bg: "bg-popover",
+                  fg: "text-popover-foreground",
+                },
                 { name: "Border", custom: "var(--border)" },
                 { name: "Input", custom: "var(--input)" },
                 { name: "Ring", custom: "var(--ring)" },
@@ -692,12 +1036,20 @@ export const Moodboard: Story = {
                   {"custom" in c && c.custom ? (
                     <div
                       className="flex h-20 items-center justify-center rounded-lg border text-[10px] font-medium"
-                      style={{ background: c.custom, color: c.name === "Foreground" || c.name === "Ring" ? "var(--background)" : "var(--foreground)" }}
+                      style={{
+                        background: c.custom,
+                        color:
+                          c.name === "Foreground" || c.name === "Ring"
+                            ? "var(--background)"
+                            : "var(--foreground)",
+                      }}
                     >
                       {c.name}
                     </div>
                   ) : (
-                    <div className={`${"bg" in c ? c.bg : ""} ${"fg" in c ? c.fg : ""} flex h-20 items-center justify-center rounded-lg border text-[10px] font-medium`}>
+                    <div
+                      className={`${"bg" in c ? c.bg : ""} ${"fg" in c ? c.fg : ""} flex h-20 items-center justify-center rounded-lg border text-[10px] font-medium`}
+                    >
                       {c.name}
                     </div>
                   )}
@@ -719,7 +1071,10 @@ export const Moodboard: Story = {
                   { label: "Warn", color: "oklch(0.70 0.140 60)" },
                   { label: "Red", color: RED },
                 ].map((s) => (
-                  <div key={s.label} className="flex flex-1 flex-col items-center gap-1.5">
+                  <div
+                    key={s.label}
+                    className="flex flex-1 flex-col items-center gap-1.5"
+                  >
                     <div
                       className="h-10 w-full rounded border"
                       style={{
@@ -728,7 +1083,9 @@ export const Moodboard: Story = {
                         boxShadow: `0 0 12px ${s.color.replace(")", " / 0.15)")}`,
                       }}
                     />
-                    <span className="text-muted-foreground text-[10px]">{s.label}</span>
+                    <span className="text-muted-foreground text-[10px]">
+                      {s.label}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -742,23 +1099,50 @@ export const Moodboard: Story = {
             <SectionTitle>Typography</SectionTitle>
             <Card>
               <CardContent className="space-y-4">
-                <p className="text-5xl font-bold tracking-tight" style={{ textShadow: `0 0 30px oklch(0.84 0.204 154 / 0.10)` }}>Display</p>
+                <p
+                  className="text-5xl font-bold tracking-tight"
+                  style={{
+                    textShadow: `0 0 30px oklch(0.84 0.204 154 / 0.10)`,
+                  }}
+                >
+                  Display
+                </p>
                 <p className="text-4xl font-bold tracking-tight">Heading 1</p>
-                <p className="text-3xl font-semibold tracking-tight">Heading 2</p>
+                <p className="text-3xl font-semibold tracking-tight">
+                  Heading 2
+                </p>
                 <p className="text-2xl font-semibold">Heading 3</p>
                 <p className="text-xl font-medium">Heading 4</p>
-                <p className="text-lg">Lead paragraph - introductory text that sets the context for the content below.</p>
-                <p className="text-base">Body text - The quick brown fox jumps over the lazy dog. Standard readable paragraph text for main content areas.</p>
-                <p className="text-muted-foreground text-sm">Muted text - Secondary information, descriptions, and supporting context that doesn't need primary emphasis.</p>
-                <p className="text-muted-foreground text-xs">Caption - Fine print, metadata, timestamps, and supplementary details.</p>
+                <p className="text-lg">
+                  Lead paragraph - introductory text that sets the context for
+                  the content below.
+                </p>
+                <p className="text-base">
+                  Body text - The quick brown fox jumps over the lazy dog.
+                  Standard readable paragraph text for main content areas.
+                </p>
+                <p className="text-muted-foreground text-sm">
+                  Muted text - Secondary information, descriptions, and
+                  supporting context that doesn't need primary emphasis.
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  Caption - Fine print, metadata, timestamps, and supplementary
+                  details.
+                </p>
                 <Separator />
                 <div className="flex gap-8">
                   <div className="space-y-1">
-                    <p className="text-muted-foreground text-[10px] uppercase tracking-widest">Monospace</p>
-                    <p className="font-mono text-sm">const breach = await scan(domain);</p>
+                    <p className="text-muted-foreground text-[10px] tracking-widest uppercase">
+                      Monospace
+                    </p>
+                    <p className="font-mono text-sm">
+                      const breach = await scan(domain);
+                    </p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-muted-foreground text-[10px] uppercase tracking-widest">Tabular</p>
+                    <p className="text-muted-foreground text-[10px] tracking-widest uppercase">
+                      Tabular
+                    </p>
                     <p className="text-sm tabular-nums">1,234,567.89</p>
                   </div>
                 </div>
@@ -774,7 +1158,9 @@ export const Moodboard: Story = {
             <Card>
               <CardContent className="space-y-6">
                 <div>
-                  <Label className="text-muted-foreground mb-2 text-xs">Variants</Label>
+                  <Label className="text-muted-foreground mb-2 text-xs">
+                    Variants
+                  </Label>
                   <div className="flex flex-wrap items-center gap-3">
                     <Button>Primary</Button>
                     <Button variant="secondary">Secondary</Button>
@@ -786,7 +1172,9 @@ export const Moodboard: Story = {
                 </div>
                 <Separator />
                 <div>
-                  <Label className="text-muted-foreground mb-2 text-xs">Sizes</Label>
+                  <Label className="text-muted-foreground mb-2 text-xs">
+                    Sizes
+                  </Label>
                   <div className="flex flex-wrap items-center gap-3">
                     <Button size="sm">Small</Button>
                     <Button size="default">Default</Button>
@@ -796,17 +1184,25 @@ export const Moodboard: Story = {
                 </div>
                 <Separator />
                 <div>
-                  <Label className="text-muted-foreground mb-2 text-xs">States</Label>
+                  <Label className="text-muted-foreground mb-2 text-xs">
+                    States
+                  </Label>
                   <div className="flex flex-wrap items-center gap-3">
                     <Button>Enabled</Button>
                     <Button disabled>Disabled</Button>
-                    <Button variant="outline" disabled>Disabled Outline</Button>
-                    <Button variant="secondary" disabled>Disabled Secondary</Button>
+                    <Button variant="outline" disabled>
+                      Disabled Outline
+                    </Button>
+                    <Button variant="secondary" disabled>
+                      Disabled Secondary
+                    </Button>
                   </div>
                 </div>
                 <Separator />
                 <div>
-                  <Label className="text-muted-foreground mb-2 text-xs">Common Patterns</Label>
+                  <Label className="text-muted-foreground mb-2 text-xs">
+                    Common Patterns
+                  </Label>
                   <div className="flex flex-wrap items-center gap-3">
                     <div className="flex gap-1">
                       <Button>Save Changes</Button>
@@ -836,7 +1232,9 @@ export const Moodboard: Story = {
             <Card>
               <CardContent className="space-y-6">
                 <div>
-                  <Label className="text-muted-foreground mb-2 text-xs">Variants</Label>
+                  <Label className="text-muted-foreground mb-2 text-xs">
+                    Variants
+                  </Label>
                   <div className="flex flex-wrap items-center gap-3">
                     <Badge>Default</Badge>
                     <Badge variant="secondary">Secondary</Badge>
@@ -848,19 +1246,40 @@ export const Moodboard: Story = {
                 </div>
                 <Separator />
                 <div>
-                  <Label className="text-muted-foreground mb-2 text-xs">Contextual Usage</Label>
+                  <Label className="text-muted-foreground mb-2 text-xs">
+                    Contextual Usage
+                  </Label>
                   <div className="flex flex-wrap items-center gap-3">
-                    <Badge style={{ background: GREEN, color: "var(--background)" }}>Secure</Badge>
-                    <Badge style={{ background: AMBER, color: "var(--background)" }}>Warning</Badge>
-                    <Badge style={{ background: RED, color: "#fff" }}>Critical</Badge>
+                    <Badge
+                      style={{ background: GREEN, color: "var(--background)" }}
+                    >
+                      Secure
+                    </Badge>
+                    <Badge
+                      style={{ background: AMBER, color: "var(--background)" }}
+                    >
+                      Warning
+                    </Badge>
+                    <Badge style={{ background: RED, color: "#fff" }}>
+                      Critical
+                    </Badge>
                     <Badge variant="outline">Pending</Badge>
                     <Badge variant="secondary">Archived</Badge>
-                    <Badge style={{ background: GREEN_DIM, color: "var(--foreground)" }}>Offline</Badge>
+                    <Badge
+                      style={{
+                        background: GREEN_DIM,
+                        color: "var(--foreground)",
+                      }}
+                    >
+                      Offline
+                    </Badge>
                   </div>
                 </div>
                 <Separator />
                 <div>
-                  <Label className="text-muted-foreground mb-2 text-xs">With Status Dots</Label>
+                  <Label className="text-muted-foreground mb-2 text-xs">
+                    With Status Dots
+                  </Label>
                   <div className="flex flex-wrap items-center gap-3">
                     {[
                       { label: "Active", color: GREEN },
@@ -868,8 +1287,18 @@ export const Moodboard: Story = {
                       { label: "Down", color: RED },
                       { label: "Maintenance", color: GREEN_DIM },
                     ].map((s) => (
-                      <Badge key={s.label} variant="outline" className="gap-1.5">
-                        <div className="h-1.5 w-1.5 rounded-full" style={{ background: s.color, boxShadow: glow(s.color, 0.4) }} />
+                      <Badge
+                        key={s.label}
+                        variant="outline"
+                        className="gap-1.5"
+                      >
+                        <div
+                          className="h-1.5 w-1.5 rounded-full"
+                          style={{
+                            background: s.color,
+                            boxShadow: glow(s.color, 0.4),
+                          }}
+                        />
                         {s.label}
                       </Badge>
                     ))}
@@ -889,7 +1318,9 @@ export const Moodboard: Story = {
             <Card>
               <CardHeader>
                 <CardTitle>Add Monitor</CardTitle>
-                <CardDescription>Configure a new breach monitoring target.</CardDescription>
+                <CardDescription>
+                  Configure a new breach monitoring target.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <FieldGroup>
@@ -898,28 +1329,36 @@ export const Moodboard: Story = {
                       <FieldLabel>Email Address</FieldLabel>
                       <FieldContent>
                         <Input type="email" placeholder="you@example.com" />
-                        <FieldDescription>We'll check this against known breaches.</FieldDescription>
+                        <FieldDescription>
+                          We'll check this against known breaches.
+                        </FieldDescription>
                       </FieldContent>
                     </Field>
                     <Field>
                       <FieldLabel>Domain</FieldLabel>
                       <FieldContent>
                         <Input placeholder="example.com" />
-                        <FieldDescription>Monitor an entire domain for exposures.</FieldDescription>
+                        <FieldDescription>
+                          Monitor an entire domain for exposures.
+                        </FieldDescription>
                       </FieldContent>
                     </Field>
                     <Field>
                       <FieldLabel>Display Name</FieldLabel>
                       <FieldContent>
                         <Input placeholder="Production Domain" />
-                        <FieldDescription>A friendly label for this monitor.</FieldDescription>
+                        <FieldDescription>
+                          A friendly label for this monitor.
+                        </FieldDescription>
                       </FieldContent>
                     </Field>
                     <Field>
                       <FieldLabel>Alert Webhook</FieldLabel>
                       <FieldContent>
                         <Input placeholder="https://hooks.slack.com/..." />
-                        <FieldDescription>Optional: Send alerts to a webhook URL.</FieldDescription>
+                        <FieldDescription>
+                          Optional: Send alerts to a webhook URL.
+                        </FieldDescription>
                       </FieldContent>
                     </Field>
                   </div>
@@ -931,14 +1370,19 @@ export const Moodboard: Story = {
                       <FieldLabel>API Key</FieldLabel>
                       <FieldContent>
                         <Input placeholder="aibp_..." aria-invalid />
-                        <FieldError>Invalid API key format. Keys must start with &quot;aibp_&quot;.</FieldError>
+                        <FieldError>
+                          Invalid API key format. Keys must start with
+                          &quot;aibp_&quot;.
+                        </FieldError>
                       </FieldContent>
                     </Field>
                     <Field>
                       <FieldLabel>API Secret</FieldLabel>
                       <FieldContent>
                         <Input type="password" placeholder="••••••••••••" />
-                        <FieldDescription>Your API secret from the dashboard.</FieldDescription>
+                        <FieldDescription>
+                          Your API secret from the dashboard.
+                        </FieldDescription>
                       </FieldContent>
                     </Field>
                   </div>
@@ -949,15 +1393,23 @@ export const Moodboard: Story = {
                     <Field>
                       <FieldLabel>Notification Email</FieldLabel>
                       <FieldContent>
-                        <Input type="email" placeholder="alerts@example.com" disabled />
-                        <FieldDescription>Upgrade to Pro to enable email notifications.</FieldDescription>
+                        <Input
+                          type="email"
+                          placeholder="alerts@example.com"
+                          disabled
+                        />
+                        <FieldDescription>
+                          Upgrade to Pro to enable email notifications.
+                        </FieldDescription>
                       </FieldContent>
                     </Field>
                     <Field>
                       <FieldLabel>Severity Threshold</FieldLabel>
                       <FieldContent>
                         <Input placeholder="Medium" />
-                        <FieldDescription>Only alert for breaches at or above this severity.</FieldDescription>
+                        <FieldDescription>
+                          Only alert for breaches at or above this severity.
+                        </FieldDescription>
                       </FieldContent>
                     </Field>
                   </div>
@@ -965,9 +1417,13 @@ export const Moodboard: Story = {
               </CardContent>
               <CardFooter>
                 <div className="flex w-full items-center justify-between">
-                  <Button variant="ghost" size="sm">Cancel</Button>
+                  <Button variant="ghost" size="sm">
+                    Cancel
+                  </Button>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm">Save Draft</Button>
+                    <Button variant="outline" size="sm">
+                      Save Draft
+                    </Button>
                     <Button size="sm">Create Monitor</Button>
                   </div>
                 </div>
@@ -978,7 +1434,9 @@ export const Moodboard: Story = {
             <Card>
               <CardHeader>
                 <CardTitle>Account Settings</CardTitle>
-                <CardDescription>Manage your account preferences.</CardDescription>
+                <CardDescription>
+                  Manage your account preferences.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <FieldSet>
@@ -1000,7 +1458,9 @@ export const Moodboard: Story = {
                       <FieldLabel>Organization</FieldLabel>
                       <FieldContent>
                         <Input defaultValue="Acme Corp" />
-                        <FieldDescription>Your organization name for reports.</FieldDescription>
+                        <FieldDescription>
+                          Your organization name for reports.
+                        </FieldDescription>
                       </FieldContent>
                     </Field>
                   </FieldGroup>
@@ -1032,7 +1492,9 @@ export const Moodboard: Story = {
                       <DropdownMenuItem>Mark as Resolved</DropdownMenuItem>
                       <DropdownMenuItem>Notify Affected Users</DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem variant="destructive">Dismiss Alert</DropdownMenuItem>
+                      <DropdownMenuItem variant="destructive">
+                        Dismiss Alert
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
 
@@ -1077,14 +1539,31 @@ export const Moodboard: Story = {
               <Card>
                 <CardHeader>
                   <CardTitle>Scan Coverage</CardTitle>
-                  <CardDescription>Percentage of assets monitored</CardDescription>
+                  <CardDescription>
+                    Percentage of assets monitored
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-primary text-4xl font-bold" style={{ textShadow: `0 0 20px oklch(0.84 0.204 154 / 0.15)` }}>
+                  <p
+                    className="text-primary text-4xl font-bold"
+                    style={{
+                      textShadow: `0 0 20px oklch(0.84 0.204 154 / 0.15)`,
+                    }}
+                  >
                     94%
                   </p>
-                  <div className="mt-2 h-2 overflow-hidden rounded-full" style={{ background: "var(--muted)" }}>
-                    <div className="h-full rounded-full" style={{ width: "94%", background: GREEN, boxShadow: glow(GREEN, 0.3) }} />
+                  <div
+                    className="mt-2 h-2 overflow-hidden rounded-full"
+                    style={{ background: "var(--muted)" }}
+                  >
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: "94%",
+                        background: GREEN,
+                        boxShadow: glow(GREEN, 0.3),
+                      }}
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -1093,11 +1572,15 @@ export const Moodboard: Story = {
               <Card>
                 <CardHeader>
                   <CardTitle>Quick Scan</CardTitle>
-                  <CardDescription>Check a single email address</CardDescription>
+                  <CardDescription>
+                    Check a single email address
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Input placeholder="check@example.com" className="mb-3" />
-                  <Button className="w-full" size="sm">Check Now</Button>
+                  <Button className="w-full" size="sm">
+                    Check Now
+                  </Button>
                 </CardContent>
               </Card>
 
@@ -1114,11 +1597,18 @@ export const Moodboard: Story = {
                     { name: "Database", status: "Operational" },
                     { name: "Webhooks", status: "Degraded" },
                   ].map((svc) => (
-                    <div key={svc.name} className="flex items-center justify-between text-sm">
+                    <div
+                      key={svc.name}
+                      className="flex items-center justify-between text-sm"
+                    >
                       <span>{svc.name}</span>
                       <div className="flex items-center gap-1.5">
-                        <StatusDot color={svc.status === "Operational" ? GREEN : AMBER} />
-                        <span className="text-muted-foreground text-xs">{svc.status}</span>
+                        <StatusDot
+                          color={svc.status === "Operational" ? GREEN : AMBER}
+                        />
+                        <span className="text-muted-foreground text-xs">
+                          {svc.status}
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -1136,9 +1626,12 @@ export const Moodboard: Story = {
                   >
                     ?
                   </div>
-                  <CardTitle className="mb-1 text-base">No monitors configured</CardTitle>
+                  <CardTitle className="mb-1 text-base">
+                    No monitors configured
+                  </CardTitle>
                   <CardDescription className="mb-4 max-w-xs">
-                    Add your first domain or email to start monitoring for breaches.
+                    Add your first domain or email to start monitoring for
+                    breaches.
                   </CardDescription>
                   <Button size="sm">Add Monitor</Button>
                 </CardContent>
@@ -1149,15 +1642,32 @@ export const Moodboard: Story = {
                 <CardHeader>
                   <Badge className="w-fit text-[10px]">Recommended</Badge>
                   <CardTitle>Pro Plan</CardTitle>
-                  <CardDescription>For teams that need advanced monitoring.</CardDescription>
+                  <CardDescription>
+                    For teams that need advanced monitoring.
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <p className="mb-4">
-                    <span className="text-3xl font-bold" style={{ textShadow: `0 0 16px oklch(0.84 0.204 154 / 0.12)` }}>$29</span>
-                    <span className="text-muted-foreground text-sm">/month</span>
+                    <span
+                      className="text-3xl font-bold"
+                      style={{
+                        textShadow: `0 0 16px oklch(0.84 0.204 154 / 0.12)`,
+                      }}
+                    >
+                      $29
+                    </span>
+                    <span className="text-muted-foreground text-sm">
+                      /month
+                    </span>
                   </p>
                   <ul className="space-y-2 text-sm">
-                    {["Unlimited domain monitors", "Real-time webhook alerts", "API access", "CSV & PDF exports", "Priority support"].map((f) => (
+                    {[
+                      "Unlimited domain monitors",
+                      "Real-time webhook alerts",
+                      "API access",
+                      "CSV & PDF exports",
+                      "Priority support",
+                    ].map((f) => (
                       <li key={f} className="flex items-center gap-2">
                         <StatusDot color={GREEN} />
                         {f}
@@ -1180,7 +1690,9 @@ export const Moodboard: Story = {
             <Card>
               <CardHeader>
                 <CardTitle>Active Monitors</CardTitle>
-                <CardDescription>Domains and emails being watched for breaches.</CardDescription>
+                <CardDescription>
+                  Domains and emails being watched for breaches.
+                </CardDescription>
                 <CardAction>
                   <Button size="sm">Add Monitor</Button>
                 </CardAction>
@@ -1199,34 +1711,96 @@ export const Moodboard: Story = {
                   </TableHeader>
                   <TableBody>
                     {[
-                      { target: "example.com", type: "Domain", lastScan: "2 min ago", breaches: 12, status: "Active" },
-                      { target: "john@example.com", type: "Email", lastScan: "5 min ago", breaches: 4, status: "Active" },
-                      { target: "staging.example.com", type: "Domain", lastScan: "1 hour ago", breaches: 0, status: "Active" },
-                      { target: "jane@example.com", type: "Email", lastScan: "3 hours ago", breaches: 2, status: "Active" },
-                      { target: "legacy.example.com", type: "Domain", lastScan: "3 days ago", breaches: 8, status: "Paused" },
+                      {
+                        target: "example.com",
+                        type: "Domain",
+                        lastScan: "2 min ago",
+                        breaches: 12,
+                        status: "Active",
+                      },
+                      {
+                        target: "john@example.com",
+                        type: "Email",
+                        lastScan: "5 min ago",
+                        breaches: 4,
+                        status: "Active",
+                      },
+                      {
+                        target: "staging.example.com",
+                        type: "Domain",
+                        lastScan: "1 hour ago",
+                        breaches: 0,
+                        status: "Active",
+                      },
+                      {
+                        target: "jane@example.com",
+                        type: "Email",
+                        lastScan: "3 hours ago",
+                        breaches: 2,
+                        status: "Active",
+                      },
+                      {
+                        target: "legacy.example.com",
+                        type: "Domain",
+                        lastScan: "3 days ago",
+                        breaches: 8,
+                        status: "Paused",
+                      },
                     ].map((row) => (
                       <TableRow key={row.target}>
-                        <TableCell className="font-medium">{row.target}</TableCell>
-                        <TableCell><Badge variant="outline" className="text-[10px]">{row.type}</Badge></TableCell>
-                        <TableCell className="text-muted-foreground text-sm">{row.lastScan}</TableCell>
+                        <TableCell className="font-medium">
+                          {row.target}
+                        </TableCell>
                         <TableCell>
-                          <span className={row.breaches > 0 ? "font-medium" : "text-muted-foreground"}>
+                          <Badge variant="outline" className="text-[10px]">
+                            {row.type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">
+                          {row.lastScan}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={
+                              row.breaches > 0
+                                ? "font-medium"
+                                : "text-muted-foreground"
+                            }
+                          >
                             {row.breaches}
                           </span>
                         </TableCell>
                         <TableCell>
                           <Badge
-                            variant={row.status === "Active" ? "outline" : "secondary"}
+                            variant={
+                              row.status === "Active" ? "outline" : "secondary"
+                            }
                             className="gap-1.5 text-[10px]"
                           >
-                            <StatusDot color={row.status === "Active" ? GREEN : GREEN_DIM} />
+                            <StatusDot
+                              color={
+                                row.status === "Active" ? GREEN : GREEN_DIM
+                              }
+                            />
                             {row.status}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
-                            <Button size="sm" variant="ghost" className="h-6 px-2 text-xs">Scan</Button>
-                            <Button size="sm" variant="ghost" className="h-6 px-2 text-xs">Edit</Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 px-2 text-xs"
+                            >
+                              Scan
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 px-2 text-xs"
+                            >
+                              Edit
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -1249,9 +1823,13 @@ export const Moodboard: Story = {
                   <div className="flex items-center gap-4">
                     <Label>Default Label</Label>
                     <Separator orientation="vertical" className="h-4" />
-                    <span className="text-muted-foreground text-sm">Muted text</span>
+                    <span className="text-muted-foreground text-sm">
+                      Muted text
+                    </span>
                     <Separator orientation="vertical" className="h-4" />
-                    <span className="text-primary text-sm font-medium">Primary text</span>
+                    <span className="text-primary text-sm font-medium">
+                      Primary text
+                    </span>
                   </div>
                 </div>
                 <Separator />
@@ -1296,14 +1874,22 @@ export const Moodboard: Story = {
                       { keys: "Ctrl + R", action: "Run scan" },
                       { keys: "Ctrl + E", action: "Export" },
                     ].map((kb) => (
-                      <div key={kb.keys} className="flex items-center gap-2 text-sm">
+                      <div
+                        key={kb.keys}
+                        className="flex items-center gap-2 text-sm"
+                      >
                         <kbd
                           className="rounded border px-1.5 py-0.5 font-mono text-xs"
-                          style={{ background: "var(--muted)", borderColor: "var(--border)" }}
+                          style={{
+                            background: "var(--muted)",
+                            borderColor: "var(--border)",
+                          }}
                         >
                           {kb.keys}
                         </kbd>
-                        <span className="text-muted-foreground text-xs">{kb.action}</span>
+                        <span className="text-muted-foreground text-xs">
+                          {kb.action}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -1315,11 +1901,17 @@ export const Moodboard: Story = {
           {/* ================================================================ */}
           {/* FOOTER                                                           */}
           {/* ================================================================ */}
-          <footer className="border-t pb-8 pt-8" style={{ borderColor: "var(--border)" }}>
+          <footer
+            className="border-t pt-8 pb-8"
+            style={{ borderColor: "var(--border)" }}
+          >
             <div className="flex flex-col items-center gap-4">
               <div className="flex items-center gap-3">
                 <StatusDot color={GREEN} />
-                <span className="text-sm font-semibold" style={{ textShadow: `0 0 12px oklch(0.84 0.204 154 / 0.1)` }}>
+                <span
+                  className="text-sm font-semibold"
+                  style={{ textShadow: `0 0 12px oklch(0.84 0.204 154 / 0.1)` }}
+                >
                   Am I Being Pwned?
                 </span>
                 <StatusDot color={GREEN} />
@@ -1332,10 +1924,18 @@ export const Moodboard: Story = {
                 <span>All OKLCH values from documented sources</span>
               </div>
               <div className="flex gap-2">
-                <Button size="sm" variant="ghost" className="text-xs">Documentation</Button>
-                <Button size="sm" variant="ghost" className="text-xs">API Reference</Button>
-                <Button size="sm" variant="ghost" className="text-xs">Status Page</Button>
-                <Button size="sm" variant="ghost" className="text-xs">Contact</Button>
+                <Button size="sm" variant="ghost" className="text-xs">
+                  Documentation
+                </Button>
+                <Button size="sm" variant="ghost" className="text-xs">
+                  API Reference
+                </Button>
+                <Button size="sm" variant="ghost" className="text-xs">
+                  Status Page
+                </Button>
+                <Button size="sm" variant="ghost" className="text-xs">
+                  Contact
+                </Button>
               </div>
             </div>
           </footer>

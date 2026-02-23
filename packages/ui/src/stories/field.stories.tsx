@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { Input } from "../input";
 import {
   Field,
   FieldContent,
@@ -11,6 +10,7 @@ import {
   FieldSeparator,
   FieldSet,
 } from "../field";
+import { Input } from "../input";
 
 const meta = {
   title: "Components/Field",

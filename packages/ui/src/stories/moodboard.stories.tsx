@@ -57,9 +57,7 @@ export const Overview: Story = {
           <h1 className="text-4xl font-bold tracking-tight">
             Am I Being Pwned?
           </h1>
-          <p className="text-muted-foreground text-lg">
-            UI Theme Moodboard
-          </p>
+          <p className="text-muted-foreground text-lg">UI Theme Moodboard</p>
           <Separator className="mt-4" />
         </div>
 
@@ -68,15 +66,29 @@ export const Overview: Story = {
           <h2 className="text-2xl font-semibold">Color Palette</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-6">
             {[
-              { name: "Primary", bg: "bg-primary", fg: "text-primary-foreground" },
-              { name: "Secondary", bg: "bg-secondary", fg: "text-secondary-foreground" },
+              {
+                name: "Primary",
+                bg: "bg-primary",
+                fg: "text-primary-foreground",
+              },
+              {
+                name: "Secondary",
+                bg: "bg-secondary",
+                fg: "text-secondary-foreground",
+              },
               { name: "Accent", bg: "bg-accent", fg: "text-accent-foreground" },
               { name: "Muted", bg: "bg-muted", fg: "text-muted-foreground" },
-              { name: "Destructive", bg: "bg-destructive", fg: "text-destructive-foreground" },
+              {
+                name: "Destructive",
+                bg: "bg-destructive",
+                fg: "text-destructive-foreground",
+              },
               { name: "Card", bg: "bg-card", fg: "text-card-foreground" },
             ].map((c) => (
               <div key={c.name} className="space-y-1.5">
-                <div className={`${c.bg} ${c.fg} flex h-20 items-center justify-center rounded-lg border text-sm font-medium`}>
+                <div
+                  className={`${c.bg} ${c.fg} flex h-20 items-center justify-center rounded-lg border text-sm font-medium`}
+                >
                   {c.name}
                 </div>
               </div>
@@ -91,10 +103,14 @@ export const Overview: Story = {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <p className="text-4xl font-bold tracking-tight">Heading 1</p>
-                <p className="text-3xl font-semibold tracking-tight">Heading 2</p>
+                <p className="text-3xl font-semibold tracking-tight">
+                  Heading 2
+                </p>
                 <p className="text-2xl font-semibold">Heading 3</p>
                 <p className="text-xl font-medium">Heading 4</p>
-                <p className="text-base">Body text - The quick brown fox jumps over the lazy dog.</p>
+                <p className="text-base">
+                  Body text - The quick brown fox jumps over the lazy dog.
+                </p>
                 <p className="text-muted-foreground text-sm">
                   Muted text - Secondary information and descriptions.
                 </p>
@@ -167,7 +183,9 @@ export const Overview: Story = {
               </CardHeader>
               <CardContent>
                 <p className="text-4xl font-bold">47</p>
-                <p className="text-muted-foreground text-sm">Across 8 domains</p>
+                <p className="text-muted-foreground text-sm">
+                  Across 8 domains
+                </p>
               </CardContent>
             </Card>
             <Card>
@@ -177,10 +195,14 @@ export const Overview: Story = {
               </CardHeader>
               <CardContent>
                 <p className="text-primary text-4xl font-bold">Medium</p>
-                <p className="text-muted-foreground text-sm">2 actions recommended</p>
+                <p className="text-muted-foreground text-sm">
+                  2 actions recommended
+                </p>
               </CardContent>
               <CardFooter>
-                <Button size="sm" variant="outline">View Details</Button>
+                <Button size="sm" variant="outline">
+                  View Details
+                </Button>
               </CardFooter>
             </Card>
           </div>
@@ -197,14 +219,18 @@ export const Overview: Story = {
                     <FieldLabel>Email Address</FieldLabel>
                     <FieldContent>
                       <Input type="email" placeholder="you@example.com" />
-                      <FieldDescription>We'll check this against known breaches.</FieldDescription>
+                      <FieldDescription>
+                        We'll check this against known breaches.
+                      </FieldDescription>
                     </FieldContent>
                   </Field>
                   <Field>
                     <FieldLabel>Domain</FieldLabel>
                     <FieldContent>
                       <Input placeholder="example.com" />
-                      <FieldDescription>Monitor an entire domain.</FieldDescription>
+                      <FieldDescription>
+                        Monitor an entire domain.
+                      </FieldDescription>
                     </FieldContent>
                   </Field>
                   <Field data-invalid="true">
@@ -217,8 +243,14 @@ export const Overview: Story = {
                   <Field>
                     <FieldLabel>Notification Email</FieldLabel>
                     <FieldContent>
-                      <Input type="email" placeholder="alerts@example.com" disabled />
-                      <FieldDescription>Upgrade to enable notifications.</FieldDescription>
+                      <Input
+                        type="email"
+                        placeholder="alerts@example.com"
+                        disabled
+                      />
+                      <FieldDescription>
+                        Upgrade to enable notifications.
+                      </FieldDescription>
                     </FieldContent>
                   </Field>
                 </div>
@@ -244,7 +276,9 @@ export const Overview: Story = {
                     <DropdownMenuItem>Export Report</DropdownMenuItem>
                     <DropdownMenuItem>Mark as Resolved</DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem variant="destructive">Dismiss</DropdownMenuItem>
+                    <DropdownMenuItem variant="destructive">
+                      Dismiss
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -258,7 +292,9 @@ export const Overview: Story = {
           <Card>
             <CardHeader>
               <CardTitle>Recent Breaches</CardTitle>
-              <CardDescription>Compromised accounts detected in monitoring.</CardDescription>
+              <CardDescription>
+                Compromised accounts detected in monitoring.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -273,14 +309,46 @@ export const Overview: Story = {
                 </TableHeader>
                 <TableBody>
                   {[
-                    { service: "LinkedIn", email: "john@example.com", date: "2025-12-14", severity: "High", status: "Unresolved" },
-                    { service: "Dropbox", email: "john@example.com", date: "2025-11-02", severity: "Medium", status: "Resolved" },
-                    { service: "Adobe", email: "jane@example.com", date: "2025-10-18", severity: "Low", status: "Resolved" },
-                    { service: "Canva", email: "jane@example.com", date: "2025-09-30", severity: "High", status: "Unresolved" },
-                    { service: "Twitter", email: "john@example.com", date: "2025-08-22", severity: "Medium", status: "Resolved" },
+                    {
+                      service: "LinkedIn",
+                      email: "john@example.com",
+                      date: "2025-12-14",
+                      severity: "High",
+                      status: "Unresolved",
+                    },
+                    {
+                      service: "Dropbox",
+                      email: "john@example.com",
+                      date: "2025-11-02",
+                      severity: "Medium",
+                      status: "Resolved",
+                    },
+                    {
+                      service: "Adobe",
+                      email: "jane@example.com",
+                      date: "2025-10-18",
+                      severity: "Low",
+                      status: "Resolved",
+                    },
+                    {
+                      service: "Canva",
+                      email: "jane@example.com",
+                      date: "2025-09-30",
+                      severity: "High",
+                      status: "Unresolved",
+                    },
+                    {
+                      service: "Twitter",
+                      email: "john@example.com",
+                      date: "2025-08-22",
+                      severity: "Medium",
+                      status: "Resolved",
+                    },
                   ].map((row) => (
                     <TableRow key={`${row.service}-${row.email}`}>
-                      <TableCell className="font-medium">{row.service}</TableCell>
+                      <TableCell className="font-medium">
+                        {row.service}
+                      </TableCell>
                       <TableCell>{row.email}</TableCell>
                       <TableCell>{row.date}</TableCell>
                       <TableCell>
@@ -297,7 +365,11 @@ export const Overview: Story = {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Badge variant={row.status === "Resolved" ? "outline" : "ghost"}>
+                        <Badge
+                          variant={
+                            row.status === "Resolved" ? "outline" : "ghost"
+                          }
+                        >
                           {row.status}
                         </Badge>
                       </TableCell>
@@ -319,7 +391,9 @@ export const Overview: Story = {
                 <div className="flex items-center gap-4">
                   <Label>Default Label</Label>
                   <Separator orientation="vertical" className="h-4" />
-                  <span className="text-muted-foreground text-sm">Muted text</span>
+                  <span className="text-muted-foreground text-sm">
+                    Muted text
+                  </span>
                 </div>
               </div>
               <Separator />

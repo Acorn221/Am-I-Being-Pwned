@@ -95,14 +95,20 @@ const themes: ThemeConfig[] = [
       >
         {/* Purple glow */}
         <div
-          className="absolute -right-10 -top-10 h-36 w-36 rounded-full opacity-20 blur-3xl"
+          className="absolute -top-10 -right-10 h-36 w-36 rounded-full opacity-20 blur-3xl"
           style={{ background: "oklch(0.74 0.149 302)" }} // #BD93F9
         />
         <div className="relative z-10">
-          <h3 className="text-2xl font-bold" style={{ color: "oklch(0.98 0.008 107)" }}>
+          <h3
+            className="text-2xl font-bold"
+            style={{ color: "oklch(0.98 0.008 107)" }}
+          >
             {name}
           </h3>
-          <p className="mt-1 text-sm" style={{ color: "oklch(0.56 0.080 270)" }}>
+          <p
+            className="mt-1 text-sm"
+            style={{ color: "oklch(0.56 0.080 270)" }}
+          >
             {tagline}
           </p>
           <div className="mt-2 flex gap-1.5">
@@ -116,7 +122,11 @@ const themes: ThemeConfig[] = [
               "oklch(0.68 0.206 24)", // red
               "oklch(0.96 0.134 113)", // yellow
             ].map((c) => (
-              <div key={c} className="h-3 w-3 rounded-full" style={{ background: c }} />
+              <div
+                key={c}
+                className="h-3 w-3 rounded-full"
+                style={{ background: c }}
+              />
             ))}
           </div>
         </div>
@@ -161,10 +171,16 @@ const themes: ThemeConfig[] = [
         style={{ background: "oklch(0.18 0.020 284)" }} // #11111B crust
       >
         <div className="relative z-10">
-          <h3 className="text-2xl font-semibold" style={{ color: "oklch(0.88 0.043 272)" }}>
+          <h3
+            className="text-2xl font-semibold"
+            style={{ color: "oklch(0.88 0.043 272)" }}
+          >
             {name}
           </h3>
-          <p className="mt-1 text-sm" style={{ color: "oklch(0.62 0.037 276)" }}>
+          <p
+            className="mt-1 text-sm"
+            style={{ color: "oklch(0.62 0.037 276)" }}
+          >
             {tagline}
           </p>
           <div className="mt-2 flex gap-1.5">
@@ -178,7 +194,11 @@ const themes: ThemeConfig[] = [
               "oklch(0.79 0.119 305)", // mauve
               "oklch(0.87 0.075 336)", // pink
             ].map((c) => (
-              <div key={c} className="h-3 w-3 rounded-full" style={{ background: c }} />
+              <div
+                key={c}
+                className="h-3 w-3 rounded-full"
+                style={{ background: c }}
+              />
             ))}
           </div>
         </div>
@@ -223,10 +243,16 @@ const themes: ThemeConfig[] = [
         style={{ background: "oklch(0.32 0.023 264)" }} // nord0
       >
         <div className="relative z-10">
-          <h3 className="text-2xl font-semibold" style={{ color: "oklch(0.93 0.010 262)" }}>
+          <h3
+            className="text-2xl font-semibold"
+            style={{ color: "oklch(0.93 0.010 262)" }}
+          >
             {name}
           </h3>
-          <p className="mt-1 text-sm" style={{ color: "oklch(0.45 0.035 264)" }}>
+          <p
+            className="mt-1 text-sm"
+            style={{ color: "oklch(0.45 0.035 264)" }}
+          >
             {tagline}
           </p>
           <div className="mt-2 flex gap-1.5">
@@ -240,7 +266,11 @@ const themes: ThemeConfig[] = [
               "oklch(0.77 0.075 131)", // nord14
               "oklch(0.69 0.063 333)", // nord15
             ].map((c) => (
-              <div key={c} className="h-3 w-3 rounded-full" style={{ background: c }} />
+              <div
+                key={c}
+                className="h-3 w-3 rounded-full"
+                style={{ background: c }}
+              />
             ))}
           </div>
         </div>
@@ -286,7 +316,10 @@ const themes: ThemeConfig[] = [
         style={{ background: "oklch(0.28 0.000 263)" }} // #282828
       >
         <div className="relative z-10">
-          <h3 className="text-2xl font-bold" style={{ color: "oklch(0.89 0.057 89)" }}>
+          <h3
+            className="text-2xl font-bold"
+            style={{ color: "oklch(0.89 0.057 89)" }}
+          >
             {name}
           </h3>
           <p className="mt-1 text-sm" style={{ color: "oklch(0.62 0.029 67)" }}>
@@ -302,7 +335,11 @@ const themes: ThemeConfig[] = [
               "oklch(0.69 0.042 170)", // blue
               "oklch(0.71 0.098 2)", // purple
             ].map((c) => (
-              <div key={c} className="h-3 w-3 rounded-full" style={{ background: c }} />
+              <div
+                key={c}
+                className="h-3 w-3 rounded-full"
+                style={{ background: c }}
+              />
             ))}
           </div>
         </div>
@@ -348,14 +385,20 @@ const themes: ThemeConfig[] = [
       >
         {/* Blue glow - city neon */}
         <div
-          className="absolute -right-8 -top-8 h-32 w-32 rounded-full opacity-15 blur-3xl"
+          className="absolute -top-8 -right-8 h-32 w-32 rounded-full opacity-15 blur-3xl"
           style={{ background: "oklch(0.72 0.132 264)" }} // #7AA2F7
         />
         <div className="relative z-10">
-          <h3 className="text-2xl font-semibold" style={{ color: "oklch(0.85 0.061 275)" }}>
+          <h3
+            className="text-2xl font-semibold"
+            style={{ color: "oklch(0.85 0.061 275)" }}
+          >
             {name}
           </h3>
-          <p className="mt-1 text-sm" style={{ color: "oklch(0.50 0.068 274)" }}>
+          <p
+            className="mt-1 text-sm"
+            style={{ color: "oklch(0.50 0.068 274)" }}
+          >
             {tagline}
           </p>
           <div className="mt-2 flex gap-1.5">
@@ -369,7 +412,11 @@ const themes: ThemeConfig[] = [
               "oklch(0.72 0.132 264)", // blue
               "oklch(0.75 0.134 299)", // purple
             ].map((c) => (
-              <div key={c} className="h-3 w-3 rounded-full" style={{ background: c }} />
+              <div
+                key={c}
+                className="h-3 w-3 rounded-full"
+                style={{ background: c }}
+              />
             ))}
           </div>
         </div>
@@ -414,10 +461,16 @@ const themes: ThemeConfig[] = [
         style={{ background: "oklch(0.27 0.049 220)" }} // #002B36
       >
         <div className="relative z-10">
-          <h3 className="text-2xl font-semibold" style={{ color: "oklch(0.70 0.016 197)" }}>
+          <h3
+            className="text-2xl font-semibold"
+            style={{ color: "oklch(0.70 0.016 197)" }}
+          >
             {name}
           </h3>
-          <p className="mt-1 text-sm" style={{ color: "oklch(0.52 0.028 219)" }}>
+          <p
+            className="mt-1 text-sm"
+            style={{ color: "oklch(0.52 0.028 219)" }}
+          >
             {tagline}
           </p>
           <div className="mt-2 flex gap-1.5">
@@ -431,7 +484,11 @@ const themes: ThemeConfig[] = [
               "oklch(0.64 0.102 187)", // cyan
               "oklch(0.64 0.151 119)", // green
             ].map((c) => (
-              <div key={c} className="h-3 w-3 rounded-full" style={{ background: c }} />
+              <div
+                key={c}
+                className="h-3 w-3 rounded-full"
+                style={{ background: c }}
+              />
             ))}
           </div>
         </div>
@@ -443,7 +500,7 @@ const themes: ThemeConfig[] = [
   // Source: Pepto's VIC-II Color Analysis (2001) - pepto.de/projects/colorvic
   {
     name: "Commodore 64",
-    tagline: "LOAD \"*\",8,1. Blue screen, light blue type. 1982.",
+    tagline: 'LOAD "*",8,1. Blue screen, light blue type. 1982.',
     source: "pepto.de/projects/colorvic",
     vars: {
       "--background": "oklch(0.34 0.132 284)", // #352879 blue
@@ -490,7 +547,10 @@ const themes: ThemeConfig[] = [
           }}
         />
         <div className="relative z-10 font-mono uppercase">
-          <div className="text-xs tracking-[0.2em]" style={{ color: "oklch(0.54 0.133 288)" }}>
+          <div
+            className="text-xs tracking-[0.2em]"
+            style={{ color: "oklch(0.54 0.133 288)" }}
+          >
             **** COMMODORE 64 BASIC V2 ****
           </div>
           <div className="text-xs" style={{ color: "oklch(0.54 0.133 288)" }}>
@@ -559,34 +619,73 @@ const themes: ThemeConfig[] = [
         style={{ background: "oklch(0.00 0.000 0)" }}
       >
         {/* LCARS sidebar bracket */}
-        <div className="absolute bottom-2 left-0 top-2 flex flex-col gap-1 pl-2">
-          <div className="w-10 flex-1 rounded-tl-[18px]" style={{ background: "oklch(0.77 0.174 65)" }} />
-          <div className="h-3 w-10" style={{ background: "oklch(0.65 0.141 350)" }} />
-          <div className="w-10 flex-1 rounded-bl-[18px]" style={{ background: "oklch(0.70 0.074 284)" }} />
+        <div className="absolute top-2 bottom-2 left-0 flex flex-col gap-1 pl-2">
+          <div
+            className="w-10 flex-1 rounded-tl-[18px]"
+            style={{ background: "oklch(0.77 0.174 65)" }}
+          />
+          <div
+            className="h-3 w-10"
+            style={{ background: "oklch(0.65 0.141 350)" }}
+          />
+          <div
+            className="w-10 flex-1 rounded-bl-[18px]"
+            style={{ background: "oklch(0.70 0.074 284)" }}
+          />
         </div>
         {/* Top bar pills */}
-        <div className="absolute right-2 top-2 flex gap-1">
-          <div className="h-3 w-10 rounded-l-full" style={{ background: "oklch(0.87 0.132 83)" }} />
-          <div className="h-3 w-6" style={{ background: "oklch(0.65 0.141 350)" }} />
-          <div className="h-3 w-14 rounded-r-full" style={{ background: "oklch(0.77 0.174 65)" }} />
+        <div className="absolute top-2 right-2 flex gap-1">
+          <div
+            className="h-3 w-10 rounded-l-full"
+            style={{ background: "oklch(0.87 0.132 83)" }}
+          />
+          <div
+            className="h-3 w-6"
+            style={{ background: "oklch(0.65 0.141 350)" }}
+          />
+          <div
+            className="h-3 w-14 rounded-r-full"
+            style={{ background: "oklch(0.77 0.174 65)" }}
+          />
         </div>
         <div className="relative z-10 ml-14 font-mono uppercase">
-          <div className="mb-1 text-[9px] tracking-[0.2em]" style={{ color: "oklch(0.65 0.141 350)" }}>
+          <div
+            className="mb-1 text-[9px] tracking-[0.2em]"
+            style={{ color: "oklch(0.65 0.141 350)" }}
+          >
             STARFLEET DATABASE
           </div>
-          <h3 className="text-2xl font-bold tracking-widest" style={{ color: "oklch(0.77 0.174 65)" }}>
+          <h3
+            className="text-2xl font-bold tracking-widest"
+            style={{ color: "oklch(0.77 0.174 65)" }}
+          >
             {name}
           </h3>
-          <p className="mt-1 text-[10px] tracking-wider" style={{ color: "oklch(0.70 0.074 284)" }}>
+          <p
+            className="mt-1 text-[10px] tracking-wider"
+            style={{ color: "oklch(0.70 0.074 284)" }}
+          >
             {tagline}
           </p>
         </div>
         {/* Bottom bar pills */}
-        <div className="absolute bottom-2 left-14 right-2 flex gap-1">
-          <div className="h-2 flex-1 rounded-full" style={{ background: "oklch(0.65 0.141 350)" }} />
-          <div className="h-2 w-6 rounded-full" style={{ background: "oklch(0.77 0.174 65)" }} />
-          <div className="h-2 w-10 rounded-full" style={{ background: "oklch(0.75 0.091 326)" }} />
-          <div className="h-2 w-6 rounded-full" style={{ background: "oklch(0.68 0.206 24)" }} />
+        <div className="absolute right-2 bottom-2 left-14 flex gap-1">
+          <div
+            className="h-2 flex-1 rounded-full"
+            style={{ background: "oklch(0.65 0.141 350)" }}
+          />
+          <div
+            className="h-2 w-6 rounded-full"
+            style={{ background: "oklch(0.77 0.174 65)" }}
+          />
+          <div
+            className="h-2 w-10 rounded-full"
+            style={{ background: "oklch(0.75 0.091 326)" }}
+          />
+          <div
+            className="h-2 w-6 rounded-full"
+            style={{ background: "oklch(0.68 0.206 24)" }}
+          />
         </div>
       </div>
     ),
@@ -620,7 +719,8 @@ const themes: ThemeConfig[] = [
       "--ring": "oklch(0.88 0.234 151)", // bright
       // Pip-Boy: angular, inset shadows (CRT depth), thin borders
       "--radius": "2px",
-      "--shadow-sm": "inset 0 1px 3px oklch(0 0 0 / 0.5), 0 0 6px oklch(0.88 0.234 151 / 0.05)",
+      "--shadow-sm":
+        "inset 0 1px 3px oklch(0 0 0 / 0.5), 0 0 6px oklch(0.88 0.234 151 / 0.05)",
       "--shadow-xs": "inset 0 1px 2px oklch(0 0 0 / 0.4)",
       "--tracking-normal": "0.03em",
     },
@@ -637,7 +737,8 @@ const themes: ThemeConfig[] = [
         <div
           className="pointer-events-none absolute inset-0"
           style={{
-            background: "radial-gradient(ellipse 80% 70% at center, transparent 40%, oklch(0 0 0 / 0.5) 100%)",
+            background:
+              "radial-gradient(ellipse 80% 70% at center, transparent 40%, oklch(0 0 0 / 0.5) 100%)",
           }}
         />
         {/* Dense scanlines */}
@@ -654,7 +755,10 @@ const themes: ThemeConfig[] = [
           style={{ background: "oklch(0.88 0.234 151)" }}
         />
         <div className="relative z-10 font-mono">
-          <div className="flex items-center gap-2 text-[9px] tracking-wider" style={{ color: "oklch(0.45 0.119 151)" }}>
+          <div
+            className="flex items-center gap-2 text-[9px] tracking-wider"
+            style={{ color: "oklch(0.45 0.119 151)" }}
+          >
             <span>VAULT-TEC IND.</span>
             <span>|</span>
             <span>MODEL 3000 MK IV</span>
@@ -663,12 +767,16 @@ const themes: ThemeConfig[] = [
             className="mt-1 text-2xl font-bold tracking-wider"
             style={{
               color: "oklch(0.88 0.234 151)",
-              textShadow: "0 0 10px oklch(0.88 0.234 151 / 0.4), 0 0 20px oklch(0.88 0.234 151 / 0.2)",
+              textShadow:
+                "0 0 10px oklch(0.88 0.234 151 / 0.4), 0 0 20px oklch(0.88 0.234 151 / 0.2)",
             }}
           >
             {name}
           </h3>
-          <p className="mt-1 text-xs tracking-wide" style={{ color: "oklch(0.45 0.119 151)" }}>
+          <p
+            className="mt-1 text-xs tracking-wide"
+            style={{ color: "oklch(0.45 0.119 151)" }}
+          >
             {tagline}
           </p>
         </div>
@@ -680,7 +788,8 @@ const themes: ThemeConfig[] = [
         <div
           className="pointer-events-none absolute inset-0 z-0"
           style={{
-            background: "radial-gradient(ellipse 80% 70% at center, transparent 50%, oklch(0 0 0 / 0.35) 100%)",
+            background:
+              "radial-gradient(ellipse 80% 70% at center, transparent 50%, oklch(0 0 0 / 0.35) 100%)",
           }}
         />
         {/* Scanlines */}
@@ -722,22 +831,26 @@ const themes: ThemeConfig[] = [
       "--input": "oklch(0.90 0.01 250 / 0.08)",
       "--ring": "oklch(0.72 0.14 195)",
       "--radius": "1rem",
-      "--shadow-sm": "0 2px 16px oklch(0.72 0.14 195 / 0.06), 0 1px 2px oklch(0 0 0 / 0.15)",
+      "--shadow-sm":
+        "0 2px 16px oklch(0.72 0.14 195 / 0.06), 0 1px 2px oklch(0 0 0 / 0.15)",
       "--shadow-xs": "0 1px 8px oklch(0.72 0.14 195 / 0.04)",
     },
     banner: (name, tagline) => (
       <div
         className="relative h-28 overflow-hidden p-6"
         style={{
-          background: "linear-gradient(135deg, oklch(0.12 0.04 250), oklch(0.18 0.06 195), oklch(0.10 0.05 280))",
+          background:
+            "linear-gradient(135deg, oklch(0.12 0.04 250), oklch(0.18 0.06 195), oklch(0.10 0.05 280))",
         }}
       >
         <div
-          className="absolute -right-12 -top-12 h-48 w-48 rounded-full opacity-25 blur-3xl"
+          className="absolute -top-12 -right-12 h-48 w-48 rounded-full opacity-25 blur-3xl"
           style={{ background: "oklch(0.72 0.14 195)" }}
         />
         <div className="relative z-10">
-          <h3 className="text-2xl font-semibold text-white drop-shadow-lg">{name}</h3>
+          <h3 className="text-2xl font-semibold text-white drop-shadow-lg">
+            {name}
+          </h3>
           <p className="mt-1 text-sm text-white/60">{tagline}</p>
         </div>
       </div>
@@ -781,12 +894,19 @@ const themes: ThemeConfig[] = [
         style={{ background: "oklch(0.65 0.24 30)" }}
       >
         <div
-          className="absolute bottom-0 right-0 h-24 w-24 translate-x-6 translate-y-6"
-          style={{ background: "oklch(0.78 0.17 85)", boxShadow: "inset -4px -4px 0 oklch(0 0 0)" }}
+          className="absolute right-0 bottom-0 h-24 w-24 translate-x-6 translate-y-6"
+          style={{
+            background: "oklch(0.78 0.17 85)",
+            boxShadow: "inset -4px -4px 0 oklch(0 0 0)",
+          }}
         />
         <div className="relative z-10">
-          <h3 className="text-2xl font-black uppercase tracking-widest text-black">{name}</h3>
-          <p className="mt-1 text-sm font-bold uppercase tracking-wider text-black/70">{tagline}</p>
+          <h3 className="text-2xl font-black tracking-widest text-black uppercase">
+            {name}
+          </h3>
+          <p className="mt-1 text-sm font-bold tracking-wider text-black/70 uppercase">
+            {tagline}
+          </p>
         </div>
       </div>
     ),
@@ -823,11 +943,16 @@ const themes: ThemeConfig[] = [
     banner: (name, tagline) => (
       <div
         className="relative h-28 overflow-hidden p-6"
-        style={{ background: "linear-gradient(135deg, oklch(0.70 0.17 25), oklch(0.50 0.19 27))" }}
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.70 0.17 25), oklch(0.50 0.19 27))",
+        }}
       >
         <div className="absolute inset-0 bg-black/20" />
         <div className="relative z-10">
-          <h3 className="text-2xl font-bold text-white drop-shadow-md">{name}</h3>
+          <h3 className="text-2xl font-bold text-white drop-shadow-md">
+            {name}
+          </h3>
           <p className="mt-1 text-sm text-white/70">{tagline}</p>
         </div>
       </div>
@@ -864,7 +989,8 @@ const themes: ThemeConfig[] = [
       "--input": "oklch(0.21 0.020 160)", // #111C16
       "--ring": "oklch(0.80 0.192 153)", // #30E080
       "--radius": "0.5rem",
-      "--shadow-sm": "0 2px 8px oklch(0 0 0 / 0.3), 0 1px 2px oklch(0 0 0 / 0.2)",
+      "--shadow-sm":
+        "0 2px 8px oklch(0 0 0 / 0.3), 0 1px 2px oklch(0 0 0 / 0.2)",
       "--shadow-xs": "0 1px 4px oklch(0 0 0 / 0.25)",
     },
     banner: (name, tagline) => (
@@ -874,18 +1000,24 @@ const themes: ThemeConfig[] = [
       >
         {/* Subtle green status glow */}
         <div
-          className="absolute -right-6 top-1/2 h-20 w-20 -translate-y-1/2 rounded-full opacity-8 blur-2xl"
+          className="absolute top-1/2 -right-6 h-20 w-20 -translate-y-1/2 rounded-full opacity-8 blur-2xl"
           style={{ background: "oklch(0.80 0.192 153)" }}
         />
         <div
-          className="absolute bottom-0 left-0 right-0 h-px"
+          className="absolute right-0 bottom-0 left-0 h-px"
           style={{ background: "oklch(0.31 0.024 175)" }}
         />
         <div className="relative z-10">
-          <h3 className="text-2xl font-semibold" style={{ color: "oklch(0.94 0.015 165)" }}>
+          <h3
+            className="text-2xl font-semibold"
+            style={{ color: "oklch(0.94 0.015 165)" }}
+          >
             {name}
           </h3>
-          <p className="mt-1 text-sm" style={{ color: "oklch(0.58 0.049 167)" }}>
+          <p
+            className="mt-1 text-sm"
+            style={{ color: "oklch(0.58 0.049 167)" }}
+          >
             {tagline}
           </p>
           <div className="mt-2 flex gap-1.5">
@@ -895,7 +1027,11 @@ const themes: ThemeConfig[] = [
               "oklch(0.84 0.164 84)", // amber warning
               "oklch(0.64 0.208 25)", // red critical
             ].map((c) => (
-              <div key={c} className="h-3 w-3 rounded-full" style={{ background: c }} />
+              <div
+                key={c}
+                className="h-3 w-3 rounded-full"
+                style={{ background: c }}
+              />
             ))}
           </div>
         </div>
@@ -933,8 +1069,10 @@ const themes: ThemeConfig[] = [
       "--ring": "oklch(0.84 0.204 154)", // #2BF08A
       "--radius": "0.375rem",
       // The key difference: green-tinted glow shadows
-      "--shadow-sm": "0 2px 10px oklch(0.84 0.204 154 / 0.06), 0 1px 2px oklch(0 0 0 / 0.3)",
-      "--shadow-xs": "0 1px 6px oklch(0.84 0.204 154 / 0.04), 0 1px 2px oklch(0 0 0 / 0.2)",
+      "--shadow-sm":
+        "0 2px 10px oklch(0.84 0.204 154 / 0.06), 0 1px 2px oklch(0 0 0 / 0.3)",
+      "--shadow-xs":
+        "0 1px 6px oklch(0.84 0.204 154 / 0.04), 0 1px 2px oklch(0 0 0 / 0.2)",
     },
     banner: (name, tagline) => (
       <div
@@ -943,7 +1081,7 @@ const themes: ThemeConfig[] = [
       >
         {/* Phosphor glow */}
         <div
-          className="absolute -right-8 top-1/2 h-28 w-28 -translate-y-1/2 rounded-full opacity-8 blur-3xl"
+          className="absolute top-1/2 -right-8 h-28 w-28 -translate-y-1/2 rounded-full opacity-8 blur-3xl"
           style={{ background: "oklch(0.84 0.204 154)" }}
         />
         {/* Faint scanlines - the Pip-Boy nod */}
@@ -955,7 +1093,7 @@ const themes: ThemeConfig[] = [
           }}
         />
         <div
-          className="absolute bottom-0 left-0 right-0 h-px"
+          className="absolute right-0 bottom-0 left-0 h-px"
           style={{ background: "oklch(0.31 0.024 175)" }}
         />
         <div className="relative z-10">
@@ -968,7 +1106,10 @@ const themes: ThemeConfig[] = [
           >
             {name}
           </h3>
-          <p className="mt-1 text-sm" style={{ color: "oklch(0.58 0.049 167)" }}>
+          <p
+            className="mt-1 text-sm"
+            style={{ color: "oklch(0.58 0.049 167)" }}
+          >
             {tagline}
           </p>
           <div className="mt-2 flex gap-1.5">
@@ -978,7 +1119,11 @@ const themes: ThemeConfig[] = [
               "oklch(0.84 0.164 84)", // amber
               "oklch(0.57 0.132 155)", // dim green
             ].map((c) => (
-              <div key={c} className="h-3 w-3 rounded-full" style={{ background: c }} />
+              <div
+                key={c}
+                className="h-3 w-3 rounded-full"
+                style={{ background: c }}
+              />
             ))}
           </div>
         </div>
@@ -1024,8 +1169,10 @@ const themes: ThemeConfig[] = [
       "--ring": "oklch(0.84 0.204 154)", // #2BF08A
       "--radius": "0.375rem",
       // Heavier green glow
-      "--shadow-sm": "0 2px 12px oklch(0.84 0.204 154 / 0.10), 0 1px 3px oklch(0 0 0 / 0.4)",
-      "--shadow-xs": "0 1px 8px oklch(0.84 0.204 154 / 0.06), 0 1px 2px oklch(0 0 0 / 0.3)",
+      "--shadow-sm":
+        "0 2px 12px oklch(0.84 0.204 154 / 0.10), 0 1px 3px oklch(0 0 0 / 0.4)",
+      "--shadow-xs":
+        "0 1px 8px oklch(0.84 0.204 154 / 0.06), 0 1px 2px oklch(0 0 0 / 0.3)",
     },
     banner: (name, tagline) => (
       <div
@@ -1034,7 +1181,7 @@ const themes: ThemeConfig[] = [
       >
         {/* Bigger phosphor glow */}
         <div
-          className="absolute -right-10 top-1/2 h-36 w-36 -translate-y-1/2 rounded-full opacity-10 blur-3xl"
+          className="absolute top-1/2 -right-10 h-36 w-36 -translate-y-1/2 rounded-full opacity-10 blur-3xl"
           style={{ background: "oklch(0.84 0.204 154)" }}
         />
         {/* Scanlines */}
@@ -1046,7 +1193,7 @@ const themes: ThemeConfig[] = [
           }}
         />
         <div
-          className="absolute bottom-0 left-0 right-0 h-px"
+          className="absolute right-0 bottom-0 left-0 h-px"
           style={{ background: "oklch(0.29 0.028 165)" }}
         />
         <div className="relative z-10">
@@ -1059,7 +1206,10 @@ const themes: ThemeConfig[] = [
           >
             {name}
           </h3>
-          <p className="mt-1 text-sm" style={{ color: "oklch(0.52 0.054 165)" }}>
+          <p
+            className="mt-1 text-sm"
+            style={{ color: "oklch(0.52 0.054 165)" }}
+          >
             {tagline}
           </p>
           <div className="mt-2 flex gap-1.5">
@@ -1069,7 +1219,11 @@ const themes: ThemeConfig[] = [
               "oklch(0.84 0.164 84)", // amber
               "oklch(0.52 0.054 165)", // dim green
             ].map((c) => (
-              <div key={c} className="h-3 w-3 rounded-full" style={{ background: c }} />
+              <div
+                key={c}
+                className="h-3 w-3 rounded-full"
+                style={{ background: c }}
+              />
             ))}
           </div>
         </div>
@@ -1116,8 +1270,10 @@ const themes: ThemeConfig[] = [
       "--input": "oklch(0.20 0.027 145)", // #0F1A0F
       "--ring": "oklch(0.81 0.226 148)", // #22E866
       "--radius": "0.375rem",
-      "--shadow-sm": "0 2px 10px oklch(0.81 0.226 148 / 0.08), 0 1px 3px oklch(0 0 0 / 0.35)",
-      "--shadow-xs": "0 1px 6px oklch(0.81 0.226 148 / 0.05), 0 1px 2px oklch(0 0 0 / 0.25)",
+      "--shadow-sm":
+        "0 2px 10px oklch(0.81 0.226 148 / 0.08), 0 1px 3px oklch(0 0 0 / 0.35)",
+      "--shadow-xs":
+        "0 1px 6px oklch(0.81 0.226 148 / 0.05), 0 1px 2px oklch(0 0 0 / 0.25)",
     },
     banner: (name, tagline) => (
       <div
@@ -1126,7 +1282,7 @@ const themes: ThemeConfig[] = [
       >
         {/* Green glow */}
         <div
-          className="absolute -right-8 top-1/2 h-32 w-32 -translate-y-1/2 rounded-full opacity-10 blur-3xl"
+          className="absolute top-1/2 -right-8 h-32 w-32 -translate-y-1/2 rounded-full opacity-10 blur-3xl"
           style={{ background: "oklch(0.81 0.226 148)" }}
         />
         {/* Scanlines - slightly more visible here */}
@@ -1138,7 +1294,7 @@ const themes: ThemeConfig[] = [
           }}
         />
         <div
-          className="absolute bottom-0 left-0 right-0 h-px"
+          className="absolute right-0 bottom-0 left-0 h-px"
           style={{ background: "oklch(0.32 0.043 144)" }}
         />
         <div className="relative z-10">
@@ -1151,7 +1307,10 @@ const themes: ThemeConfig[] = [
           >
             {name}
           </h3>
-          <p className="mt-1 text-sm" style={{ color: "oklch(0.53 0.085 144)" }}>
+          <p
+            className="mt-1 text-sm"
+            style={{ color: "oklch(0.53 0.085 144)" }}
+          >
             {tagline}
           </p>
           <div className="mt-2 flex gap-1.5">
@@ -1161,7 +1320,11 @@ const themes: ThemeConfig[] = [
               "oklch(0.53 0.085 144)", // muted
               "oklch(0.84 0.164 84)", // amber (the one outsider)
             ].map((c) => (
-              <div key={c} className="h-3 w-3 rounded-full" style={{ background: c }} />
+              <div
+                key={c}
+                className="h-3 w-3 rounded-full"
+                style={{ background: c }}
+              />
             ))}
           </div>
         </div>
@@ -1207,8 +1370,10 @@ const themes: ThemeConfig[] = [
       "--input": "oklch(0.21 0.017 217)", // #0F1A1D
       "--ring": "oklch(0.80 0.155 169)", // #20DCAC
       "--radius": "0.5rem",
-      "--shadow-sm": "0 2px 10px oklch(0.80 0.155 169 / 0.08), 0 1px 3px oklch(0 0 0 / 0.35)",
-      "--shadow-xs": "0 1px 6px oklch(0.80 0.155 169 / 0.05), 0 1px 2px oklch(0 0 0 / 0.25)",
+      "--shadow-sm":
+        "0 2px 10px oklch(0.80 0.155 169 / 0.08), 0 1px 3px oklch(0 0 0 / 0.35)",
+      "--shadow-xs":
+        "0 1px 6px oklch(0.80 0.155 169 / 0.05), 0 1px 2px oklch(0 0 0 / 0.25)",
     },
     banner: (name, tagline) => (
       <div
@@ -1217,7 +1382,7 @@ const themes: ThemeConfig[] = [
       >
         {/* Teal glow */}
         <div
-          className="absolute -right-8 top-1/2 h-32 w-32 -translate-y-1/2 rounded-full opacity-10 blur-3xl"
+          className="absolute top-1/2 -right-8 h-32 w-32 -translate-y-1/2 rounded-full opacity-10 blur-3xl"
           style={{ background: "oklch(0.80 0.155 169)" }}
         />
         {/* Scanlines */}
@@ -1229,7 +1394,7 @@ const themes: ThemeConfig[] = [
           }}
         />
         <div
-          className="absolute bottom-0 left-0 right-0 h-px"
+          className="absolute right-0 bottom-0 left-0 h-px"
           style={{ background: "oklch(0.31 0.026 208)" }}
         />
         <div className="relative z-10">
@@ -1242,7 +1407,10 @@ const themes: ThemeConfig[] = [
           >
             {name}
           </h3>
-          <p className="mt-1 text-sm" style={{ color: "oklch(0.56 0.052 204)" }}>
+          <p
+            className="mt-1 text-sm"
+            style={{ color: "oklch(0.56 0.052 204)" }}
+          >
             {tagline}
           </p>
           <div className="mt-2 flex gap-1.5">
@@ -1252,7 +1420,11 @@ const themes: ThemeConfig[] = [
               "oklch(0.84 0.164 84)", // amber
               "oklch(0.64 0.208 25)", // red
             ].map((c) => (
-              <div key={c} className="h-3 w-3 rounded-full" style={{ background: c }} />
+              <div
+                key={c}
+                className="h-3 w-3 rounded-full"
+                style={{ background: c }}
+              />
             ))}
           </div>
         </div>
@@ -1275,9 +1447,24 @@ const themes: ThemeConfig[] = [
 // ---------------------------------------------------------------------------
 
 const BREACHES = [
-  { service: "LinkedIn", email: "john@ex.com", severity: "High" as const, status: "Unresolved" },
-  { service: "Dropbox", email: "john@ex.com", severity: "Medium" as const, status: "Resolved" },
-  { service: "Adobe", email: "jane@ex.com", severity: "Low" as const, status: "Resolved" },
+  {
+    service: "LinkedIn",
+    email: "john@ex.com",
+    severity: "High" as const,
+    status: "Unresolved",
+  },
+  {
+    service: "Dropbox",
+    email: "john@ex.com",
+    severity: "Medium" as const,
+    status: "Resolved",
+  },
+  {
+    service: "Adobe",
+    email: "jane@ex.com",
+    severity: "Low" as const,
+    status: "Resolved",
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -1296,7 +1483,10 @@ function ThemePreview({ theme }: { theme: ThemeConfig }) {
       {/* Component showcase */}
       <div
         className="relative space-y-5 p-5"
-        style={{ backgroundColor: "var(--background)", color: "var(--foreground)" }}
+        style={{
+          backgroundColor: "var(--background)",
+          color: "var(--foreground)",
+        }}
       >
         {theme.decorations}
 
@@ -1304,20 +1494,28 @@ function ThemePreview({ theme }: { theme: ThemeConfig }) {
         <div className="relative z-10 grid grid-cols-3 gap-3">
           <Card className="gap-3 py-3">
             <CardHeader className="px-3 py-0">
-              <CardDescription className="text-[11px]">Breaches</CardDescription>
+              <CardDescription className="text-[11px]">
+                Breaches
+              </CardDescription>
             </CardHeader>
             <CardContent className="px-3 py-0">
-              <p className="text-2xl font-bold leading-none">12</p>
-              <p className="text-destructive mt-1 text-[10px] font-medium">+3 new</p>
+              <p className="text-2xl leading-none font-bold">12</p>
+              <p className="text-destructive mt-1 text-[10px] font-medium">
+                +3 new
+              </p>
             </CardContent>
           </Card>
           <Card className="gap-3 py-3">
             <CardHeader className="px-3 py-0">
-              <CardDescription className="text-[11px]">Accounts</CardDescription>
+              <CardDescription className="text-[11px]">
+                Accounts
+              </CardDescription>
             </CardHeader>
             <CardContent className="px-3 py-0">
-              <p className="text-2xl font-bold leading-none">47</p>
-              <p className="text-muted-foreground mt-1 text-[10px]">8 domains</p>
+              <p className="text-2xl leading-none font-bold">47</p>
+              <p className="text-muted-foreground mt-1 text-[10px]">
+                8 domains
+              </p>
             </CardContent>
           </Card>
           <Card className="gap-3 py-3">
@@ -1325,8 +1523,12 @@ function ThemePreview({ theme }: { theme: ThemeConfig }) {
               <CardDescription className="text-[11px]">Risk</CardDescription>
             </CardHeader>
             <CardContent className="px-3 py-0">
-              <p className="text-primary text-2xl font-bold leading-none">High</p>
-              <p className="text-muted-foreground mt-1 text-[10px]">4 actions</p>
+              <p className="text-primary text-2xl leading-none font-bold">
+                High
+              </p>
+              <p className="text-muted-foreground mt-1 text-[10px]">
+                4 actions
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -1334,10 +1536,18 @@ function ThemePreview({ theme }: { theme: ThemeConfig }) {
         {/* Buttons */}
         <div className="relative z-10 flex flex-wrap items-center gap-2">
           <Button size="sm">Scan Now</Button>
-          <Button size="sm" variant="outline">Report</Button>
-          <Button size="sm" variant="secondary">Settings</Button>
-          <Button size="sm" variant="ghost">Ghost</Button>
-          <Button size="sm" variant="destructive">Delete</Button>
+          <Button size="sm" variant="outline">
+            Report
+          </Button>
+          <Button size="sm" variant="secondary">
+            Settings
+          </Button>
+          <Button size="sm" variant="ghost">
+            Ghost
+          </Button>
+          <Button size="sm" variant="destructive">
+            Delete
+          </Button>
         </div>
 
         {/* Input */}
@@ -1354,17 +1564,29 @@ function ThemePreview({ theme }: { theme: ThemeConfig }) {
                 <TableHead className="h-8 text-[11px]">Service</TableHead>
                 <TableHead className="h-8 text-[11px]">Email</TableHead>
                 <TableHead className="h-8 text-[11px]">Severity</TableHead>
-                <TableHead className="h-8 text-right text-[11px]">Status</TableHead>
+                <TableHead className="h-8 text-right text-[11px]">
+                  Status
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {BREACHES.map((row) => (
                 <TableRow key={row.service}>
-                  <TableCell className="py-1.5 text-xs font-medium">{row.service}</TableCell>
-                  <TableCell className="text-muted-foreground py-1.5 text-xs">{row.email}</TableCell>
+                  <TableCell className="py-1.5 text-xs font-medium">
+                    {row.service}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground py-1.5 text-xs">
+                    {row.email}
+                  </TableCell>
                   <TableCell className="py-1.5">
                     <Badge
-                      variant={row.severity === "High" ? "destructive" : row.severity === "Medium" ? "default" : "secondary"}
+                      variant={
+                        row.severity === "High"
+                          ? "destructive"
+                          : row.severity === "Medium"
+                            ? "default"
+                            : "secondary"
+                      }
                       className="text-[10px]"
                     >
                       {row.severity}
@@ -1387,9 +1609,15 @@ function ThemePreview({ theme }: { theme: ThemeConfig }) {
         {/* Badges */}
         <div className="relative z-10 flex flex-wrap gap-1.5">
           <Badge className="text-[10px]">Default</Badge>
-          <Badge variant="secondary" className="text-[10px]">Secondary</Badge>
-          <Badge variant="outline" className="text-[10px]">Outline</Badge>
-          <Badge variant="destructive" className="text-[10px]">Destructive</Badge>
+          <Badge variant="secondary" className="text-[10px]">
+            Secondary
+          </Badge>
+          <Badge variant="outline" className="text-[10px]">
+            Outline
+          </Badge>
+          <Badge variant="destructive" className="text-[10px]">
+            Destructive
+          </Badge>
         </div>
       </div>
     </div>
@@ -1407,7 +1635,8 @@ export const Gallery: Story = {
         <div className="space-y-2">
           <h1 className="text-4xl font-bold tracking-tight">Theme Gallery</h1>
           <p className="text-muted-foreground text-lg">
-            Real palettes from documented sources. Every OKLCH value traced to a hex code.
+            Real palettes from documented sources. Every OKLCH value traced to a
+            hex code.
           </p>
         </div>
 
