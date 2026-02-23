@@ -87,7 +87,7 @@ export function OneTimeScan({ reports }: { reports: ReportMap }) {
               Scan Extensions
             </Button>
             <span className="text-muted-foreground text-xs">
-              Processed entirely in your browser — nothing is sent to our servers.
+              Processed entirely in your browser - nothing is sent to our servers.
             </span>
           </div>
         </>
@@ -97,7 +97,7 @@ export function OneTimeScan({ reports }: { reports: ReportMap }) {
             <div className="border-border mb-4 rounded-lg border p-6 text-center">
               <p className="text-foreground mb-1 font-medium">No threats found</p>
               <p className="text-muted-foreground text-sm">
-                None of your {results.length} matched extensions have known issues. That's great — but our database is always growing.
+                None of your {results.length} matched extensions have known issues. That's great - but our database is always growing.
               </p>
             </div>
           ) : (

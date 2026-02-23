@@ -94,12 +94,12 @@ export const Overview: Story = {
                 <p className="text-3xl font-semibold tracking-tight">Heading 2</p>
                 <p className="text-2xl font-semibold">Heading 3</p>
                 <p className="text-xl font-medium">Heading 4</p>
-                <p className="text-base">Body text — The quick brown fox jumps over the lazy dog.</p>
+                <p className="text-base">Body text - The quick brown fox jumps over the lazy dog.</p>
                 <p className="text-muted-foreground text-sm">
-                  Muted text — Secondary information and descriptions.
+                  Muted text - Secondary information and descriptions.
                 </p>
                 <p className="text-muted-foreground text-xs">
-                  Caption — Fine print and metadata.
+                  Caption - Fine print and metadata.
                 </p>
               </div>
             </CardContent>
@@ -339,7 +339,7 @@ export const Overview: Story = {
 
         {/* Footer */}
         <div className="text-muted-foreground pb-8 text-center text-sm">
-          Am I Being Pwned? — UI Moodboard
+          Am I Being Pwned? - UI Moodboard
         </div>
       </div>
     </div>

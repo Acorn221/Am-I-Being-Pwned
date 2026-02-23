@@ -24,7 +24,7 @@ export function useExtensionDatabase() {
     //       setReports(new Map(entries));
     //     }
     //   } catch {
-    //     // Static file — if it fails the site is down anyway
+    //     // Static file - if it fails the site is down anyway
     //   } finally {
     //     if (!cancelled) setLoading(false);
     //   }

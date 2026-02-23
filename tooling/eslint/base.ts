@@ -74,6 +74,21 @@ export const baseConfig = defineConfig(
       ],
       "@typescript-eslint/no-non-null-assertion": "error",
       "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "Literal[value=/\u2014/]",
+          message: "Em-dashes (—) are not allowed in string literals. Use a regular hyphen (-) or reword the string.",
+        },
+        {
+          selector: "TemplateElement[value.raw=/\u2014/]",
+          message: "Em-dashes (—) are not allowed in template literals. Use a regular hyphen (-) or reword the string.",
+        },
+        {
+          selector: "JSXText[value=/\u2014/]",
+          message: "Em-dashes (—) are not allowed in JSX text. Use a regular hyphen (-) or reword the string.",
+        },
+      ],
     },
   },
   {

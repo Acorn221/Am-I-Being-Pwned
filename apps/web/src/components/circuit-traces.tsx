@@ -159,7 +159,7 @@ function routeHitsObstacles(
 
 /**
  * Route from chip to label anchor in two phases:
- *   Phase 1: Exit the chip zone — short segment from chip to a clear point
+ *   Phase 1: Exit the chip zone - short segment from chip to a clear point
  *            outside the chip bounding box (not checked against chip obstacles).
  *   Phase 2: Route from the clear point to the label anchor, avoiding all
  *            text + label obstacles.
@@ -172,7 +172,7 @@ function buildRoute(
   chipZone: { x: number; y: number; w: number; h: number } | null,
   quiet = false,
 ): [number, number][] {
-  // Try all 4 chip corners — pick the one with the shortest obstacle-free route.
+  // Try all 4 chip corners - pick the one with the shortest obstacle-free route.
   const chipCorners: [number, number][] = [
     [chipRect.x + CORNER_INSET, chipRect.y + CORNER_INSET],
     [chipRect.x + chipRect.w - CORNER_INSET, chipRect.y + CORNER_INSET],
@@ -882,7 +882,7 @@ export function CircuitTraces({
 
         return (
           <g key={trace.annotation.permission}>
-            {/* Trace path — draws from chip to label */}
+            {/* Trace path - draws from chip to label */}
             <path
               d={trace.path}
               fill="none"
@@ -896,7 +896,7 @@ export function CircuitTraces({
               }}
             />
 
-            {/* Dot at chip — appears immediately */}
+            {/* Dot at chip - appears immediately */}
             <circle
               cx={trace.chipX}
               cy={trace.chipY}
@@ -906,7 +906,7 @@ export function CircuitTraces({
               style={{ transition: `opacity 200ms ease-out ${delay}ms` }}
             />
 
-            {/* Dot at label anchor — appears when trace arrives */}
+            {/* Dot at label anchor - appears when trace arrives */}
             <circle
               cx={trace.anchorX}
               cy={trace.anchorY}
@@ -916,7 +916,7 @@ export function CircuitTraces({
               style={{ transition: `opacity 200ms ease-out ${arriveDelay}ms` }}
             />
 
-            {/* Floating label — fades in when trace arrives */}
+            {/* Floating label - fades in when trace arrives */}
             <foreignObject
               x={trace.labelX}
               y={trace.labelY}

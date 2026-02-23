@@ -44,7 +44,7 @@ import {
 } from "../table";
 
 // ---------------------------------------------------------------------------
-// AIBP — Deep theme vars
+// AIBP - Deep theme vars
 // Darker base. Stronger glow. Night shift energy.
 // Source: Pip-Boy #2BF08A on deeper #080F0B darks
 // ---------------------------------------------------------------------------
@@ -214,7 +214,7 @@ export const Moodboard: Story = {
             </h1>
             <p className="text-muted-foreground max-w-2xl text-lg">
               Real-time breach monitoring, credential exposure tracking, and threat intelligence
-              for your organization. AIBP Deep theme — night shift edition.
+              for your organization. AIBP Deep theme - night shift edition.
             </p>
             <div className="flex items-center gap-3 pt-2">
               <Button>Run Full Scan</Button>
@@ -272,14 +272,14 @@ export const Moodboard: Story = {
                   <div className="flex items-center gap-2">
                     <StatusDot color={RED} pulse />
                     <CardTitle className="text-sm font-semibold">
-                      Critical — New Credential Dump Detected
+                      Critical - New Credential Dump Detected
                     </CardTitle>
                     <Badge variant="destructive" className="ml-auto text-[10px]">
                       Critical
                     </Badge>
                   </div>
                   <CardDescription>
-                    5 monitored accounts found in paste &quot;combo_2026_feb.txt&quot; — discovered 23 minutes ago. Immediate action required.
+                    5 monitored accounts found in paste &quot;combo_2026_feb.txt&quot; - discovered 23 minutes ago. Immediate action required.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -296,7 +296,7 @@ export const Moodboard: Story = {
                   <div className="flex items-center gap-2">
                     <StatusDot color={AMBER} pulse />
                     <CardTitle className="text-sm font-semibold">
-                      Warning — Domain Certificate Expiring
+                      Warning - Domain Certificate Expiring
                     </CardTitle>
                     <Badge variant="outline" className="ml-auto text-[10px]">
                       Warning
@@ -313,7 +313,7 @@ export const Moodboard: Story = {
                   <div className="flex items-center gap-2">
                     <StatusDot color={GREEN} />
                     <CardTitle className="text-sm font-semibold">
-                      Resolved — LinkedIn Breach Accounts Rotated
+                      Resolved - LinkedIn Breach Accounts Rotated
                     </CardTitle>
                     <Badge variant="secondary" className="ml-auto text-[10px]">
                       Resolved
@@ -337,7 +337,7 @@ export const Moodboard: Story = {
               <Card className="lg:col-span-2">
                 <CardHeader>
                   <CardTitle>Breach Discovery Timeline</CardTitle>
-                  <CardDescription>Monthly breach detections — last 12 months</CardDescription>
+                  <CardDescription>Monthly breach detections - last 12 months</CardDescription>
                   <CardAction>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -389,7 +389,7 @@ export const Moodboard: Story = {
                       <svg width={130} height={130} viewBox="0 0 130 130">
                         {/* Background ring */}
                         <circle cx={65} cy={65} r={52} fill="none" stroke="var(--muted)" strokeWidth={14} />
-                        {/* Segments — drawn as stroke-dasharray arcs */}
+                        {/* Segments - drawn as stroke-dasharray arcs */}
                         <circle
                           cx={65} cy={65} r={52}
                           fill="none" stroke={RED} strokeWidth={14}
@@ -631,10 +631,10 @@ export const Moodboard: Story = {
               <CardContent>
                 <div className="space-y-0">
                   {[
-                    { time: "2 min ago", action: "New breach detected", detail: "LinkedIn — john@example.com found in paste", color: RED, badge: "Critical" },
-                    { time: "23 min ago", action: "Scan completed", detail: "Full domain scan of example.com — 0 new exposures", color: GREEN, badge: "Info" },
+                    { time: "2 min ago", action: "New breach detected", detail: "LinkedIn - john@example.com found in paste", color: RED, badge: "Critical" },
+                    { time: "23 min ago", action: "Scan completed", detail: "Full domain scan of example.com - 0 new exposures", color: GREEN, badge: "Info" },
                     { time: "1 hour ago", action: "User notified", detail: "Password rotation email sent to jane@example.com", color: GREEN_MID, badge: "Action" },
-                    { time: "3 hours ago", action: "Breach resolved", detail: "Adobe breach — all affected credentials rotated", color: GREEN, badge: "Resolved" },
+                    { time: "3 hours ago", action: "Breach resolved", detail: "Adobe breach - all affected credentials rotated", color: GREEN, badge: "Resolved" },
                     { time: "6 hours ago", action: "Monitor added", detail: "New domain monitor: staging.example.com", color: GREEN_DIM, badge: "Config" },
                     { time: "1 day ago", action: "API key rotated", detail: "Production API key regenerated by admin@example.com", color: GREEN_MID, badge: "Security" },
                     { time: "2 days ago", action: "Report exported", detail: "Monthly breach report generated for January 2026", color: GREEN_DIM, badge: "Report" },
@@ -747,10 +747,10 @@ export const Moodboard: Story = {
                 <p className="text-3xl font-semibold tracking-tight">Heading 2</p>
                 <p className="text-2xl font-semibold">Heading 3</p>
                 <p className="text-xl font-medium">Heading 4</p>
-                <p className="text-lg">Lead paragraph — introductory text that sets the context for the content below.</p>
-                <p className="text-base">Body text — The quick brown fox jumps over the lazy dog. Standard readable paragraph text for main content areas.</p>
-                <p className="text-muted-foreground text-sm">Muted text — Secondary information, descriptions, and supporting context that doesn't need primary emphasis.</p>
-                <p className="text-muted-foreground text-xs">Caption — Fine print, metadata, timestamps, and supplementary details.</p>
+                <p className="text-lg">Lead paragraph - introductory text that sets the context for the content below.</p>
+                <p className="text-base">Body text - The quick brown fox jumps over the lazy dog. Standard readable paragraph text for main content areas.</p>
+                <p className="text-muted-foreground text-sm">Muted text - Secondary information, descriptions, and supporting context that doesn't need primary emphasis.</p>
+                <p className="text-muted-foreground text-xs">Caption - Fine print, metadata, timestamps, and supplementary details.</p>
                 <Separator />
                 <div className="flex gap-8">
                   <div className="space-y-1">
@@ -767,7 +767,7 @@ export const Moodboard: Story = {
           </section>
 
           {/* ================================================================ */}
-          {/* BUTTONS — EXHAUSTIVE                                             */}
+          {/* BUTTONS - EXHAUSTIVE                                             */}
           {/* ================================================================ */}
           <section className="space-y-4">
             <SectionTitle>Buttons</SectionTitle>
@@ -829,7 +829,7 @@ export const Moodboard: Story = {
           </section>
 
           {/* ================================================================ */}
-          {/* BADGES — EXHAUSTIVE                                              */}
+          {/* BADGES - EXHAUSTIVE                                              */}
           {/* ================================================================ */}
           <section className="space-y-4">
             <SectionTitle>Badges</SectionTitle>
@@ -880,7 +880,7 @@ export const Moodboard: Story = {
           </section>
 
           {/* ================================================================ */}
-          {/* FORM ELEMENTS — EXTENSIVE                                        */}
+          {/* FORM ELEMENTS - EXTENSIVE                                        */}
           {/* ================================================================ */}
           <section className="space-y-4">
             <SectionTitle>Form Elements</SectionTitle>
@@ -1173,7 +1173,7 @@ export const Moodboard: Story = {
           </section>
 
           {/* ================================================================ */}
-          {/* SECONDARY TABLE — DOMAIN MONITORS                                */}
+          {/* SECONDARY TABLE - DOMAIN MONITORS                                */}
           {/* ================================================================ */}
           <section className="space-y-4">
             <SectionTitle>Domain Monitors</SectionTitle>
@@ -1325,7 +1325,7 @@ export const Moodboard: Story = {
                 <StatusDot color={GREEN} />
               </div>
               <div className="text-muted-foreground flex items-center gap-3 text-xs">
-                <span>AIBP — Deep Theme</span>
+                <span>AIBP - Deep Theme</span>
                 <Separator orientation="vertical" className="h-3" />
                 <span>Night Shift Edition</span>
                 <Separator orientation="vertical" className="h-3" />

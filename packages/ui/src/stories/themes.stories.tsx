@@ -41,7 +41,7 @@ interface ThemeConfig {
   tagline: string;
   /** Real source for the palette (URL or system name) */
   source: string;
-  /** CSS custom properties — OKLCH values derived from documented hex palettes */
+  /** CSS custom properties - OKLCH values derived from documented hex palettes */
   vars: Record<string, string>;
   /** Extra inline styles on the theme root */
   rootStyle?: CSSProperties;
@@ -256,12 +256,12 @@ const themes: ThemeConfig[] = [
     source: "github.com/morhetz/gruvbox",
     vars: {
       "--background": "oklch(0.28 0.000 263)", // #282828 bg
-      "--foreground": "oklch(0.89 0.057 89)", // #EBDBB2 fg — the warm yellow fg!
+      "--foreground": "oklch(0.89 0.057 89)", // #EBDBB2 fg - the warm yellow fg!
       "--card": "oklch(0.34 0.007 48)", // #3C3836 bg1
       "--card-foreground": "oklch(0.89 0.057 89)", // #EBDBB2
       "--popover": "oklch(0.34 0.007 48)", // #3C3836
       "--popover-foreground": "oklch(0.89 0.057 89)", // #EBDBB2
-      "--primary": "oklch(0.73 0.182 52)", // #FE8019 orange — signature color
+      "--primary": "oklch(0.73 0.182 52)", // #FE8019 orange - signature color
       "--primary-foreground": "oklch(0.28 0.000 263)", // #282828
       "--secondary": "oklch(0.41 0.011 52)", // #504945 bg2
       "--secondary-foreground": "oklch(0.83 0.051 85)", // #D5C4A1 fg2
@@ -346,7 +346,7 @@ const themes: ThemeConfig[] = [
         className="relative h-28 overflow-hidden p-6"
         style={{ background: "oklch(0.23 0.021 280)" }} // #1A1B26
       >
-        {/* Blue glow — city neon */}
+        {/* Blue glow - city neon */}
         <div
           className="absolute -right-8 -top-8 h-32 w-32 rounded-full opacity-15 blur-3xl"
           style={{ background: "oklch(0.72 0.132 264)" }} // #7AA2F7
@@ -440,7 +440,7 @@ const themes: ThemeConfig[] = [
   },
 
   // ── 7. Commodore 64 ───────────────────────────────────────────────────
-  // Source: Pepto's VIC-II Color Analysis (2001) — pepto.de/projects/colorvic
+  // Source: Pepto's VIC-II Color Analysis (2001) - pepto.de/projects/colorvic
   {
     name: "Commodore 64",
     tagline: "LOAD \"*\",8,1. Blue screen, light blue type. 1982.",
@@ -518,7 +518,7 @@ const themes: ThemeConfig[] = [
   },
 
   // ── 8. LCARS ──────────────────────────────────────────────────────────
-  // Source: thelcars.com — Michael Okuda's Star Trek interface
+  // Source: thelcars.com - Michael Okuda's Star Trek interface
   {
     name: "LCARS",
     tagline: "Starfleet computer. Gold/pink/blue panels on black.",
@@ -530,7 +530,7 @@ const themes: ThemeConfig[] = [
       "--card-foreground": "oklch(0.88 0.088 66)", // #FFCC99
       "--popover": "oklch(0.08 0.005 0)",
       "--popover-foreground": "oklch(0.88 0.088 66)",
-      "--primary": "oklch(0.77 0.174 65)", // #FF9900 gold — signature
+      "--primary": "oklch(0.77 0.174 65)", // #FF9900 gold - signature
       "--primary-foreground": "oklch(0.00 0.000 0)", // black
       "--secondary": "oklch(0.65 0.141 350)", // #CC6699 hopbush pink
       "--secondary-foreground": "oklch(0.00 0.000 0)", // black
@@ -593,7 +593,7 @@ const themes: ThemeConfig[] = [
   },
 
   // ── 9. Pip-Boy 3000 ───────────────────────────────────────────────────
-  // Source: Fallout 3 defaults — R:16 G:255 B:128 (#10FF80)
+  // Source: Fallout 3 defaults - R:16 G:255 B:128 (#10FF80)
   {
     name: "Pip-Boy 3000",
     tagline: "Vault-Tec approved. Single-hue monochrome. CRT phosphor.",
@@ -613,7 +613,7 @@ const themes: ThemeConfig[] = [
       "--muted-foreground": "oklch(0.45 0.119 151)", // #06662F very dim
       "--accent": "oklch(0.35 0.090 151)", // between faint and dim
       "--accent-foreground": "oklch(0.88 0.234 151)", // bright
-      "--destructive": "oklch(0.88 0.234 151)", // bright green (monochrome — no red)
+      "--destructive": "oklch(0.88 0.234 151)", // bright green (monochrome - no red)
       "--destructive-foreground": "oklch(0.18 0.028 140)",
       "--border": "oklch(0.45 0.119 151)", // #06662F very dim
       "--input": "oklch(0.22 0.035 145)",
@@ -696,11 +696,11 @@ const themes: ThemeConfig[] = [
   },
 
   // ── 10. Glassmorphic Noir ─────────────────────────────────────────────
-  // Concept theme — not sourced from a specific palette
+  // Concept theme - not sourced from a specific palette
   {
     name: "Glassmorphic Noir",
     tagline: "Frosted glass panels. Translucent cards. Glow shadows.",
-    source: "Design concept — glassmorphism trend",
+    source: "Design concept - glassmorphism trend",
     vars: {
       "--background": "oklch(0.08 0.01 250)",
       "--foreground": "oklch(0.95 0.005 250)",
@@ -745,11 +745,11 @@ const themes: ThemeConfig[] = [
   },
 
   // ── 11. Brutalist ─────────────────────────────────────────────────────
-  // Concept theme — brutalist web design movement
+  // Concept theme - brutalist web design movement
   {
     name: "Brutalist",
     tagline: "Thick borders. Hard offset shadows. Bold type.",
-    source: "Design concept — brutalistwebsites.com",
+    source: "Design concept - brutalistwebsites.com",
     vars: {
       "--background": "oklch(0.06 0 0)",
       "--foreground": "oklch(0.93 0.01 80)",
@@ -834,29 +834,29 @@ const themes: ThemeConfig[] = [
     ),
   },
 
-  // ── 13. AIBP — Clean ────────────────────────────────────────────────
+  // ── 13. AIBP - Clean ────────────────────────────────────────────────
   // Pip-Boy green on a green-tinted dark base. Professional layout.
   // The "safe" pick: clearly cybersec but wouldn't scare a CISO in a demo.
   // Green-tinted backgrounds (not neutral gray) give everything a security-monitor feel
   // without CRT gimmicks.
   {
-    name: "AIBP — Clean",
+    name: "AIBP - Clean",
     tagline: "Green-tinted dark base. Pip-Boy heritage, boardroom manners.",
     source: "Pip-Boy #30E080 on green-tinted darks #0C1410",
     vars: {
-      "--background": "oklch(0.18 0.015 163)", // #0C1410 — near-black, green undertone
-      "--foreground": "oklch(0.88 0.030 167)", // #C5DDD2 — warm green-white
+      "--background": "oklch(0.18 0.015 163)", // #0C1410 - near-black, green undertone
+      "--foreground": "oklch(0.88 0.030 167)", // #C5DDD2 - warm green-white
       "--card": "oklch(0.21 0.020 160)", // #111C16
       "--card-foreground": "oklch(0.88 0.030 167)", // #C5DDD2
       "--popover": "oklch(0.21 0.020 160)", // #111C16
       "--popover-foreground": "oklch(0.94 0.015 165)", // #E4F0EA
-      "--primary": "oklch(0.80 0.192 153)", // #30E080 — hybrid green
+      "--primary": "oklch(0.80 0.192 153)", // #30E080 - hybrid green
       "--primary-foreground": "oklch(0.18 0.015 163)", // #0C1410
       "--secondary": "oklch(0.25 0.022 161)", // #17241D
       "--secondary-foreground": "oklch(0.88 0.030 167)", // #C5DDD2
       "--muted": "oklch(0.25 0.022 161)", // #17241D
       "--muted-foreground": "oklch(0.58 0.049 167)", // #5E8474
-      "--accent": "oklch(0.71 0.143 255)", // #60A5FA — blue for info
+      "--accent": "oklch(0.71 0.143 255)", // #60A5FA - blue for info
       "--accent-foreground": "oklch(0.18 0.015 163)", // #0C1410
       "--destructive": "oklch(0.64 0.208 25)", // #EF4444
       "--destructive-foreground": "oklch(0.94 0.015 165)", // #E4F0EA
@@ -903,12 +903,12 @@ const themes: ThemeConfig[] = [
     ),
   },
 
-  // ── 14. AIBP — Phosphor ───────────────────────────────────────────────
+  // ── 14. AIBP - Phosphor ───────────────────────────────────────────────
   // More Pip-Boy energy. Brighter green, faint green glow on shadows,
   // very subtle scanline texture. Green-tinted muted text.
-  // Still professional layout/radius — the texture is a whisper, not a shout.
+  // Still professional layout/radius - the texture is a whisper, not a shout.
   {
-    name: "AIBP — Phosphor",
+    name: "AIBP - Phosphor",
     tagline: "More Pip-Boy. Glow shadows, faint scanlines, green everything.",
     source: "Pip-Boy #2BF08A bright + #0C1410 base + subtle CRT nod",
     vars: {
@@ -918,15 +918,15 @@ const themes: ThemeConfig[] = [
       "--card-foreground": "oklch(0.88 0.030 167)", // #C5DDD2
       "--popover": "oklch(0.21 0.020 160)", // #111C16
       "--popover-foreground": "oklch(0.94 0.015 165)", // #E4F0EA
-      "--primary": "oklch(0.84 0.204 154)", // #2BF08A — brighter, closer to Pip-Boy
+      "--primary": "oklch(0.84 0.204 154)", // #2BF08A - brighter, closer to Pip-Boy
       "--primary-foreground": "oklch(0.18 0.015 163)", // #0C1410
       "--secondary": "oklch(0.25 0.022 161)", // #17241D
       "--secondary-foreground": "oklch(0.88 0.030 167)", // #C5DDD2
       "--muted": "oklch(0.25 0.022 161)", // #17241D
       "--muted-foreground": "oklch(0.58 0.049 167)", // #5E8474
-      "--accent": "oklch(0.42 0.095 156)", // #0F5C36 — dim green accent
+      "--accent": "oklch(0.42 0.095 156)", // #0F5C36 - dim green accent
       "--accent-foreground": "oklch(0.84 0.204 154)", // #2BF08A
-      "--destructive": "oklch(0.84 0.164 84)", // amber (not red — keeps the monochrome feel)
+      "--destructive": "oklch(0.84 0.164 84)", // amber (not red - keeps the monochrome feel)
       "--destructive-foreground": "oklch(0.18 0.015 163)", // #0C1410
       "--border": "oklch(0.31 0.024 175)", // #243530
       "--input": "oklch(0.21 0.020 160)", // #111C16
@@ -946,7 +946,7 @@ const themes: ThemeConfig[] = [
           className="absolute -right-8 top-1/2 h-28 w-28 -translate-y-1/2 rounded-full opacity-8 blur-3xl"
           style={{ background: "oklch(0.84 0.204 154)" }}
         />
-        {/* Faint scanlines — the Pip-Boy nod */}
+        {/* Faint scanlines - the Pip-Boy nod */}
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.02]"
           style={{
@@ -995,27 +995,27 @@ const themes: ThemeConfig[] = [
     ),
   },
 
-  // ── 15. AIBP — Deep ──────────────────────────────────────────────────
+  // ── 15. AIBP - Deep ──────────────────────────────────────────────────
   // Darker. More contrast. Heavier glow. The "night shift SOC analyst" edition.
   // Think: lights off, three monitors, 2AM incident response.
   {
-    name: "AIBP — Deep",
+    name: "AIBP - Deep",
     tagline: "Darker base. Stronger glow. Night shift energy.",
     source: "Pip-Boy #2BF08A on deeper #080F0B darks",
     vars: {
-      "--background": "oklch(0.16 0.014 160)", // #080F0B — deeper black-green
+      "--background": "oklch(0.16 0.014 160)", // #080F0B - deeper black-green
       "--foreground": "oklch(0.85 0.037 166)", // #B8D6C8
       "--card": "oklch(0.19 0.018 155)", // #0D1610
       "--card-foreground": "oklch(0.85 0.037 166)", // #B8D6C8
       "--popover": "oklch(0.19 0.018 155)", // #0D1610
       "--popover-foreground": "oklch(0.94 0.026 160)", // #DCF0E4
-      "--primary": "oklch(0.84 0.204 154)", // #2BF08A — bright
+      "--primary": "oklch(0.84 0.204 154)", // #2BF08A - bright
       "--primary-foreground": "oklch(0.16 0.014 160)", // #080F0B
       "--secondary": "oklch(0.22 0.022 158)", // #121E17
       "--secondary-foreground": "oklch(0.85 0.037 166)", // #B8D6C8
       "--muted": "oklch(0.22 0.022 158)", // #121E17
       "--muted-foreground": "oklch(0.52 0.054 165)", // #4A7260
-      "--accent": "oklch(0.29 0.028 165)", // #1E3028 — green-dark accent
+      "--accent": "oklch(0.29 0.028 165)", // #1E3028 - green-dark accent
       "--accent-foreground": "oklch(0.84 0.204 154)", // #2BF08A
       "--destructive": "oklch(0.84 0.164 84)", // amber
       "--destructive-foreground": "oklch(0.16 0.014 160)", // #080F0B
@@ -1086,23 +1086,23 @@ const themes: ThemeConfig[] = [
     ),
   },
 
-  // ── 16. AIBP — Mono ───────────────────────────────────────────────────
-  // Fully monochrome green — no blue, no teal. Pure green hue 145 throughout.
+  // ── 16. AIBP - Mono ───────────────────────────────────────────────────
+  // Fully monochrome green - no blue, no teal. Pure green hue 145 throughout.
   // Warmer green (less teal) like actual Pip-Boy. All semantic colors are green
   // intensity levels. Destructive = amber because it's the only non-green.
   // Green-tinted foreground text. This is the "if we could get away with it" pick.
   {
-    name: "AIBP — Mono",
+    name: "AIBP - Mono",
     tagline: "Single-hue green. All UI states are green intensities.",
     source: "Pure hue-145 green monochrome, Pip-Boy philosophy",
     vars: {
       "--background": "oklch(0.17 0.020 145)", // #0A120A
-      "--foreground": "oklch(0.83 0.076 145)", // #A8D4A8 — green-tinted text
+      "--foreground": "oklch(0.83 0.076 145)", // #A8D4A8 - green-tinted text
       "--card": "oklch(0.20 0.027 145)", // #0F1A0F
       "--card-foreground": "oklch(0.83 0.076 145)", // #A8D4A8
       "--popover": "oklch(0.20 0.027 145)", // #0F1A0F
       "--popover-foreground": "oklch(0.92 0.044 145)", // #D4EED4
-      "--primary": "oklch(0.81 0.226 148)", // #22E866 — warm green primary
+      "--primary": "oklch(0.81 0.226 148)", // #22E866 - warm green primary
       "--primary-foreground": "oklch(0.17 0.020 145)", // #0A120A
       "--secondary": "oklch(0.23 0.024 145)", // #162016
       "--secondary-foreground": "oklch(0.83 0.076 145)", // #A8D4A8
@@ -1110,7 +1110,7 @@ const themes: ThemeConfig[] = [
       "--muted-foreground": "oklch(0.53 0.085 144)", // #4D7A4D
       "--accent": "oklch(0.32 0.043 144)", // #243824
       "--accent-foreground": "oklch(0.81 0.226 148)", // #22E866
-      "--destructive": "oklch(0.84 0.164 84)", // amber — only non-green color
+      "--destructive": "oklch(0.84 0.164 84)", // amber - only non-green color
       "--destructive-foreground": "oklch(0.17 0.020 145)", // #0A120A
       "--border": "oklch(0.32 0.043 144)", // #243824
       "--input": "oklch(0.20 0.027 145)", // #0F1A0F
@@ -1129,7 +1129,7 @@ const themes: ThemeConfig[] = [
           className="absolute -right-8 top-1/2 h-32 w-32 -translate-y-1/2 rounded-full opacity-10 blur-3xl"
           style={{ background: "oklch(0.81 0.226 148)" }}
         />
-        {/* Scanlines — slightly more visible here */}
+        {/* Scanlines - slightly more visible here */}
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.03]"
           style={{
@@ -1178,22 +1178,22 @@ const themes: ThemeConfig[] = [
     ),
   },
 
-  // ── 17. AIBP — Teal Shift ─────────────────────────────────────────────
+  // ── 17. AIBP - Teal Shift ─────────────────────────────────────────────
   // Same phosphor concept but the green shifts toward teal/cyan.
   // Feels slightly more "corporate security" and less "retro game."
   // Teal reads as modern + technical. Still has the glow and green-tinted base.
   {
-    name: "AIBP — Teal Shift",
+    name: "AIBP - Teal Shift",
     tagline: "Phosphor glow shifted toward teal. More modern, same energy.",
     source: "Teal #20DCAC on teal-dark #0A1214 base",
     vars: {
-      "--background": "oklch(0.18 0.013 215)", // #0A1214 — dark with teal undertone
+      "--background": "oklch(0.18 0.013 215)", // #0A1214 - dark with teal undertone
       "--foreground": "oklch(0.88 0.034 204)", // #BDDDE0
       "--card": "oklch(0.21 0.017 217)", // #0F1A1D
       "--card-foreground": "oklch(0.88 0.034 204)", // #BDDDE0
       "--popover": "oklch(0.21 0.017 217)", // #0F1A1D
       "--popover-foreground": "oklch(0.94 0.020 205)", // #DDF0F2
-      "--primary": "oklch(0.80 0.155 169)", // #20DCAC — teal-green
+      "--primary": "oklch(0.80 0.155 169)", // #20DCAC - teal-green
       "--primary-foreground": "oklch(0.18 0.013 215)", // #0A1214
       "--secondary": "oklch(0.24 0.020 213)", // #152326
       "--secondary-foreground": "oklch(0.88 0.034 204)", // #BDDDE0
@@ -1201,7 +1201,7 @@ const themes: ThemeConfig[] = [
       "--muted-foreground": "oklch(0.56 0.052 204)", // #4E7D82
       "--accent": "oklch(0.31 0.026 208)", // #213538
       "--accent-foreground": "oklch(0.80 0.155 169)", // #20DCAC
-      "--destructive": "oklch(0.64 0.208 25)", // #EF4444 — red (teal + red = classic security)
+      "--destructive": "oklch(0.64 0.208 25)", // #EF4444 - red (teal + red = classic security)
       "--destructive-foreground": "oklch(0.94 0.020 205)", // #DDF0F2
       "--border": "oklch(0.31 0.026 208)", // #213538
       "--input": "oklch(0.21 0.017 217)", // #0F1A1D
@@ -1281,7 +1281,7 @@ const BREACHES = [
 ];
 
 // ---------------------------------------------------------------------------
-// ThemePreview — real shadcn components, themed via CSS variable overrides
+// ThemePreview - real shadcn components, themed via CSS variable overrides
 // ---------------------------------------------------------------------------
 
 function ThemePreview({ theme }: { theme: ThemeConfig }) {

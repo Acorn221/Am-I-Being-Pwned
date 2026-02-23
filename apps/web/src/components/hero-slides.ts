@@ -22,11 +22,11 @@ export interface HeroSlide {
 }
 
 /**
- * Self-contained hero slide data — no extension IDs or database lookups.
+ * Self-contained hero slide data - no extension IDs or database lookups.
  * All data sourced from our vulnerability reports; names are anonymised.
  *
- * Annotations focus on what the extension ACTUALLY DOES to the user — concrete,
- * verifiable behaviours. We never speculate about intent (e.g. "sold") — only
+ * Annotations focus on what the extension ACTUALLY DOES to the user - concrete,
+ * verifiable behaviours. We never speculate about intent (e.g. "sold") - only
  * state what the code does and where data goes.
  *
  * Ordered to lead with the most shocking examples and highest user counts.
@@ -186,7 +186,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     hostPermissions: ["<all_urls>"],
     annotations: [
       { permission: "declarativeNetRequest", title: "Remote Control Server", description: "Receives commands from a remote server to execute on your browser" },
-      { permission: "<all_urls>", title: "Runs on Every Site", description: "Injected into all websites — far beyond its stated purpose" },
+      { permission: "<all_urls>", title: "Runs on Every Site", description: "Injected into all websites - far beyond its stated purpose" },
     ],
   },
   {

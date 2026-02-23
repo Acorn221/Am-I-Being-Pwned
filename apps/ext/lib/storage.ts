@@ -67,7 +67,7 @@ export async function setCachedDb(data: ExtensionDatabase): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
-// Notification dedup — tracks last notified risk per extension
+// Notification dedup - tracks last notified risk per extension
 // ---------------------------------------------------------------------------
 
 export async function getNotifiedRisk(

@@ -1,5 +1,14 @@
-// import { useMemo } from "react";
-import { Check, Eye, Globe, ShieldAlert, Syringe, Wifi } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Globe,
+  ShieldAlert,
+  Syringe,
+  Wifi,
+} from "lucide-react";
 
 import { Button } from "@amibeingpwned/ui";
 
@@ -10,6 +19,153 @@ import { HeroCycleProvider } from "~/components/hero-cycle-context";
 import { TypingTitle } from "~/components/typing-title";
 // import { formatUsers } from "~/lib/risk";
 import { navigate } from "~/router";
+
+const THREATS = [
+  {
+    icon: Eye,
+    title: "Data Harvesting",
+    desc: "Extensions silently collect browsing history, keystrokes, form inputs, and personal data - then upload it to remote servers. Often disguised as productivity tools or ad blockers, these extensions build detailed profiles of every employee in your organisation.",
+  },
+  {
+    icon: Globe,
+    title: "Session Hijacking",
+    desc: "By reading authentication tokens and cookies, malicious extensions can impersonate your employees on any website - including internal tools, SaaS platforms, and corporate email. The attacker never needs a password.",
+  },
+  {
+    icon: Syringe,
+    title: "Code Injection",
+    desc: "Extensions with broad host permissions can inject arbitrary JavaScript into any page your employees visit. This enables ad injection, UI manipulation, credential skimming, and modification of internal web apps.",
+  },
+  {
+    icon: Wifi,
+    title: "Network Tampering",
+    desc: "Some extensions intercept and modify network requests in real time - proxying traffic through attacker-controlled servers, injecting malware into responses, or routing your employees' connections through residential botnet nodes.",
+  },
+  {
+    icon: ShieldAlert,
+    title: "Known Vulnerabilities",
+    desc: "Beyond malicious intent, many extensions have poor security hygiene: outdated dependencies with known CVEs, insecure data storage, and unvalidated remote code execution paths. Any of these can be exploited by a third party.",
+  },
+] as const;
+
+const INTERVAL_MS = 5000;
+
+function ThreatCarousel() {
+  const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (paused) return;
+    const id = setInterval(() => {
+      setActive((i) => (i + 1) % THREATS.length);
+    }, INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [paused, active]);
+
+  const threat = THREATS[active % THREATS.length];
+  if (!threat) return null;
+
+  function prev() {
+    setActive((i) => (i - 1 + THREATS.length) % THREATS.length);
+    setPaused(true);
+  }
+
+  function next() {
+    setActive((i) => (i + 1) % THREATS.length);
+    setPaused(true);
+  }
+
+  return (
+    <div
+      className="flex gap-8"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
+      {/* Sidebar nav - desktop */}
+      <div
+        className="hidden flex-col gap-1 sm:flex"
+        style={{ minWidth: "11rem" }}
+      >
+        {THREATS.map((t, i) => (
+          <button
+            key={t.title}
+            onClick={() => {
+              setActive(i);
+              setPaused(true);
+            }}
+            className={`rounded-md px-3 py-2 text-left text-sm transition-colors ${
+              i === active
+                ? "bg-accent text-foreground font-medium"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t.title}
+          </button>
+        ))}
+      </div>
+
+      {/* Card */}
+      <div className="flex-1">
+        <div
+          key={active}
+          className="border-border bg-card animate-in fade-in min-h-58 rounded-xl border p-8 duration-300"
+        >
+          <threat.icon className="text-primary mb-5 h-7 w-7" />
+          <h3 className="text-foreground mb-3 text-xl font-semibold">
+            {threat.title}
+          </h3>
+          <p className="text-muted-foreground leading-relaxed">{threat.desc}</p>
+        </div>
+
+        {/* Mobile nav */}
+        <div className="mt-4 flex items-center gap-3 sm:hidden">
+          <button
+            onClick={prev}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <div className="flex flex-1 justify-center gap-1.5">
+            {THREATS.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  setActive(i);
+                  setPaused(true);
+                }}
+                className={`h-1 rounded-full transition-all duration-300 ${
+                  i === active ? "bg-primary w-6" : "bg-border w-3"
+                }`}
+              />
+            ))}
+          </div>
+          <button
+            onClick={next}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Progress dots - desktop */}
+        <div className="mt-4 hidden gap-1.5 sm:flex">
+          {THREATS.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                setActive(i);
+                setPaused(true);
+              }}
+              className={`h-1 rounded-full transition-all duration-300 ${
+                i === active ? "bg-primary w-6" : "bg-border w-3"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function HeroSection() {
   return (
@@ -105,7 +261,7 @@ function App({ reports }: { reports: ReportMap }) {
         </div>
       </nav>
 
-      {/* Stats — commented out until database is re-enabled */}
+      {/* Stats - commented out until database is re-enabled */}
       {/* <div className="border-border/50 border-y">
         <div className="divide-border/50 mx-auto grid max-w-6xl grid-cols-3 divide-x">
           <div className="px-6 py-6">
@@ -126,70 +282,14 @@ function App({ reports }: { reports: ReportMap }) {
       {/* What we detect */}
       <section className="border-border/50 border-y">
         <div className="mx-auto max-w-6xl px-6 py-16">
-          <h2 className="text-foreground mb-8 text-xl font-semibold">
+          <h2 className="text-foreground mb-2 text-xl font-semibold">
             What we detect
           </h2>
-          <div className="flex flex-col items-center gap-4">
-            <div className="grid w-full gap-4 sm:grid-cols-3">
-              {[
-                {
-                  icon: Eye,
-                  title: "Data Harvesting",
-                  desc: "Silently collecting browsing history, keystrokes, and personal data.",
-                },
-                {
-                  icon: Globe,
-                  title: "Session Hijacking",
-                  desc: "Stealing auth tokens and cookies to impersonate you on websites.",
-                },
-                {
-                  icon: Syringe,
-                  title: "Code Injection",
-                  desc: "Injecting scripts into pages to modify content or insert ads.",
-                },
-              ].map((threat) => (
-                <div
-                  key={threat.title}
-                  className="border-border rounded-lg border p-4"
-                >
-                  <threat.icon className="text-muted-foreground mb-3 h-5 w-5" />
-                  <h3 className="text-foreground mb-1 text-sm font-medium">
-                    {threat.title}
-                  </h3>
-                  <p className="text-muted-foreground text-xs leading-relaxed">
-                    {threat.desc}
-                  </p>
-                </div>
-              ))}
-            </div>
-            <div className="grid w-full gap-4 sm:max-w-[66.666%] sm:grid-cols-2">
-              {[
-                {
-                  icon: Wifi,
-                  title: "Network Tampering",
-                  desc: "Intercepting requests to inject malware or proxy through malicious servers.",
-                },
-                {
-                  icon: ShieldAlert,
-                  title: "Vulnerabilities",
-                  desc: "Poor security hygiene, outdated dependencies, or known CVEs.",
-                },
-              ].map((threat) => (
-                <div
-                  key={threat.title}
-                  className="border-border rounded-lg border p-4"
-                >
-                  <threat.icon className="text-muted-foreground mb-3 h-5 w-5" />
-                  <h3 className="text-foreground mb-1 text-sm font-medium">
-                    {threat.title}
-                  </h3>
-                  <p className="text-muted-foreground text-xs leading-relaxed">
-                    {threat.desc}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
+          <p className="text-muted-foreground mb-10 text-sm">
+            Five categories of malicious behaviour, all found in real extensions
+            on the Chrome Web Store.
+          </p>
+          <ThreatCarousel />
         </div>
       </section>
 
@@ -207,7 +307,7 @@ function App({ reports }: { reports: ReportMap }) {
             {
               step: "01",
               title: "Connect your inventory",
-              desc: "Share your extension list via our Chrome extension or API. No sensitive data leaves your machine — only extension IDs and metadata.",
+              desc: "Share your extension list via our Chrome extension or API. No sensitive data leaves your machine - only extension IDs and metadata.",
             },
             {
               step: "02",
@@ -217,7 +317,7 @@ function App({ reports }: { reports: ReportMap }) {
             {
               step: "03",
               title: "Actionable reports",
-              desc: "Get risk-scored results with plain-English explanations. Block, replace, or monitor extensions — with evidence you can share with stakeholders.",
+              desc: "Get risk-scored results with plain-English explanations. Block, replace, or monitor extensions - with evidence you can share with stakeholders.",
             },
           ].map((item) => (
             <div key={item.step} className="flex flex-col gap-3">
@@ -235,11 +335,11 @@ function App({ reports }: { reports: ReportMap }) {
         </div>
       </section>
 
-      {/* One-time scan — commented out until database is re-enabled */}
+      {/* One-time scan - commented out until database is re-enabled */}
       {/* <section id="scan" className="border-border/50 border-y">
         <div className="mx-auto max-w-6xl px-6 py-16">
           <h2 className="text-foreground mb-2 text-xl font-semibold">
-            Scan your extensions — free
+            Scan your extensions - free
           </h2>
           <p className="text-muted-foreground mb-8 text-sm">
             Paste your extension list below and we'll check it against our
@@ -250,7 +350,10 @@ function App({ reports }: { reports: ReportMap }) {
       </section> */}
 
       {/* Pricing */}
-      <section id="pricing" className="mx-auto max-w-6xl px-6 py-16">
+      <section
+        id="pricing"
+        className="border-border/50 mx-auto max-w-6xl border-t px-6 py-16"
+      >
         <h2 className="text-foreground mb-2 text-xl font-semibold">Pricing</h2>
         <p className="text-muted-foreground mb-12 text-sm">
           Free to start. Enterprise monitoring for teams that need more.

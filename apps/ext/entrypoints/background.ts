@@ -10,7 +10,7 @@ const ALLOWED_ORIGINS = import.meta.env.DEV
   : ["https://amibeingpwned.com"];
 
 // ---------------------------------------------------------------------------
-// Rate limiter — sliding window, 10 requests per 60 seconds per origin
+// Rate limiter - sliding window, 10 requests per 60 seconds per origin
 // ---------------------------------------------------------------------------
 const RATE_LIMIT = 10;
 const RATE_WINDOW_MS = 60_000;
@@ -30,7 +30,7 @@ function isRateLimited(origin: string): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// Risk severity — higher number = worse. Only notify at NOTIFY_THRESHOLD+.
+// Risk severity - higher number = worse. Only notify at NOTIFY_THRESHOLD+.
 // ---------------------------------------------------------------------------
 const RISK_SEVERITY: Record<RiskLevel, number> = {
   clean: 0,
@@ -76,7 +76,7 @@ export default defineBackground(() => {
 
       await setNotifiedRisk(extensionId, risk);
     } catch {
-      // Network errors shouldn't break the extension — fail silently
+      // Network errors shouldn't break the extension - fail silently
     }
   }
 
@@ -85,7 +85,7 @@ export default defineBackground(() => {
     try {
       await fetchExtensionDatabase();
     } catch {
-      return; // Can't reach the server — skip scan
+      return; // Can't reach the server - skip scan
     }
 
     const installed = await chrome.management.getAll();
@@ -173,7 +173,7 @@ export default defineBackground(() => {
 
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (request.type === "GET_EXTENSIONS") {
-        // Async — return true to keep the message channel open
+        // Async - return true to keep the message channel open
         void chrome.management.getAll().then((installed) => {
           const extensions: InstalledExtensionInfo[] = installed
             .filter(

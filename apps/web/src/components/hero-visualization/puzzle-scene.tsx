@@ -33,7 +33,7 @@ const SPACING = 1.15;
 
 export function PuzzleScene({ pieces, reducedMotion }: PuzzleSceneProps) {
   const pieceData = useMemo(() => {
-    // Sort: danger first, then safe — show most interesting pieces
+    // Sort: danger first, then safe - show most interesting pieces
     const sorted = [...pieces]
       .sort((a, b) => riskOrder[a.risk] - riskOrder[b.risk])
       .slice(0, MAX_PIECES);
