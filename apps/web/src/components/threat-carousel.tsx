@@ -186,10 +186,14 @@ export function ThreatCarousel() {
                   goTo(i);
                   setPaused(true);
                 }}
-                className={`h-1 rounded-full transition-all duration-300 ${
-                  i === active ? "bg-primary w-6" : "bg-border w-3"
-                }`}
-              />
+                className="flex items-center py-2"
+              >
+                <span
+                  className={`block h-1.5 rounded-full transition-all duration-300 ${
+                    i === active ? "bg-primary w-12" : "bg-border w-6"
+                  }`}
+                />
+              </button>
             ))}
           </div>
           <button
@@ -209,10 +213,14 @@ export function ThreatCarousel() {
                 goTo(i);
                 setPaused(true);
               }}
-              className={`h-1 rounded-full transition-all duration-300 ${
-                i === active ? "bg-primary w-6" : "bg-border w-3"
-              }`}
-            />
+              className="flex items-center py-2"
+            >
+              <span
+                className={`block h-1.5 rounded-full transition-all duration-300 ${
+                  i === active ? "bg-primary w-12" : "bg-border w-6"
+                }`}
+              />
+            </button>
           ))}
         </div>
       </div>

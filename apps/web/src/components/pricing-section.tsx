@@ -24,8 +24,7 @@ const TIERS = [
       "Risk scores & vulnerability summaries",
       "Actionable remediation report",
     ],
-    highlight: false,
-    cta: "Get started",
+    cta: "Book a demo",
   },
   {
     name: "Growth",
@@ -37,8 +36,7 @@ const TIERS = [
       "Audit-ready compliance reports",
       "Executive summary for stakeholders",
     ],
-    highlight: true,
-    cta: "Get started",
+    cta: "Book a demo",
   },
   {
     name: "Enterprise",
@@ -50,7 +48,6 @@ const TIERS = [
       "Dedicated support + SLA",
       "Custom reporting & exports",
     ],
-    highlight: false,
     cta: "Book a demo",
   },
 ] as const;
@@ -91,14 +88,7 @@ export function PricingSection() {
       </div>
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
         {TIERS.map((tier, i) => (
-          <div
-            key={tier.name}
-            className={`bg-card flex flex-col rounded-lg p-6 ${
-              tier.highlight
-                ? "border-primary border-2"
-                : "border-border border"
-            }`}
-          >
+          <div key={tier.name} className="bg-card flex flex-col rounded-lg p-6">
             <div className="mb-6">
               <h3 className="text-foreground mb-1 text-sm font-semibold">
                 {tier.name}
@@ -112,7 +102,7 @@ export function PricingSection() {
                 {tier.description}
               </p>
             </div>
-            <ul className="text-muted-foreground mb-8 flex-1 space-y-3 text-xs">
+            <ul className="text-muted-foreground flex-1 space-y-3 text-xs">
               {tier.features.map((f) => (
                 <li key={f} className="flex items-start gap-2">
                   <Check className="text-primary mt-0.5 h-3 w-3 shrink-0" />
@@ -120,21 +110,11 @@ export function PricingSection() {
                 </li>
               ))}
             </ul>
-            <Button
-              size="sm"
-              variant={tier.highlight ? "default" : "outline"}
-              className="w-full"
-              asChild
-            >
-              <a href={DEMO_HREF} target="_blank" rel="noreferrer">
-                {tier.cta}
-              </a>
-            </Button>
           </div>
         ))}
       </div>
       <div className="border-border bg-card/50 rounded-lg border border-dashed px-6 py-5">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-foreground mb-1 text-sm font-semibold">
               Continuous monitoring
@@ -148,7 +128,7 @@ export function PricingSection() {
               this is something you need now.
             </p>
           </div>
-          <Button size="sm" variant="outline" className="shrink-0" asChild>
+          <Button size="sm" variant="outline" className="w-full sm:w-auto sm:shrink-0" asChild>
             <a href={DEMO_HREF} target="_blank" rel="noreferrer">
               Express interest
             </a>
