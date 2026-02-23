@@ -57,8 +57,8 @@ export function MethodologySection() {
                 reaches a report.
               </li>
               <li>
-                Result: precise, evidence-backed findings with minimal false
-                positives.
+                This results in precise, evidence-backed findings with minimal
+                false positives.
               </li>
             </ul>
           </div>

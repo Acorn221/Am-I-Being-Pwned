@@ -12,6 +12,7 @@ import { MethodologySection } from "~/components/methodology-section";
 import { VideosSection } from "~/components/videos-section";
 import { HowItWorksSection } from "~/components/how-it-works-section";
 import { PricingSection, DEMO_HREF } from "~/components/pricing-section";
+import { TestimonialsSection } from "~/components/testimonials-section";
 import { Footer } from "~/components/footer";
 import { Button } from "@amibeingpwned/ui";
 
@@ -58,6 +59,8 @@ function App({ reports }: { reports: ReportMap }) {
           <ThreatCarousel />
         </div>
       </section>
+
+      <TestimonialsSection />
 
       <MethodologySection />
 
