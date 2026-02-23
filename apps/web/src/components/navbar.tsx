@@ -10,13 +10,13 @@ export function Navbar() {
         <div className="flex items-center gap-6">
           <a
             href="#how-it-works"
-            className="text-foreground/70 hover:text-foreground text-sm transition-colors"
+            className="text-foreground/70 hover:text-foreground hidden text-sm transition-colors sm:block"
           >
             How it works
           </a>
           <a
             href="#pricing"
-            className="text-foreground/70 hover:text-foreground text-sm transition-colors"
+            className="text-foreground/70 hover:text-foreground hidden text-sm transition-colors sm:block"
           >
             Pricing
           </a>

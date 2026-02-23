@@ -1,7 +1,25 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ShieldAlert, X } from "lucide-react";
+
 import type { DetectedExtension } from "~/hooks/use-extension-probe";
-import { PROBE_RISK_STYLES, PROBE_RISK_DOT, probeRiskRank } from "~/lib/risk";
+
+const RISK_STYLES: Record<string, string> = {
+  CRITICAL: "bg-red-500/15 text-red-400 border-red-500/30",
+  HIGH: "bg-orange-500/15 text-orange-400 border-orange-500/30",
+  MEDIUM: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
+};
+
+const RISK_DOT: Record<string, string> = {
+  CRITICAL: "bg-red-500",
+  HIGH: "bg-orange-500",
+  MEDIUM: "bg-yellow-500",
+};
+
+const RISK_PRIORITY = ["CRITICAL", "HIGH", "MEDIUM", "LOW"];
+function riskRank(risk: string) {
+  const i = RISK_PRIORITY.indexOf(risk);
+  return i === -1 ? 99 : i;
+}
 
 export function ScanResultsSection({
   detected,
@@ -14,11 +32,16 @@ export function ScanResultsSection({
 }) {
   const [dismissed, setDismissed] = useState(false);
 
+  const sorted = useMemo(
+    () => [...detected].sort((a, b) => riskRank(a.risk) - riskRank(b.risk)),
+    [detected],
+  );
+
   if (dismissed) return null;
 
   if (probing) {
     return (
-      <div className="border-border/50 border-b">
+      <div className="border-border/50 hidden border-b sm:block">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-6 py-3">
           <span className="relative flex h-2 w-2 shrink-0">
             <span className="bg-primary absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" />
@@ -34,7 +57,7 @@ export function ScanResultsSection({
 
   if (detected.length === 0) {
     return (
-      <div className="border-border/50 border-b">
+      <div className="border-border/50 hidden border-b sm:block">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
           <div className="flex items-center gap-2">
             <span className="flex h-2 w-2 shrink-0 rounded-full bg-green-500" />
@@ -54,12 +77,8 @@ export function ScanResultsSection({
     );
   }
 
-  const sorted = [...detected].sort(
-    (a, b) => probeRiskRank(a.risk) - probeRiskRank(b.risk),
-  );
-
   return (
-    <div className="border-border/50 border-b bg-red-500/5">
+    <div className="border-border/50 hidden border-b bg-red-500/5 sm:block">
       <div className="mx-auto max-w-6xl px-6 py-4">
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -83,10 +102,10 @@ export function ScanResultsSection({
           {sorted.map((e) => (
             <span
               key={e.id}
-              className={`inline-flex items-center gap-1.5 rounded border px-2 py-1 text-xs ${(PROBE_RISK_STYLES[e.risk] ?? PROBE_RISK_STYLES.MEDIUM)}`}
+              className={`inline-flex items-center gap-1.5 rounded border px-2 py-1 text-xs ${RISK_STYLES[e.risk] ?? RISK_STYLES.MEDIUM}`}
             >
               <span
-                className={`h-1.5 w-1.5 rounded-full ${(PROBE_RISK_DOT[e.risk] ?? "bg-yellow-500")}`}
+                className={`h-1.5 w-1.5 rounded-full ${RISK_DOT[e.risk] ?? "bg-yellow-500"}`}
               />
               <span className="font-medium">{e.risk}</span>
               <span className="opacity-75">{e.name}</span>

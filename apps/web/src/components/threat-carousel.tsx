@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Eye, Globe, ShieldAlert, Syringe, Wifi } from "lucide-react";
 
 const THREATS = [
@@ -42,6 +42,7 @@ export function ThreatCarousel() {
   const [prevIndex, setPrevIndex] = useState<number | null>(null);
   const [direction, setDirection] = useState<"forward" | "back">("forward");
   const [paused, setPaused] = useState(false);
+  const touchStartX = useRef<number | null>(null);
 
   const goTo = useCallback(
     (index: number) => {
@@ -81,8 +82,17 @@ export function ThreatCarousel() {
   return (
     <div
       className="flex gap-8"
+      style={{ touchAction: "pan-y" }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
+      onTouchStart={(e) => { touchStartX.current = e.touches[0]?.clientX ?? null; }}
+      onTouchEnd={(e) => {
+        if (touchStartX.current === null) return;
+        const dx = (e.changedTouches[0]?.clientX ?? 0) - touchStartX.current;
+        touchStartX.current = null;
+        if (Math.abs(dx) < 40) return;
+        if (dx < 0) next(); else prev();
+      }}
     >
       {/* Sidebar nav - desktop */}
       <div
@@ -115,7 +125,7 @@ export function ThreatCarousel() {
           @keyframes slide-in-left   { from { transform: translateX(-100%); } to { transform: translateX(0); } }
           @keyframes slide-out-right { from { transform: translateX(0); }    to { transform: translateX(100%); } }
         `}</style>
-        <div className="relative h-64 overflow-hidden rounded-xl">
+        <div className="relative h-[22rem] overflow-hidden rounded-xl sm:h-64">
           {/* Outgoing card */}
           {prevIndex !== null &&
             (() => {
@@ -123,7 +133,7 @@ export function ThreatCarousel() {
               if (!prev) return null;
               return (
                 <div
-                  className="border-border bg-card absolute inset-0 rounded-xl border p-8"
+                  className="border-border bg-card absolute inset-0 rounded-xl border p-6 sm:p-8"
                   style={{
                     animation: `${direction === "forward" ? "slide-out-left" : "slide-out-right"} ${SLIDE_DURATION}ms ease forwards`,
                   }}
@@ -141,7 +151,7 @@ export function ThreatCarousel() {
 
           {/* Incoming card */}
           <div
-            className="border-border bg-card absolute inset-0 rounded-xl border p-8"
+            className="border-border bg-card absolute inset-0 rounded-xl border p-6 sm:p-8"
             style={
               prevIndex !== null
                 ? {
