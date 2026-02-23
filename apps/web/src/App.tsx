@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Check,
   ChevronLeft,
@@ -54,29 +54,46 @@ const THREATS = [
 ] as const;
 
 const INTERVAL_MS = 5000;
+const SLIDE_DURATION = 350;
 
 function ThreatCarousel() {
   const [active, setActive] = useState(0);
+  const [prevIndex, setPrevIndex] = useState<number | null>(null);
+  const [direction, setDirection] = useState<"forward" | "back">("forward");
   const [paused, setPaused] = useState(false);
+
+  const goTo = useCallback(
+    (index: number) => {
+      if (prevIndex !== null || index === active) return;
+      const n = THREATS.length;
+      const diff = (index - active + n) % n;
+      const dir: "forward" | "back" = diff <= n / 2 ? "forward" : "back";
+      setDirection(dir);
+      setPrevIndex(active);
+      setActive(index);
+      setTimeout(() => setPrevIndex(null), SLIDE_DURATION);
+    },
+    [active, prevIndex],
+  );
 
   useEffect(() => {
     if (paused) return;
     const id = setInterval(() => {
-      setActive((i) => (i + 1) % THREATS.length);
+      goTo((active + 1) % THREATS.length);
     }, INTERVAL_MS);
     return () => clearInterval(id);
-  }, [paused, active]);
+  }, [paused, active, goTo]);
 
-  const threat = THREATS[active % THREATS.length];
+  const threat = THREATS[active];
   if (!threat) return null;
 
   function prev() {
-    setActive((i) => (i - 1 + THREATS.length) % THREATS.length);
+    goTo((active - 1 + THREATS.length) % THREATS.length);
     setPaused(true);
   }
 
   function next() {
-    setActive((i) => (i + 1) % THREATS.length);
+    goTo((active + 1) % THREATS.length);
     setPaused(true);
   }
 
@@ -95,7 +112,7 @@ function ThreatCarousel() {
           <button
             key={t.title}
             onClick={() => {
-              setActive(i);
+              goTo(i);
               setPaused(true);
             }}
             className={`rounded-md px-3 py-2 text-left text-sm transition-colors ${
@@ -111,15 +128,54 @@ function ThreatCarousel() {
 
       {/* Card */}
       <div className="flex-1">
-        <div
-          key={active}
-          className="border-border bg-card animate-in fade-in min-h-58 rounded-xl border p-8 duration-300"
-        >
-          <threat.icon className="text-primary mb-5 h-7 w-7" />
-          <h3 className="text-foreground mb-3 text-xl font-semibold">
-            {threat.title}
-          </h3>
-          <p className="text-muted-foreground leading-relaxed">{threat.desc}</p>
+        <style>{`
+          @keyframes slide-in-right  { from { transform: translateX(100%); } to { transform: translateX(0); } }
+          @keyframes slide-out-left  { from { transform: translateX(0); }    to { transform: translateX(-100%); } }
+          @keyframes slide-in-left   { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+          @keyframes slide-out-right { from { transform: translateX(0); }    to { transform: translateX(100%); } }
+        `}</style>
+        <div className="relative h-64 overflow-hidden rounded-xl">
+          {/* Outgoing card */}
+          {prevIndex !== null && (() => {
+            const prev = THREATS[prevIndex];
+            if (!prev) return null;
+            return (
+              <div
+                className="border-border bg-card absolute inset-0 rounded-xl border p-8"
+                style={{
+                  animation: `${direction === "forward" ? "slide-out-left" : "slide-out-right"} ${SLIDE_DURATION}ms ease forwards`,
+                }}
+              >
+                <prev.icon className="text-primary mb-5 h-7 w-7" />
+                <h3 className="text-foreground mb-3 text-xl font-semibold">
+                  {prev.title}
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  {prev.desc}
+                </p>
+              </div>
+            );
+          })()}
+
+          {/* Incoming card */}
+          <div
+            className={`border-border bg-card h-full rounded-xl border p-8${prevIndex !== null ? " absolute inset-0" : ""}`}
+            style={
+              prevIndex !== null
+                ? {
+                    animation: `${direction === "forward" ? "slide-in-right" : "slide-in-left"} ${SLIDE_DURATION}ms ease forwards`,
+                  }
+                : {}
+            }
+          >
+            <threat.icon className="text-primary mb-5 h-7 w-7" />
+            <h3 className="text-foreground mb-3 text-xl font-semibold">
+              {threat.title}
+            </h3>
+            <p className="text-muted-foreground leading-relaxed">
+              {threat.desc}
+            </p>
+          </div>
         </div>
 
         {/* Mobile nav */}
@@ -135,7 +191,7 @@ function ThreatCarousel() {
               <button
                 key={i}
                 onClick={() => {
-                  setActive(i);
+                  goTo(i);
                   setPaused(true);
                 }}
                 className={`h-1 rounded-full transition-all duration-300 ${
@@ -158,7 +214,7 @@ function ThreatCarousel() {
             <button
               key={i}
               onClick={() => {
-                setActive(i);
+                goTo(i);
                 setPaused(true);
               }}
               className={`h-1 rounded-full transition-all duration-300 ${
@@ -304,8 +360,8 @@ function App({ reports }: { reports: ReportMap }) {
           How it works
         </h2>
         <p className="text-muted-foreground mb-12 text-sm">
-          Up and running in minutes. No agents to deploy, no data leaving your
-          network.
+          Turn around your browser security in under 48 hours, with no
+          deployment or maintenance overhead.
         </p>
         <div className="grid gap-8 sm:grid-cols-3">
           {[
@@ -317,7 +373,7 @@ function App({ reports }: { reports: ReportMap }) {
             {
               step: "02",
               title: "Automated risk analysis",
-              desc: "We scan permissions, network behavior, code patterns, and known CVEs across your entire extension set and score each one.",
+              desc: "We use a combination of static analysis, LLM agents and human expertise to identify problematic extensions.",
             },
             {
               step: "03",
