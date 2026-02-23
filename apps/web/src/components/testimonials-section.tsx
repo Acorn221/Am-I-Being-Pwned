@@ -5,11 +5,38 @@ const TESTIMONIALS = [
     quote:
       "As a YC company handling streamer data, we needed to show investors and clients we take security seriously. Am I Being Pwned flagged extensions we'd never have caught manually, we cut our attack surface before it became a problem.",
     name: "Nang Ang",
-    role: "Co-Founder, PearAI / Streamble",
+    role: "Co-Founder, PearAI / Streamable",
     badge: "YC F24",
     avatar: "/imgs/nang.png",
     badgeIcon: "/imgs/yc_icon.svg",
   },
+  {
+    quote:
+      "I was shocked to find out that my productivity extension had been spying on me, every website I visited was sent to some random server. Am I Being Pwned saved us from major potential issues by catching this.",
+    name: "Kip Parker",
+    role: "Co-Founder of General Reasoning",
+    // badge: "YC F24",
+    // avatar: "/imgs/nang.png", // TODO
+    // badgeIcon: "/imgs/yc_icon.svg",
+  },
+  // {
+  // quote:
+  // "I ",
+  // name: "Chris Mjelde",
+  // role: "Co-Founder of Kenobi.ai",
+  // badge: "YC W22",
+  // avatar: "/imgs/nang.png", // TODO
+  // badgeIcon: "/imgs/yc_icon.svg",
+  // },
+  // {
+  // quote:
+  // "I ",
+  // name: "Rory McMeekin",
+  // role: "Co-Founder of Kenobi.ai",
+  // badge: "YC W22",
+  // avatar: "/imgs/nang.png", // TODO
+  // badgeIcon: "/imgs/yc_icon.svg",
+  // },
 ];
 
 const INTERVAL_MS = 6000;
