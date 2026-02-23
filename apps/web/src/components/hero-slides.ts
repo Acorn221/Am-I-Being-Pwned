@@ -33,7 +33,7 @@ export interface HeroSlide {
  */
 export const HERO_SLIDES: HeroSlide[] = [
   {
-    phrase: "browser extension",
+    phrase: "Browser extensions",
     name: "Ad Block Plus Pro",
     risk: "critical",
     userCount: 700000,
@@ -45,7 +45,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "free VPN",
+    phrase: "Free VPN extensions",
     name: "Free VPN Unlimited",
     risk: "critical",
     userCount: 600000,
@@ -58,7 +58,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "search tool",
+    phrase: "Unvetted search tools",
     name: "Similar Sites Finder",
     risk: "high",
     userCount: 300000,
@@ -70,7 +70,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "ad blocker",
+    phrase: "Employee ad blockers",
     name: "Ad Speedup & Skipper",
     risk: "critical",
     userCount: 200000,
@@ -82,7 +82,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "screen time tracker",
+    phrase: "Productivity extensions",
     name: "Screen Time Tracker",
     risk: "critical",
     userCount: 200000,
@@ -94,7 +94,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "social media tool",
+    phrase: "Social media tools",
     name: "Tweet Manager Pro",
     risk: "critical",
     userCount: 40000,
@@ -106,7 +106,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "VPN extension",
+    phrase: "VPN extensions",
     name: "1-Click VPN Free",
     risk: "high",
     userCount: 8000000,
@@ -118,7 +118,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "media editor",
+    phrase: "Unmanaged media tools",
     name: "Movie Maker Studio",
     risk: "critical",
     userCount: 100000,
@@ -130,7 +130,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "new tab page",
+    phrase: "New tab extensions",
     name: "Infinite New Tab",
     risk: "high",
     userCount: 100000,
@@ -142,7 +142,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "notepad",
+    phrase: "Notepad extensions",
     name: "Notepad Online",
     risk: "high",
     userCount: 100000,
@@ -154,7 +154,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "document editor",
+    phrase: "Document editors",
     name: "Office Online Suite",
     risk: "critical",
     userCount: 90000,
@@ -166,7 +166,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "audio tool",
+    phrase: "Unvetted audio tools",
     name: "Audio Editor Studio",
     risk: "critical",
     userCount: 80000,
@@ -178,7 +178,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "video tool",
+    phrase: "Video extensions",
     name: "Auto Ad Skipper",
     risk: "high",
     userCount: 100000,
@@ -190,7 +190,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     ],
   },
   {
-    phrase: "video downloader",
+    phrase: "Video downloaders",
     name: "Video Downloader HD",
     risk: "high",
     userCount: 100000,

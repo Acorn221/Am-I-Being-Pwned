@@ -96,7 +96,6 @@ export function TypingTitle() {
 
   return (
     <h1 className="text-foreground mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
-      Is my{" "}
       <span className="inline-grid align-baseline">
         <span className="text-primary col-start-1 row-start-1">
           {displayText}
@@ -110,7 +109,7 @@ export function TypingTitle() {
         </span>
       </span>
       <br />
-      spying on me?
+      are compromising your fleet.
     </h1>
   );
 }
