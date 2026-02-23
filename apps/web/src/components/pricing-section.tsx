@@ -3,7 +3,7 @@ import { Check } from "lucide-react";
 
 import { Button } from "@amibeingpwned/ui";
 
-const DEMO_HREF = "https://calendar.app.google/ErKTbbbDDHzjAEESA";
+export const DEMO_HREF = "https://calendar.app.google/ErKTbbbDDHzjAEESA";
 
 const CURRENCIES = {
   GBP: { symbol: "£", label: "GBP", rates: [500, 1000, 2500] },

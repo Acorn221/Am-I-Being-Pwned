@@ -11,8 +11,9 @@ import { ThreatCarousel } from "~/components/threat-carousel";
 import { MethodologySection } from "~/components/methodology-section";
 import { VideosSection } from "~/components/videos-section";
 import { HowItWorksSection } from "~/components/how-it-works-section";
-import { PricingSection } from "~/components/pricing-section";
+import { PricingSection, DEMO_HREF } from "~/components/pricing-section";
 import { Footer } from "~/components/footer";
+import { Button } from "@amibeingpwned/ui";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function App({ reports }: { reports: ReportMap }) {
@@ -65,6 +66,23 @@ function App({ reports }: { reports: ReportMap }) {
       <HowItWorksSection />
 
       <PricingSection />
+
+      <section className="border-border/50 border-t">
+        <div className="mx-auto max-w-6xl px-6 py-20 text-center">
+          <h2 className="text-foreground mb-3 text-2xl font-semibold">
+            Ready to secure your fleet?
+          </h2>
+          <p className="text-muted-foreground mx-auto mb-8 max-w-md text-sm">
+            Book a 30-minute call and we'll walk you through what we've found in
+            extensions your team is already using.
+          </p>
+          <Button size="lg" asChild>
+            <a href={DEMO_HREF} target="_blank" rel="noreferrer">
+              Book a call
+            </a>
+          </Button>
+        </div>
+      </section>
 
       <Footer />
     </div>
