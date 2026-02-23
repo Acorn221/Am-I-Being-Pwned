@@ -9,12 +9,27 @@ export interface DetectedExtension {
   flags: string[];
 }
 
-type SWMessage =
-  | { type: "PROBE_RESULTS"; detected: DetectedExtension[] }
-  | { type: string };
+interface ProbeResultsMessage {
+  type: "PROBE_RESULTS";
+  detected: DetectedExtension[];
+  checkedCount: number;
+}
 
-export function useExtensionProbe() {
+function isProbeResults(data: unknown): data is ProbeResultsMessage {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    (data as Record<string, unknown>).type === "PROBE_RESULTS"
+  );
+}
+
+export function useExtensionProbe(): {
+  detected: DetectedExtension[];
+  probing: boolean;
+  checkedCount: number;
+} {
   const [detected, setDetected] = useState<DetectedExtension[]>([]);
+  const [checkedCount, setCheckedCount] = useState<number>(0);
   // Only start as probing if service workers are available
   const [probing, setProbing] = useState(() => "serviceWorker" in navigator);
 
@@ -23,10 +38,10 @@ export function useExtensionProbe() {
 
     let cancelled = false;
 
-    const handler = (event: MessageEvent<SWMessage>) => {
-      const { data } = event;
-      if (data.type === "PROBE_RESULTS" && "detected" in data && !cancelled) {
-        setDetected(data.detected);
+    const handler = (event: MessageEvent<unknown>) => {
+      if (isProbeResults(event.data) && !cancelled) {
+        setDetected(event.data.detected);
+        setCheckedCount(event.data.checkedCount);
         setProbing(false);
       }
     };
@@ -49,5 +64,5 @@ export function useExtensionProbe() {
     };
   }, []);
 
-  return { detected, probing };
+  return { detected, probing, checkedCount };
 }

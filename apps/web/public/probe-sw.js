@@ -12,31 +12,30 @@ self.addEventListener("message", async (event) => {
     const res = await fetch("/extension_probes.json");
     const data = await res.json();
 
-    const detected = [];
+    const entries = Object.entries(data).filter(([, info]) => info.probe_resource);
+    const checkedCount = entries.length;
 
-    for (const [id, info] of Object.entries(data)) {
-      const resource = info.probe_resource;
-      if (!resource) continue;
+    const results = await Promise.allSettled(
+      entries.map(async ([id, info]) => {
+        const r = await fetch(`chrome-extension://${id}/${info.probe_resource}`);
+        if (!r.ok) return null;
+        return {
+          id,
+          name: info.name,
+          risk: info.risk,
+          version: info.version ?? null,
+          summary: info.summary,
+          flags: info.flags ?? [],
+        };
+      }),
+    );
 
-      try {
-        const r = await fetch(`chrome-extension://${id}/${resource}`);
-        if (r.ok) {
-          detected.push({
-            id,
-            name: info.name,
-            risk: info.risk,
-            version: info.version ?? null,
-            summary: info.summary,
-            flags: info.flags ?? [],
-          });
-        }
-      } catch {
-        // Not installed or not accessible
-      }
-    }
+    const detected = results
+      .filter((r) => r.status === "fulfilled" && r.value !== null)
+      .map((r) => r.value);
 
-    source?.postMessage({ type: "PROBE_RESULTS", detected });
+    source?.postMessage({ type: "PROBE_RESULTS", detected, checkedCount });
   } catch {
-    source?.postMessage({ type: "PROBE_RESULTS", detected: [] });
+    source?.postMessage({ type: "PROBE_RESULTS", detected: [], checkedCount: 0 });
   }
 });
