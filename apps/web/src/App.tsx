@@ -24,7 +24,7 @@ const THREATS = [
   {
     icon: Eye,
     title: "Data Harvesting",
-    desc: "Extensions silently collect browsing history, keystrokes, form inputs, and personal data - then upload it to remote servers. Often disguised as productivity tools or ad blockers, these extensions build detailed profiles of every employee in your organisation.",
+    desc: "Extensions silently collect browsing history, keystrokes, form inputs, and personal data - then upload it to remote servers. Often disguised as productivity tools or ad blockers, these extensions can build detailed profiles of every employee in your organisation without anyone noticing.",
   },
   {
     icon: Globe,
@@ -43,8 +43,13 @@ const THREATS = [
   },
   {
     icon: ShieldAlert,
+    title: "Vulnerability Discovery",
+    desc: "Many extensions are built with little regard for security and are vulnerable to attacks, we have already identified over 4 vulnerabilities in popular extensions with CVSS scores between 8 and 9.6",
+  },
+  {
+    icon: ShieldAlert,
     title: "Known Vulnerabilities",
-    desc: "Beyond malicious intent, many extensions have poor security hygiene: outdated dependencies with known CVEs, insecure data storage, and unvalidated remote code execution paths. Any of these can be exploited by a third party.",
+    desc: "Beyond malicious intent, many extensions have poor security hygiene: outdated dependencies with known CVEs, insecure data storage, and un-validated remote code execution paths. Any of these can be exploited by a third party.",
   },
 ] as const;
 
