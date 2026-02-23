@@ -141,7 +141,7 @@ export function ThreatCarousel() {
 
           {/* Incoming card */}
           <div
-            className={`border-border bg-card h-full rounded-xl border p-8${prevIndex !== null ? "absolute inset-0" : ""}`}
+            className="border-border bg-card absolute inset-0 rounded-xl border p-8"
             style={
               prevIndex !== null
                 ? {
