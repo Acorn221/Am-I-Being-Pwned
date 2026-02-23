@@ -8,6 +8,7 @@ import { Navbar } from "~/components/navbar";
 import { ScanModal } from "~/components/scan-modal";
 import { ScanResultsSection } from "~/components/scan-results-section";
 import { ThreatCarousel } from "~/components/threat-carousel";
+import { MethodologySection } from "~/components/methodology-section";
 import { VideosSection } from "~/components/videos-section";
 import { HowItWorksSection } from "~/components/how-it-works-section";
 import { PricingSection } from "~/components/pricing-section";
@@ -56,6 +57,8 @@ function App({ reports }: { reports: ReportMap }) {
           <ThreatCarousel />
         </div>
       </section>
+
+      <MethodologySection />
 
       <VideosSection />
 
