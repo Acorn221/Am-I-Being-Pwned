@@ -70,6 +70,9 @@ export const Organization = createTable("organization", {
   // Soft-suspend — set to kill all B2B device auth for this org instantly
   suspendedAt: timestamp({ withTimezone: true }),
   suspendedReason: text(),
+  // Zero-trust policy: disable any extension whose new version hasn't been
+  // scanned yet. Auto-re-enabled once the scan comes back clean.
+  quarantineUnscannedUpdates: boolean().notNull().default(false),
 });
 
 export type Organization = typeof Organization.$inferSelect;

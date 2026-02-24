@@ -18,6 +18,8 @@ import { makeB2BClient, makeDeviceClient, publicClient } from "./trpc";
 // ---------------------------------------------------------------------------
 
 const FINGERPRINT_KEY = "aibp_fingerprint";
+const DISABLE_LIST_KEY = "aibp_disable_list";
+const QUARANTINE_LIST_KEY = "aibp_quarantine_list";
 const TOKEN_KEY = "aibp_device_token";
 
 // ---------------------------------------------------------------------------
@@ -111,6 +113,42 @@ export async function registerDevice(): Promise<string> {
 }
 
 // ---------------------------------------------------------------------------
+// Disable list — persisted locally so enforcement survives API downtime.
+//
+// The server is authoritative, but once it says "disable X", we store that
+// decision and re-enforce it on every SW wake regardless of API availability.
+// A DoS attack against the API cannot un-disarm an already-flagged extension.
+// ---------------------------------------------------------------------------
+
+export async function getDisableList(): Promise<string[]> {
+  const stored = await chrome.storage.local.get(DISABLE_LIST_KEY);
+  const val = stored[DISABLE_LIST_KEY];
+  return Array.isArray(val) ? (val as string[]) : [];
+}
+
+export async function setDisableList(list: string[]): Promise<void> {
+  await chrome.storage.local.set({ [DISABLE_LIST_KEY]: list });
+}
+
+// ---------------------------------------------------------------------------
+// Quarantine list — server-authoritative, fully replaced on each sync.
+//
+// Unlike the disable list (additive-only), the quarantine list can shrink:
+// once a scan completes clean, the extension drops off and gets re-enabled.
+// If a scan comes back malicious, the server moves it to the disable list.
+// ---------------------------------------------------------------------------
+
+export async function getQuarantineList(): Promise<string[]> {
+  const stored = await chrome.storage.local.get(QUARANTINE_LIST_KEY);
+  const val = stored[QUARANTINE_LIST_KEY];
+  return Array.isArray(val) ? (val as string[]) : [];
+}
+
+export async function setQuarantineList(list: string[]): Promise<void> {
+  await chrome.storage.local.set({ [QUARANTINE_LIST_KEY]: list });
+}
+
+// ---------------------------------------------------------------------------
 // Sync
 // ---------------------------------------------------------------------------
 
@@ -122,8 +160,10 @@ export interface SyncExtension {
 }
 
 export interface SyncResult {
-  /** Extension IDs the server wants disabled on this device. */
+  /** Confirmed malicious — permanently disabled until admin un-flags. */
   disableList: string[];
+  /** Unscanned updates — temporarily disabled until scan completes clean. */
+  quarantineList: string[];
   /** Rotated device token — must be stored immediately. */
   newToken: string;
 }

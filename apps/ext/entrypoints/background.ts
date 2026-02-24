@@ -5,8 +5,12 @@ import { ExtRequestSchema } from "@amibeingpwned/validators";
 import { API_BASE_URL, lookupExtension, fetchExtensionDatabase } from "../lib/api";
 import {
   clearToken,
+  getDisableList,
+  getQuarantineList,
   getStoredToken,
   registerDevice,
+  setDisableList,
+  setQuarantineList,
   storeToken,
   syncExtensions,
 } from "../lib/device";
@@ -105,6 +109,30 @@ export default defineBackground(() => {
   }
 
   // -------------------------------------------------------------------------
+  // Offline-safe disable enforcement
+  //
+  // Re-applied on every SW wake from the locally persisted list.
+  // This means a DoS attack against the API cannot leave users exposed —
+  // once the server flags an extension, the decision is enforced locally
+  // until the server explicitly removes it from the disable list.
+  // -------------------------------------------------------------------------
+
+  async function enforceDisableList() {
+    const list = await getDisableList();
+    if (list.length === 0) return;
+    for (const extId of list) {
+      try {
+        const info = await chrome.management.get(extId);
+        if (info.enabled) {
+          await chrome.management.setEnabled(extId, false);
+        }
+      } catch {
+        // Extension may have been uninstalled — ignore
+      }
+    }
+  }
+
+  // -------------------------------------------------------------------------
   // API: device registration
   // -------------------------------------------------------------------------
 
@@ -171,10 +199,14 @@ export default defineBackground(() => {
       // Rotate token immediately — server already invalidated the old one
       await storeToken(result.newToken);
 
-      // Enforce the server's disable list
+      // --- Disable list (permanent, additive-only) ---
+      // Only ever grows locally — DoS can't shrink it.
+      const existingDisabled = await getDisableList();
+      const mergedDisabled = [...new Set([...existingDisabled, ...result.disableList])];
+      await setDisableList(mergedDisabled);
+
       for (const extId of result.disableList) {
-        try {
-          await chrome.management.setEnabled(extId, false);
+        if (!existingDisabled.includes(extId)) {
           void chrome.notifications.create(`aibp-disabled-${extId}`, {
             type: "basic",
             iconUrl: chrome.runtime.getURL("icon/128.png"),
@@ -183,8 +215,45 @@ export default defineBackground(() => {
               "Am I Being Pwned has disabled an extension flagged as malicious.",
             priority: 2,
           });
+        }
+      }
+      await enforceDisableList();
+
+      // --- Quarantine list (temporary, fully server-authoritative) ---
+      // Extensions dropped from the list have been scanned clean — re-enable
+      // them unless they're also on the permanent disable list.
+      const prevQuarantine = await getQuarantineList();
+      const newQuarantine = result.quarantineList;
+      await setQuarantineList(newQuarantine);
+
+      // Re-enable anything that cleared quarantine and isn't permanently flagged
+      const cleared = prevQuarantine.filter(
+        (id) => !newQuarantine.includes(id) && !mergedDisabled.includes(id),
+      );
+      for (const extId of cleared) {
+        try {
+          await chrome.management.setEnabled(extId, true);
         } catch {
-          // Extension may have already been removed — ignore
+          // Extension may have been uninstalled — ignore
+        }
+      }
+
+      // Disable newly quarantined extensions and notify
+      for (const extId of newQuarantine) {
+        if (!prevQuarantine.includes(extId)) {
+          try {
+            await chrome.management.setEnabled(extId, false);
+            void chrome.notifications.create(`aibp-quarantine-${extId}`, {
+              type: "basic",
+              iconUrl: chrome.runtime.getURL("icon/128.png"),
+              title: "Extension Quarantined Pending Scan",
+              message:
+                "An extension updated to an unscanned version and has been temporarily disabled.",
+              priority: 1,
+            });
+          } catch {
+            // Extension may have been uninstalled — ignore
+          }
         }
       }
     } catch (err) {
@@ -203,9 +272,12 @@ export default defineBackground(() => {
   // Event listeners
   // -------------------------------------------------------------------------
 
-  // When any extension is installed or updated: local check + API sync
+  // When any extension is installed or updated: re-enforce immediately
+  // (catches the case where a user reinstalls a flagged extension),
+  // then check and sync with API.
   chrome.management.onInstalled.addListener((ext) => {
     if (ext.type !== "extension" || ext.id === chrome.runtime.id) return;
+    void enforceDisableList();
     void checkAndNotify(ext.id, ext.name);
     void syncWithApi();
   });
@@ -228,8 +300,10 @@ export default defineBackground(() => {
     }
   });
 
-  // On service worker startup (browser launch, extension reload)
+  // On service worker startup (browser launch, extension reload):
+  // enforce immediately from local cache, then sync with API
   chrome.runtime.onStartup.addListener(() => {
+    void enforceDisableList();
     void syncWithApi();
   });
 

@@ -135,6 +135,20 @@ export const adminOrgsRouter = createTRPCRouter({
         .where(eqi(Organization.id, input.orgId));
     }),
 
+  setQuarantinePolicy: adminProcedure
+    .input(
+      z.object({
+        orgId: z.string(),
+        enabled: z.boolean(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db
+        .update(Organization)
+        .set({ quarantineUnscannedUpdates: input.enabled })
+        .where(eqi(Organization.id, input.orgId));
+    }),
+
   suspend: adminProcedure
     .input(
       z.object({

@@ -28,8 +28,10 @@ import {
   ExtensionScan,
   ExtensionVersion,
   OrgApiKey,
+  Organization,
   UserExtension,
   UserExtensionEvent,
+  eqi,
 } from "@amibeingpwned/db";
 
 import { generateDeviceToken, hashToken } from "../lib/tokens";
@@ -274,6 +276,22 @@ export const devicesRouter = createTRPCRouter({
       const now = new Date();
 
       // -----------------------------------------------------------------------
+      // 0. Fetch org policy (B2B only — B2C devices have no org)
+      // -----------------------------------------------------------------------
+
+      let quarantineUnscannedUpdates = false;
+      if (device.orgId) {
+        const [org] = await ctx.db
+          .select({ quarantineUnscannedUpdates: Organization.quarantineUnscannedUpdates })
+          .from(Organization)
+          .where(eqi(Organization.id, device.orgId))
+          .limit(1);
+        quarantineUnscannedUpdates = org?.quarantineUnscannedUpdates ?? false;
+      }
+
+      const quarantineList: string[] = [];
+
+      // -----------------------------------------------------------------------
       // 1. Upsert extensions into the global registry
       // -----------------------------------------------------------------------
 
@@ -336,6 +354,19 @@ export const devicesRouter = createTRPCRouter({
             ),
           )
           .limit(1);
+
+        // Quarantine check: if the org policy is on and this extension just
+        // updated to a version we haven't scanned yet, add it to quarantineList.
+        // The extension will disable it temporarily and re-enable once clean.
+        if (
+          quarantineUnscannedUpdates &&
+          existingUE &&
+          existingUE.versionAtLastSync !== ext.version &&
+          versionRow &&
+          !versionRow.analyzedAt
+        ) {
+          quarantineList.push(ext.chromeExtensionId);
+        }
 
         if (existingUE) {
           const versionChanged = existingUE.versionAtLastSync !== ext.version;
@@ -474,6 +505,7 @@ export const devicesRouter = createTRPCRouter({
 
       return {
         disableList,
+        quarantineList,
         newToken: newRaw,
       };
     }),
