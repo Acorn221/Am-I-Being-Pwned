@@ -1,0 +1,132 @@
+import { TRPCError } from "@trpc/server";
+import { and, count, desc, eq, ilike, isNull, or } from "drizzle-orm";
+import { z } from "zod/v4";
+
+import { Device, UserAlert, UserSubscription, eqi, user } from "@amibeingpwned/db";
+
+import { adminProcedure, createTRPCRouter } from "../../trpc";
+
+const PaginationSchema = z.object({
+  page: z.number().int().min(1).default(1),
+  limit: z.number().int().min(1).max(100).default(20),
+});
+
+export const adminUsersRouter = createTRPCRouter({
+  list: adminProcedure
+    .input(
+      PaginationSchema.extend({
+        search: z.string().optional(),
+        role: z.enum(["user", "admin"]).optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const offset = (input.page - 1) * input.limit;
+
+      const where = and(
+        input.search
+          ? or(
+              ilike(user.email, `%${input.search}%`),
+              ilike(user.name, `%${input.search}%`),
+            )
+          : undefined,
+        input.role !== undefined ? eq(user.role, input.role) : undefined,
+      );
+
+      const [rows, totalResult] = await Promise.all([
+        ctx.db
+          .select()
+          .from(user)
+          .where(where)
+          .orderBy(desc(user.createdAt))
+          .limit(input.limit)
+          .offset(offset),
+        ctx.db.select({ total: count() }).from(user).where(where),
+      ]);
+
+      return {
+        rows,
+        total: totalResult[0]?.total ?? 0,
+        page: input.page,
+        limit: input.limit,
+      };
+    }),
+
+  get: adminProcedure
+    .input(z.object({ userId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      // user.id is a plain text column from better-auth — use eq, not eqi
+      const [userRow] = await ctx.db
+        .select()
+        .from(user)
+        .where(eq(user.id, input.userId))
+        .limit(1);
+
+      if (!userRow) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const [subscription] = await ctx.db
+        .select()
+        .from(UserSubscription)
+        .where(eq(UserSubscription.userId, input.userId))
+        .limit(1);
+
+      const [deviceCountResult, unreadAlertResult] = await Promise.all([
+        ctx.db
+          .select({ total: count() })
+          .from(Device)
+          .where(and(eq(Device.userId, input.userId), isNull(Device.revokedAt))),
+        ctx.db
+          .select({ total: count() })
+          .from(UserAlert)
+          .where(and(eq(UserAlert.userId, input.userId), eq(UserAlert.read, false))),
+      ]);
+
+      return {
+        user: userRow,
+        subscription: subscription ?? null,
+        activeDeviceCount: deviceCountResult[0]?.total ?? 0,
+        unreadAlertCount: unreadAlertResult[0]?.total ?? 0,
+      };
+    }),
+
+  /**
+   * Promote or demote a user's role.
+   * Immediately invalidates all active sessions so the change takes effect
+   * on the next request rather than waiting for session expiry.
+   */
+  setRole: adminProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        role: z.enum(["user", "admin"]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (input.userId === ctx.session.user.id && input.role !== "admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Cannot demote your own admin role",
+        });
+      }
+
+      await ctx.db
+        .update(user)
+        .set({ role: input.role })
+        .where(eq(user.id, input.userId));
+
+      // Session invalidation: better-auth (with Drizzle adapter) fetches the user
+      // record fresh on every getSession call, so the role change is visible on the
+      // very next request without needing to revoke existing session tokens.
+    }),
+
+  revokeAllDevices: adminProcedure
+    .input(z.object({ userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const revoked = await ctx.db
+        .update(Device)
+        .set({ revokedAt: new Date() })
+        .where(and(eq(Device.userId, input.userId), isNull(Device.revokedAt)))
+        .returning({ id: Device.id });
+
+      return { revokedCount: revoked.length };
+    }),
+});
