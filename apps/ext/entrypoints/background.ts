@@ -19,8 +19,10 @@ import { getNotifiedRisk, setNotifiedRisk } from "../lib/storage";
 const WEB_URL = API_BASE_URL;
 
 const ALLOWED_ORIGINS = import.meta.env.DEV
-  ? ["https://amibeingpwned.com", API_BASE_URL]
+  ? ["https://amibeingpwned.com", "http://localhost:3000", "http://127.0.0.1:3000", "https://deathmail-mac.j4a.uk"]
   : ["https://amibeingpwned.com"];
+
+console.log("[AIBP bg] DEV:", import.meta.env.DEV, "| ALLOWED_ORIGINS:", ALLOWED_ORIGINS);
 
 // ---------------------------------------------------------------------------
 // Rate limiter - sliding window, 10 requests per 60 seconds per origin
@@ -152,7 +154,8 @@ export default defineBackground(() => {
       // For B2C, UNAUTHORIZED just means the user hasn't logged in yet.
       // Don't log it as an error — schedule a quiet retry.
       const isUnauthed =
-        err instanceof TRPCClientError && err.data?.httpStatus === 401;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        err instanceof TRPCClientError && ("httpStatus" in err.data && err.data.httpStatus === 401);
       if (!isUnauthed) {
         console.warn("[AIBP] Device registration failed:", err);
       }
@@ -257,6 +260,8 @@ export default defineBackground(() => {
         }
       }
     } catch (err) {
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if (err instanceof TRPCClientError && err.data?.httpStatus === 401) {
         // Token was revoked server-side — clear and re-register
         console.warn("[AIBP] Device token rejected, re-registering");
@@ -337,7 +342,9 @@ export default defineBackground(() => {
     (message: unknown, sender, sendResponse) => {
       // Defense-in-depth: validate sender origin even though Chrome filters
       const origin = sender.url ? new URL(sender.url).origin : "";
+      console.log("[AIBP bg] onMessageExternal — origin:", origin, "| allowed:", ALLOWED_ORIGINS);
       if (!ALLOWED_ORIGINS.includes(origin)) {
+        console.warn("[AIBP bg] FORBIDDEN — origin not in allowed list");
         sendResponse({
           type: "ERROR",
           version: 1,

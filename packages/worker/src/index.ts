@@ -2,6 +2,7 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
 import { appRouter, createTRPCContext } from "@amibeingpwned/api";
 import { initAuth } from "@amibeingpwned/auth";
+import { initDb } from "@amibeingpwned/db/client";
 
 export interface Env {
   ASSETS?: Fetcher;
@@ -104,6 +105,7 @@ function getAuth(env: Env) {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    initDb(env.POSTGRES_URL);
     const { pathname } = new URL(request.url);
     const currentAuth = getAuth(env);
 

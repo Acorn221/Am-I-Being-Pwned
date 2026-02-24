@@ -1,7 +1,10 @@
 import { adminRouter } from "./router/admin/index";
+import { alertsRouter } from "./router/alerts";
 import { authRouter } from "./router/auth";
 import { devicesRouter } from "./router/devices";
+import { extensionsRouter } from "./router/extensions";
 import { postRouter } from "./router/post";
+import { subscriptionRouter } from "./router/subscription";
 import { createTRPCRouter } from "./trpc";
 
 export const appRouter = createTRPCRouter({
@@ -9,6 +12,9 @@ export const appRouter = createTRPCRouter({
   auth: authRouter,
   devices: devicesRouter,
   post: postRouter,
+  alerts: alertsRouter,
+  extensions: extensionsRouter,
+  subscription: subscriptionRouter,
 });
 
 // export type definition of API

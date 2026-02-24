@@ -7,7 +7,7 @@ export const user = pgTable("user", (t) => ({
   emailVerified: t.boolean().notNull(),
   image: t.text(),
   // "user" | "admin" — extend via better-auth additionalFields
-  role: t.text().notNull().default("user"),
+  role: t.text("role").notNull().default("user"),
   createdAt: t.timestamp().notNull(),
   updatedAt: t.timestamp().notNull(),
 }));

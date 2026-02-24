@@ -48,3 +48,4 @@ apps/ext/.output/
 
 # example reference repo — not part of the project
 example/
+.dev.vars

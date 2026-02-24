@@ -236,8 +236,8 @@ function buildRoute(
       });
       continue;
     }
-    if (!quiet)
-      console.log(`  [corner${ci}] direct BLOCKED: ${fmt(d)}`, findHits(d, 0));
+    // if (!quiet)
+    // console.log(`  [corner${ci}] direct BLOCKED: ${fmt(d)}`, findHits(d, 0));
 
     // 2. Exit → anchor (skip chip→exit)
     const r1: [number, number][] = [[sx, sy], ep, target];
@@ -250,11 +250,11 @@ function buildRoute(
       });
       continue;
     }
-    if (!quiet)
-      console.log(
-        `  [corner${ci}] exit→anchor BLOCKED: ${fmt(r1)}`,
-        findHits(r1, 1),
-      );
+    // if (!quiet)
+    // console.log(
+    //   `  [corner${ci}] exit→anchor BLOCKED: ${fmt(r1)}`,
+    //   findHits(r1, 1),
+    // );
 
     // 3. Exit → exit column → anchor
     const r2: [number, number][] = [[sx, sy], ep, [exitX, ep[1]], target];
@@ -267,11 +267,11 @@ function buildRoute(
       });
       continue;
     }
-    if (!quiet)
-      console.log(
-        `  [corner${ci}] exit→col→anchor BLOCKED: ${fmt(r2)}`,
-        findHits(r2, 1),
-      );
+    // if (!quiet)
+    // console.log(
+    //   `  [corner${ci}] exit→col→anchor BLOCKED: ${fmt(r2)}`,
+    //   findHits(r2, 1),
+    // );
 
     // 4. Vertical detour scan
     const step = labelAnchor.y < ep[1] ? -6 : 6;
@@ -314,7 +314,8 @@ function buildRoute(
       }
     }
 
-    if (!found && !quiet) console.log(`  [corner${ci}] ALL strategies FAILED`);
+    // if (!found && !quiet) {
+    // } // console.log(`  [corner${ci}] ALL strategies FAILED`);
   }
 
   if (results.length > 0) {
@@ -340,10 +341,10 @@ function buildRoute(
   const fbExit: [number, number] = chipZone
     ? [chipZone.x + chipZone.w + 4, fb.y]
     : [exitX, fb.y];
-  if (!quiet)
-    console.log(
-      `[Route] WARNING: no clear route found, using fallback: ${fmt([[fb.x, fb.y], fbExit, [labelAnchor.x, labelAnchor.y]])}`,
-    );
+  // if (!quiet)
+  //   console.log(
+  //     `[Route] WARNING: no clear route found, using fallback: ${fmt([[fb.x, fb.y], fbExit, [labelAnchor.x, labelAnchor.y]])}`,
+  //   );
   return [[fb.x, fb.y], fbExit, [labelAnchor.x, labelAnchor.y]];
 }
 
@@ -411,13 +412,13 @@ function bestSlotAssignment(
   }
 
   search([], new Set());
-  console.log(
-    `[Assignment] best:`,
-    best.map(
-      (s, i) => `chip${i}→slot${s}(${slots[s]!.labelX},${slots[s]!.labelY})`,
-    ),
-    `routedCost=${Math.round(bestCost)}`,
-  );
+  // console.log(
+  //   `[Assignment] best:`,
+  //   best.map(
+  //     (s, i) => `chip${i}→slot${s}(${slots[s]!.labelX},${slots[s]!.labelY})`,
+  //   ),
+  //   `routedCost=${Math.round(bestCost)}`,
+  // );
   return best;
 }
 
@@ -610,14 +611,14 @@ export function CircuitTraces({
         const otherLabels = allLabelBoxes.filter((_, j) => j !== i);
         const allObstacles = [...otherLabels, ...textObstacles];
 
-        console.log(
-          `[Trace ${rank}] "${m.annotation.permission}" → slot(${slot.labelX},${slot.labelY})`,
-          `exitX=${Math.round(exitX)}`,
-          `chip=(${Math.round(m.chip.x)},${Math.round(m.chip.y)} ${Math.round(m.chip.w)}×${Math.round(m.chip.h)})`,
-          `anchor=(${Math.round(anchor.x)},${Math.round(anchor.y)})`,
-          `chipZone=${chipZone ? `(${Math.round(chipZone.x)},${Math.round(chipZone.y)} ${Math.round(chipZone.w)}×${Math.round(chipZone.h)})` : "none"}`,
-          `obstacles: ${otherLabels.length} labels + ${textObstacles.length} text = ${allObstacles.length}`,
-        );
+        // console.log(
+        //   `[Trace ${rank}] "${m.annotation.permission}" → slot(${slot.labelX},${slot.labelY})`,
+        //   `exitX=${Math.round(exitX)}`,
+        //   `chip=(${Math.round(m.chip.x)},${Math.round(m.chip.y)} ${Math.round(m.chip.w)}×${Math.round(m.chip.h)})`,
+        //   `anchor=(${Math.round(anchor.x)},${Math.round(anchor.y)})`,
+        //   `chipZone=${chipZone ? `(${Math.round(chipZone.x)},${Math.round(chipZone.y)} ${Math.round(chipZone.w)}×${Math.round(chipZone.h)})` : "none"}`,
+        //   `obstacles: ${otherLabels.length} labels + ${textObstacles.length} text = ${allObstacles.length}`,
+        // );
 
         // Build the polyline
         const pixels = buildRoute(

@@ -14,12 +14,12 @@ export default defineConfig({
     permissions: ["alarms", "management", "notifications", "storage"],
     host_permissions: [
       "https://amibeingpwned.com/*",
-      ...(mode === "development" ? ["http://localhost/*"] : []),
+      ...(mode === "development" ? ["http://localhost/*", "https://deathmail-mac.j4a.uk/*"] : []),
     ],
     externally_connectable: {
       matches: [
         "https://amibeingpwned.com/*",
-        ...(mode === "development" ? ["http://localhost/*"] : []),
+        ...(mode === "development" ? ["http://localhost/*", "https://deathmail-mac.j4a.uk/*"] : []),
       ],
     },
     // id = amibeingpndbmhcmnjdekhljpjcbjnpl

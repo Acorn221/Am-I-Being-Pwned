@@ -8,6 +8,10 @@ export default defineConfig({
     host: "127.0.0.1",
     port: 3000,
     strictPort: true,
+    allowedHosts: ["deathmail-mac.j4a.uk"],
+    proxy: {
+      "/api": "http://localhost:8787",
+    },
   },
   plugins: [
     tsConfigPaths({

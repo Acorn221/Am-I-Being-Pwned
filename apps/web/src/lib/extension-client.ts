@@ -17,14 +17,20 @@ export class ExtensionClient {
    * Stores the ID internally on success.
    */
   async detect(): Promise<string | null> {
+    console.log("[AIBP] detect: trying known ID", ExtensionClient.KNOWN_ID);
     const known = await this.ping(ExtensionClient.KNOWN_ID);
     if (known) {
+      console.log("[AIBP] detect: known ID responded, extension connected");
       this.extensionId = known;
       return known;
     }
+    console.log("[AIBP] detect: known ID did not respond, falling back to content script discovery");
     const discovered = await this.listenForContentScript();
     if (discovered) {
+      console.log("[AIBP] detect: discovered ID via content script:", discovered);
       this.extensionId = discovered;
+    } else {
+      console.log("[AIBP] detect: content script discovery timed out — extension not installed");
     }
     return discovered;
   }
@@ -77,14 +83,20 @@ export class ExtensionClient {
    */
   private async ping(id: string): Promise<string | null> {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (!chrome?.runtime?.sendMessage) return null;
+    if (!chrome?.runtime?.sendMessage) {
+      console.log("[AIBP] ping: chrome.runtime.sendMessage not available");
+      return null;
+    }
 
     const prev = this.extensionId;
     this.extensionId = id;
     try {
       const resp = await this.send({ type: "PING", version: 1 }, 1000);
-      return resp.type === "PONG" ? id : null;
-    } catch {
+      const ok = resp.type === "PONG";
+      console.log("[AIBP] ping", id, "→", ok ? "PONG ✓" : `unexpected response:`, ok ? null : resp);
+      return ok ? id : null;
+    } catch (err) {
+      console.log("[AIBP] ping", id, "→ failed:", err instanceof Error ? err.message : err);
       return null;
     } finally {
       this.extensionId = prev;
@@ -119,6 +131,7 @@ export class ExtensionClient {
         if (!settled) {
           settled = true;
           window.removeEventListener("message", handler);
+          console.log("[AIBP] content script discovery timed out after", timeoutMs, "ms");
           resolve(null);
         }
       }, timeoutMs);
@@ -132,11 +145,20 @@ export class ExtensionClient {
           settled = true;
           clearTimeout(timer);
           window.removeEventListener("message", handler);
+          console.log("[AIBP] received AIBP_EXTENSION_READY, ext ID:", extId);
           resolve(extId);
         }
       }
 
       window.addEventListener("message", handler);
+
+      // Trigger the content script to re-broadcast (handles the case where
+      // the initial AIBP_EXTENSION_READY fired before React mounted)
+      console.log("[AIBP] sending AIBP_REQUEST_ID to content script");
+      window.postMessage(
+        { channel: "AIBP_BRIDGE", type: "AIBP_REQUEST_ID" },
+        location.origin,
+      );
     });
   }
 }
