@@ -1,5 +1,14 @@
 {
   "extends": "@amibeingpwned/tsconfig/compiled-package.json",
+  "compilerOptions": {
+    // better-auth's oAuthProxy plugin bleeds OAuthProxyOptions into inferred
+    // types, causing TS4023 when declaration files are generated. This package
+    // is consumed as source within the monorepo so .d.ts files aren't needed.
+    "declaration": false,
+    "declarationMap": false,
+    "emitDeclarationOnly": false,
+    "noEmit": true
+  },
   "include": ["src"],
   "exclude": ["node_modules"]
 }

@@ -2,7 +2,6 @@ import type { BetterAuthOptions, BetterAuthPlugin } from "better-auth";
 import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { oAuthProxy } from "better-auth/plugins";
 
 import { db } from "@amibeingpwned/db/client";
 
@@ -10,11 +9,9 @@ export function initAuth<
   TExtraPlugins extends BetterAuthPlugin[] = [],
 >(options: {
   baseUrl: string;
-  productionUrl: string;
   secret: string | undefined;
-
-  discordClientId: string;
-  discordClientSecret: string;
+  googleClientId: string;
+  googleClientSecret: string;
   extraPlugins?: TExtraPlugins;
 }) {
   const config = {
@@ -28,22 +25,15 @@ export function initAuth<
         role: {
           type: "string" as const,
           defaultValue: "user",
-          input: false, // not settable by the user themselves
+          input: false,
         },
       },
     },
-    plugins: [
-      oAuthProxy({
-        productionURL: options.productionUrl,
-      }),
-      expo(),
-      ...(options.extraPlugins ?? []),
-    ],
+    plugins: [expo(), ...(options.extraPlugins ?? [])],
     socialProviders: {
-      discord: {
-        clientId: options.discordClientId,
-        clientSecret: options.discordClientSecret,
-        redirectURI: `${options.productionUrl}/api/auth/callback/discord`,
+      google: {
+        clientId: options.googleClientId,
+        clientSecret: options.googleClientSecret,
       },
     },
     trustedOrigins: ["expo://"],

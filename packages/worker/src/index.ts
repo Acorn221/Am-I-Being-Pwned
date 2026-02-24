@@ -7,9 +7,12 @@ export interface Env {
   ASSETS?: Fetcher;
   POSTGRES_URL: string;
   AUTH_SECRET: string;
-  AUTH_DISCORD_ID: string;
-  AUTH_DISCORD_SECRET: string;
-  AUTH_REDIRECT_PROXY_URL: string;
+  AUTH_GOOGLE_ID: string;
+  AUTH_GOOGLE_SECRET: string;
+  // Canonical public origin — used as better-auth baseUrl.
+  // Must come from a trusted env var, NOT from request headers (which an
+  // attacker can spoof, poisoning the auth singleton for an entire isolate).
+  APP_URL: string;
   // TODO: add RATE_LIMIT_KV: KVNamespace when rate limiting is implemented
 }
 
@@ -82,14 +85,14 @@ function applySecurityHeaders(response: Response): Response {
 
 let auth: ReturnType<typeof initAuth> | undefined;
 
-function getAuth(origin: string, env: Env) {
+function getAuth(env: Env) {
   if (!auth) {
     auth = initAuth({
-      baseUrl: origin,
-      productionUrl: env.AUTH_REDIRECT_PROXY_URL,
+      // APP_URL comes from a trusted env var — never from request headers.
+      baseUrl: env.APP_URL,
       secret: env.AUTH_SECRET,
-      discordClientId: env.AUTH_DISCORD_ID,
-      discordClientSecret: env.AUTH_DISCORD_SECRET,
+      googleClientId: env.AUTH_GOOGLE_ID,
+      googleClientSecret: env.AUTH_GOOGLE_SECRET,
     });
   }
   return auth;
@@ -101,18 +104,18 @@ function getAuth(origin: string, env: Env) {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    const url = new URL(request.url);
-    const currentAuth = getAuth(url.origin, env);
+    const { pathname } = new URL(request.url);
+    const currentAuth = getAuth(env);
 
     let response: Response;
 
     // Auth routes — better-auth handles all /api/auth/* paths
-    if (url.pathname.startsWith("/api/auth")) {
+    if (pathname.startsWith("/api/auth")) {
       response = await currentAuth.handler(request);
     }
 
     // tRPC routes
-    else if (url.pathname.startsWith("/api/trpc")) {
+    else if (pathname.startsWith("/api/trpc")) {
       response = await fetchRequestHandler({
         endpoint: "/api/trpc",
         req: request,

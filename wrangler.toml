@@ -8,4 +8,4 @@ assets = { directory = "apps/web/dist" }
 # Local dev — mirror env vars from .env
 # Set secrets in production with: wrangler secret put <NAME>
 [vars]
-AUTH_REDIRECT_PROXY_URL = "https://amibeingpwned.com"
+APP_URL = "https://amibeingpwned.com"

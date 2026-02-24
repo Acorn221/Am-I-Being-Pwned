@@ -22,6 +22,7 @@
     "@amibeingpwned/db": "workspace:*",
     "@amibeingpwned/validators": "workspace:*",
     "@trpc/server": "catalog:",
+    "drizzle-orm": "catalog:",
     "superjson": "2.2.3",
     "zod": "catalog:"
   },

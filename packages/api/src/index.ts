@@ -26,5 +26,6 @@ export {
   protectedProcedure,
   publicProcedure,
 } from "./trpc";
+export { deviceProcedure } from "./middleware/device-auth";
 export { rateLimitMiddleware } from "./middleware/rate-limit";
 export type { RouterInputs, RouterOutputs };
