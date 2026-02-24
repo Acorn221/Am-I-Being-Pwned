@@ -19,5 +19,12 @@ type RouterInputs = inferRouterInputs<AppRouter>;
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 
 export { type AppRouter, appRouter } from "./root";
-export { createTRPCContext } from "./trpc";
+export {
+  adminProcedure,
+  createTRPCContext,
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "./trpc";
+export { rateLimitMiddleware } from "./middleware/rate-limit";
 export type { RouterInputs, RouterOutputs };

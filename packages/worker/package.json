@@ -1,0 +1,22 @@
+{
+  "name": "@amibeingpwned/worker",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@amibeingpwned/api": "workspace:*",
+    "@amibeingpwned/auth": "workspace:*",
+    "@trpc/server": "catalog:"
+  },
+  "devDependencies": {
+    "@amibeingpwned/tsconfig": "workspace:*",
+    "@cloudflare/workers-types": "^4.20250129.0",
+    "typescript": "catalog:",
+    "wrangler": "^4.0.0"
+  }
+}

@@ -8,24 +8,11 @@ node_modules
 # testing
 coverage
 
-# next.js
-.next/
-out/
-next-env.d.ts
-
-# nitro
-.nitro/
-.output/
-
-# expo
-.expo/
-expo-env.d.ts
-apps/expo/.gitignore
-apps/expo/ios
-apps/expo/android
-
-# production
+# builds
 build
+dist/
+.output/
+.cache
 
 # misc
 .DS_Store
@@ -41,19 +28,23 @@ yarn-error.log*
 .env
 .env*.local
 
-# vercel
-.vercel
-
 # typescript
-dist/
-.cache
-
-# storybook
-storybook-static
+*.tsbuildinfo
 
 # turbo
 .turbo
 
 # tanstack
 .tanstack
-node_modules/.pnpm/@antfu+ni@25.0.0/node_modules/ansis
+
+# cloudflare
+.wrangler/
+
+# storybook
+storybook-static
+
+# wxt (extension builds)
+apps/ext/.output/
+
+# example reference repo — not part of the project
+example/

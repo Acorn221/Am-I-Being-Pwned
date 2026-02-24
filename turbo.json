@@ -20,6 +20,13 @@
     "@amibeingpwned/ext#dev": {
       "persistent": true
     },
+    "@amibeingpwned/worker#dev": {
+      "persistent": true
+    },
+    "deploy": {
+      "dependsOn": ["^build"],
+      "cache": false
+    },
     "format": {
       "outputs": [".cache/.prettiercache"],
       "outputLogs": "new-only"
@@ -61,18 +68,21 @@
   },
   "globalEnv": [
     "POSTGRES_URL",
+    "AUTH_SECRET",
     "AUTH_DISCORD_ID",
     "AUTH_DISCORD_SECRET",
     "AUTH_REDIRECT_PROXY_URL",
-    "AUTH_SECRET",
     "PORT"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",
     "CI",
-    "VERCEL",
-    "VERCEL_ENV",
-    "VERCEL_URL",
-    "npm_lifecycle_event"
+    "npm_lifecycle_event",
+    "CF_PAGES",
+    "CF_PAGES_BRANCH",
+    "CF_PAGES_URL",
+    "CF_PAGES_COMMIT_SHA",
+    "CLOUDFLARE_ACCOUNT_ID",
+    "CLOUDFLARE_API_TOKEN"
   ]
 }

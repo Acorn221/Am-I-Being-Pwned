@@ -10,17 +10,22 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@amibeingpwned/api": "workspace:*",
     "@amibeingpwned/types": "workspace:*",
     "@amibeingpwned/ui": "workspace:*",
     "@amibeingpwned/validators": "workspace:*",
     "@react-spring/three": "^10.0.3",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
+    "@tanstack/react-query": "catalog:",
+    "@trpc/client": "catalog:",
+    "@trpc/tanstack-react-query": "catalog:",
     "lucide-react": "^0.563.0",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
+    "superjson": "2.2.3",
     "three": "^0.182.0"
   },
   "devDependencies": {

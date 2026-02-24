@@ -23,6 +23,15 @@ export function initAuth<
     }),
     baseURL: options.baseUrl,
     secret: options.secret,
+    user: {
+      additionalFields: {
+        role: {
+          type: "string" as const,
+          defaultValue: "user",
+          input: false, // not settable by the user themselves
+        },
+      },
+    },
     plugins: [
       oAuthProxy({
         productionURL: options.productionUrl,

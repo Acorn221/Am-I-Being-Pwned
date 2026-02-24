@@ -1,0 +1,11 @@
+name = "amibeingpwned"
+compatibility_date = "2025-01-31"
+compatibility_flags = ["nodejs_compat"]
+
+main = "packages/worker/src/index.ts"
+assets = { directory = "apps/web/dist" }
+
+# Local dev — mirror env vars from .env
+# Set secrets in production with: wrangler secret put <NAME>
+[vars]
+AUTH_REDIRECT_PROXY_URL = "https://amibeingpwned.com"
