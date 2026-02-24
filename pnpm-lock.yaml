@@ -104,6 +104,9 @@ importers:
 
   apps/ext:
     dependencies:
+      '@amibeingpwned/api':
+        specifier: workspace:*
+        version: link:../../packages/api
       '@amibeingpwned/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -113,12 +116,18 @@ importers:
       '@amibeingpwned/validators':
         specifier: workspace:*
         version: link:../../packages/validators
+      '@trpc/client':
+        specifier: 'catalog:'
+        version: 11.10.0(@trpc/server@11.7.1(typescript@5.9.3))(typescript@5.9.3)
       react:
         specifier: catalog:react19
         version: 19.1.4
       react-dom:
         specifier: catalog:react19
         version: 19.1.4(react@19.1.4)
+      superjson:
+        specifier: 2.2.3
+        version: 2.2.3
     devDependencies:
       '@amibeingpwned/eslint-config':
         specifier: workspace:*
@@ -12545,7 +12554,7 @@ snapshots:
       debug: 4.4.3
       invariant: 2.2.4
       metro: 0.83.3(bufferutil@4.0.8)(utf-8-validate@6.0.4)
-      metro-config: 0.83.3(bufferutil@4.0.8)
+      metro-config: 0.83.3(bufferutil@4.0.8)(utf-8-validate@6.0.4)
       metro-core: 0.83.3
       semver: 7.7.3
     transitivePeerDependencies:
@@ -16920,6 +16929,21 @@ snapshots:
       - supports-color
       - utf-8-validate
 
+  metro-config@0.83.3(bufferutil@4.0.8)(utf-8-validate@6.0.4):
+    dependencies:
+      connect: 3.7.0
+      flow-enums-runtime: 0.0.6
+      jest-validate: 29.7.0
+      metro: 0.83.3(bufferutil@4.0.8)(utf-8-validate@6.0.4)
+      metro-cache: 0.83.3
+      metro-core: 0.83.3
+      metro-runtime: 0.83.3
+      yaml: 2.8.1
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+
   metro-core@0.83.2:
     dependencies:
       flow-enums-runtime: 0.0.6
@@ -17309,7 +17333,7 @@ snapshots:
       metro-babel-transformer: 0.83.3
       metro-cache: 0.83.3
       metro-cache-key: 0.83.3
-      metro-config: 0.83.3(bufferutil@4.0.8)
+      metro-config: 0.83.3(bufferutil@4.0.8)(utf-8-validate@6.0.4)
       metro-core: 0.83.3
       metro-file-map: 0.83.3
       metro-resolver: 0.83.3

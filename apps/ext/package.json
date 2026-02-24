@@ -17,11 +17,14 @@
     "postinstall": "wxt prepare"
   },
   "dependencies": {
+    "@amibeingpwned/api": "workspace:*",
     "@amibeingpwned/types": "workspace:*",
     "@amibeingpwned/ui": "workspace:*",
     "@amibeingpwned/validators": "workspace:*",
+    "@trpc/client": "catalog:",
     "react": "catalog:react19",
-    "react-dom": "catalog:react19"
+    "react-dom": "catalog:react19",
+    "superjson": "2.2.3"
   },
   "devDependencies": {
     "@amibeingpwned/eslint-config": "workspace:*",

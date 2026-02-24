@@ -1,6 +1,15 @@
 import type { ExtResponse, InstalledExtensionInfo, RiskLevel } from "@amibeingpwned/types";
+import { TRPCClientError } from "@trpc/client";
 import { ExtRequestSchema } from "@amibeingpwned/validators";
+
 import { API_BASE_URL, lookupExtension, fetchExtensionDatabase } from "../lib/api";
+import {
+  clearToken,
+  getStoredToken,
+  registerDevice,
+  storeToken,
+  syncExtensions,
+} from "../lib/device";
 import { getNotifiedRisk, setNotifiedRisk } from "../lib/storage";
 
 const WEB_URL = API_BASE_URL;
@@ -49,7 +58,7 @@ const NOTIFY_THRESHOLD = RISK_SEVERITY.medium; // medium and above
 // ---------------------------------------------------------------------------
 export default defineBackground(() => {
   // -------------------------------------------------------------------------
-  // Extension install / update monitoring
+  // Local database scan + notifications
   // -------------------------------------------------------------------------
 
   async function checkAndNotify(extensionId: string, extensionName: string) {
@@ -80,7 +89,7 @@ export default defineBackground(() => {
     }
   }
 
-  // Scan all installed extensions against the remote database
+  // Scan all installed extensions against the local/remote database
   async function scanAllExtensions() {
     try {
       await fetchExtensionDatabase();
@@ -95,38 +104,161 @@ export default defineBackground(() => {
     }
   }
 
-  // When any extension is installed or updated, check it
+  // -------------------------------------------------------------------------
+  // API: device registration
+  // -------------------------------------------------------------------------
+
+  /**
+   * Tries to register this device with the AIBP API.
+   * On success: stores the token and cancels the retry alarm.
+   * On failure: schedules a retry alarm (fires every 30 min).
+   *   B2C failure is usually "user not logged in yet" — harmless.
+   */
+  async function tryRegisterDevice() {
+    try {
+      const token = await registerDevice();
+      await storeToken(token);
+      await chrome.alarms.clear("registration-retry");
+      console.log("[AIBP] Device registered");
+    } catch (err) {
+      // For B2C, UNAUTHORIZED just means the user hasn't logged in yet.
+      // Don't log it as an error — schedule a quiet retry.
+      const isUnauthed =
+        err instanceof TRPCClientError && err.data?.httpStatus === 401;
+      if (!isUnauthed) {
+        console.warn("[AIBP] Device registration failed:", err);
+      }
+      void chrome.alarms.create("registration-retry", {
+        periodInMinutes: 30,
+      });
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // API: extension inventory sync
+  // -------------------------------------------------------------------------
+
+  /**
+   * Syncs the current extension inventory with the API.
+   *
+   * - Registers the device first if not already registered.
+   * - Rotates the device token on every successful sync.
+   * - Disables extensions the server flags as malicious.
+   * - If the token is rejected (revoked), clears it and re-registers.
+   */
+  async function syncWithApi() {
+    let token = await getStoredToken();
+
+    if (!token) {
+      await tryRegisterDevice();
+      token = await getStoredToken();
+      if (!token) return; // Still not registered (user not logged in yet)
+    }
+
+    const installed = await chrome.management.getAll();
+    const extensions = installed
+      .filter((e) => e.type === "extension" && e.id !== chrome.runtime.id)
+      .map((e) => ({
+        chromeExtensionId: e.id,
+        version: e.version,
+        enabled: e.enabled,
+        name: e.name,
+      }));
+
+    try {
+      const result = await syncExtensions(token, extensions);
+
+      // Rotate token immediately — server already invalidated the old one
+      await storeToken(result.newToken);
+
+      // Enforce the server's disable list
+      for (const extId of result.disableList) {
+        try {
+          await chrome.management.setEnabled(extId, false);
+          void chrome.notifications.create(`aibp-disabled-${extId}`, {
+            type: "basic",
+            iconUrl: chrome.runtime.getURL("icon/128.png"),
+            title: "Malicious Extension Disabled",
+            message:
+              "Am I Being Pwned has disabled an extension flagged as malicious.",
+            priority: 2,
+          });
+        } catch {
+          // Extension may have already been removed — ignore
+        }
+      }
+    } catch (err) {
+      if (err instanceof TRPCClientError && err.data?.httpStatus === 401) {
+        // Token was revoked server-side — clear and re-register
+        console.warn("[AIBP] Device token rejected, re-registering");
+        await clearToken();
+        await tryRegisterDevice();
+      } else {
+        console.warn("[AIBP] Sync failed:", err);
+      }
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Event listeners
+  // -------------------------------------------------------------------------
+
+  // When any extension is installed or updated: local check + API sync
   chrome.management.onInstalled.addListener((ext) => {
     if (ext.type !== "extension" || ext.id === chrome.runtime.id) return;
     void checkAndNotify(ext.id, ext.name);
+    void syncWithApi();
   });
 
-  // On first install: scan everything + create daily alarm
-  // On update: ensure alarm still exists
+  // When any extension is uninstalled: sync so server marks it as removed
+  chrome.management.onUninstalled.addListener((extId) => {
+    if (extId === chrome.runtime.id) return;
+    void syncWithApi();
+  });
+
+  // On first install: scan everything, open web app, register device
+  // On update: ensure alarms still exist
   chrome.runtime.onInstalled.addListener((details) => {
     void chrome.alarms.create("daily-scan", { periodInMinutes: 24 * 60 });
 
     if (details.reason === "install") {
       void chrome.tabs.create({ url: WEB_URL });
       void scanAllExtensions();
+      void tryRegisterDevice();
     }
   });
 
-  // Daily alarm: fetch fresh database + scan all extensions
+  // On service worker startup (browser launch, extension reload)
+  chrome.runtime.onStartup.addListener(() => {
+    void syncWithApi();
+  });
+
+  // Alarm handler
   chrome.alarms.onAlarm.addListener((alarm) => {
-    if (alarm.name !== "daily-scan") return;
-    void scanAllExtensions();
+    if (alarm.name === "daily-scan") {
+      void scanAllExtensions();
+      void syncWithApi();
+    } else if (alarm.name === "registration-retry") {
+      void tryRegisterDevice();
+    }
   });
 
   // Open report page when a notification is clicked
   chrome.notifications.onClicked.addListener((notifId) => {
-    if (!notifId.startsWith("aibp-alert-")) return;
-    const extensionId = notifId.replace("aibp-alert-", "");
-    void chrome.tabs.create({ url: `${WEB_URL}/report/${extensionId}` });
-    void chrome.notifications.clear(notifId);
+    if (notifId.startsWith("aibp-alert-")) {
+      const extensionId = notifId.replace("aibp-alert-", "");
+      void chrome.tabs.create({ url: `${WEB_URL}/report/${extensionId}` });
+      void chrome.notifications.clear(notifId);
+    } else if (notifId.startsWith("aibp-disabled-")) {
+      void chrome.tabs.create({ url: WEB_URL });
+      void chrome.notifications.clear(notifId);
+    }
   });
 
-  // Handle messages from the web page via externally_connectable
+  // -------------------------------------------------------------------------
+  // External messaging (web app ↔ extension bridge)
+  // -------------------------------------------------------------------------
+
   chrome.runtime.onMessageExternal.addListener(
     (message: unknown, sender, sendResponse) => {
       // Defense-in-depth: validate sender origin even though Chrome filters
