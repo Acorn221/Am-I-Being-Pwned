@@ -12,6 +12,7 @@
     "@amibeingpwned/api": "workspace:*",
     "@amibeingpwned/auth": "workspace:*",
     "@amibeingpwned/db": "workspace:*",
+    "@amibeingpwned/email": "workspace:*",
     "@trpc/server": "catalog:"
   },
   "devDependencies": {

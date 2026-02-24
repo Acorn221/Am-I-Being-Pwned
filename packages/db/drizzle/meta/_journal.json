@@ -8,6 +8,13 @@
       "when": 1771958630576,
       "tag": "0000_tiny_franklin_richards",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1771960712705,
+      "tag": "0001_slow_jubilee",
+      "breakpoints": true
     }
   ]
 }

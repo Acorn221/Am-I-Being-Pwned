@@ -3,6 +3,7 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { appRouter, createTRPCContext } from "@amibeingpwned/api";
 import { initAuth } from "@amibeingpwned/auth";
 import { initDb } from "@amibeingpwned/db/client";
+import { createEmailClient } from "@amibeingpwned/email";
 
 export interface Env {
   ASSETS?: Fetcher;
@@ -14,6 +15,7 @@ export interface Env {
   // Must come from a trusted env var, NOT from request headers (which an
   // attacker can spoof, poisoning the auth singleton for an entire isolate).
   APP_URL: string;
+  RESEND_API_KEY: string;
   // TODO: add RATE_LIMIT_KV: KVNamespace when rate limiting is implemented
 }
 
@@ -123,7 +125,12 @@ export default {
         req: request,
         router: appRouter,
         createContext: () =>
-          createTRPCContext({ headers: request.headers, auth: currentAuth }),
+          createTRPCContext({
+            headers: request.headers,
+            auth: currentAuth,
+            email: env.RESEND_API_KEY ? createEmailClient(env.RESEND_API_KEY) : null,
+            appUrl: env.APP_URL,
+          }),
       });
     }
 

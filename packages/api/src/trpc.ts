@@ -8,10 +8,13 @@
  */
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
+import { and, eq, or } from "drizzle-orm";
 import { z, ZodError } from "zod/v4";
 
 import type { Auth } from "@amibeingpwned/auth";
 import { db } from "@amibeingpwned/db/client";
+import { OrgMember, Organization, eqi } from "@amibeingpwned/db";
+import type { createEmailClient } from "@amibeingpwned/email";
 
 /**
  * 1. CONTEXT
@@ -29,6 +32,8 @@ import { db } from "@amibeingpwned/db/client";
 export const createTRPCContext = async (opts: {
   headers: Headers;
   auth: Auth;
+  email: ReturnType<typeof createEmailClient> | null;
+  appUrl: string;
 }) => {
   const session = await opts.auth.api.getSession({
     headers: opts.headers,
@@ -36,6 +41,8 @@ export const createTRPCContext = async (opts: {
   return {
     session,
     db,
+    email: opts.email,
+    appUrl: opts.appUrl,
     headers: opts.headers,
   };
 };
@@ -140,3 +147,50 @@ export const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   }
   return next({ ctx });
 });
+
+/**
+ * Manager procedure
+ *
+ * Requires a valid session AND membership in an org with role "owner" or "admin".
+ * Attaches `ctx.org` (org row) and `ctx.orgRole` to context.
+ * Throws UNAUTHORIZED if the user is not a manager of any org.
+ */
+export const managerProcedure = protectedProcedure.use(
+  async ({ ctx, next }) => {
+    const userId = ctx.session.user.id;
+
+    const [membership] = await ctx.db
+      .select({
+        orgId: OrgMember.orgId,
+        orgRole: OrgMember.role,
+        orgName: Organization.name,
+        orgPlan: Organization.plan,
+        orgSuspendedAt: Organization.suspendedAt,
+      })
+      .from(OrgMember)
+      .innerJoin(Organization, eqi(OrgMember.orgId, Organization.id))
+      .where(
+        and(
+          eq(OrgMember.userId, userId),
+          or(eq(OrgMember.role, "owner"), eq(OrgMember.role, "admin")),
+        ),
+      )
+      .limit(1);
+
+    if (!membership) {
+      throw new TRPCError({ code: "UNAUTHORIZED" });
+    }
+
+    return next({
+      ctx: {
+        org: {
+          id: membership.orgId,
+          name: membership.orgName,
+          plan: membership.orgPlan,
+          suspendedAt: membership.orgSuspendedAt,
+        },
+        orgRole: membership.orgRole as "owner" | "admin",
+      },
+    });
+  },
+);

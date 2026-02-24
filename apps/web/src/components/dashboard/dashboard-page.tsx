@@ -10,15 +10,40 @@ import {
   TableHeader,
   TableRow,
 } from "@amibeingpwned/ui/table";
+import { useQuery } from "@tanstack/react-query";
 import { Bell, LogOut, Puzzle, RefreshCw, Shield } from "lucide-react";
 
 import { type ExtensionStatus, useExtension } from "~/hooks/use-extension";
 import { authClient } from "~/lib/auth-client";
+import { useTRPC } from "~/lib/trpc";
 import { navigate } from "~/router";
+
+import { FleetDashboard } from "./fleet-dashboard";
 
 export function DashboardPage() {
   const { data: session } = authClient.useSession();
   const { status, extensions, scan, scanning, error } = useExtension();
+  const trpc = useTRPC();
+
+  const { data: fleetOverview, isPending: fleetPending } = useQuery(
+    trpc.fleet.overview.queryOptions(),
+  );
+
+  // Show a minimal loading state while we determine the user's role.
+  if (fleetPending) {
+    return (
+      <div className="bg-background flex min-h-screen items-center justify-center">
+        <RefreshCw className="h-8 w-8 animate-spin opacity-30" />
+      </div>
+    );
+  }
+
+  // Manager path — fleet overview query succeeded.
+  if (fleetOverview) {
+    return <FleetDashboard overview={fleetOverview} />;
+  }
+
+  // Regular user path — fleet query threw UNAUTHORIZED (user is not a manager).
 
   async function handleSignOut() {
     await authClient.signOut();

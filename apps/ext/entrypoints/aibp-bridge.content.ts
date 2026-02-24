@@ -13,10 +13,7 @@ export default defineContentScript({
       extensionId: chrome.runtime.id,
     };
 
-    console.log("[AIBP bridge] content script loaded, ext ID:", chrome.runtime.id);
-
     // Broadcast immediately (may be missed if page JS hasn't mounted yet)
-    console.log("[AIBP bridge] broadcasting AIBP_EXTENSION_READY");
     window.postMessage(message, location.origin);
 
     // Also respond to on-demand requests so the page can ask after mount
@@ -27,7 +24,6 @@ export default defineContentScript({
         data?.channel === "AIBP_BRIDGE" &&
         data.type === "AIBP_REQUEST_ID"
       ) {
-        console.log("[AIBP bridge] responding to AIBP_REQUEST_ID");
         window.postMessage(message, location.origin);
       }
     });

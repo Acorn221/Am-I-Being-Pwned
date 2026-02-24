@@ -53,7 +53,8 @@ export const severityEnum = pgEnum("severity", ["info", "warning", "critical"]);
 
 export const planEnum = pgEnum("plan", ["free", "pro"]);
 
-export const orgRoleEnum = pgEnum("org_role", ["owner", "admin", "member"]);
+// orgRoleEnum removed — OrgMember.role uses a plain text column with enum values
+// (matches the style of user.role in auth-schema.ts)
 
 export const devicePlatformEnum = pgEnum("device_platform", ["chrome", "edge"]);
 
@@ -158,7 +159,9 @@ export const OrgMember = createTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    role: orgRoleEnum().notNull().default("member"),
+    role: text("role", { enum: ["owner", "admin", "member"] as const })
+      .notNull()
+      .default("member"),
   },
   (t) => [
     unique().on(t.orgId, t.userId),

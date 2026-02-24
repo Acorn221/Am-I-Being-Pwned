@@ -20,6 +20,7 @@
   "dependencies": {
     "@amibeingpwned/auth": "workspace:*",
     "@amibeingpwned/db": "workspace:*",
+    "@amibeingpwned/email": "workspace:*",
     "@amibeingpwned/validators": "workspace:*",
     "@trpc/server": "catalog:",
     "drizzle-orm": "catalog:",

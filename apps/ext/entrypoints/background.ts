@@ -22,7 +22,6 @@ const ALLOWED_ORIGINS = import.meta.env.DEV
   ? ["https://amibeingpwned.com", "http://localhost:3000", "http://127.0.0.1:3000", "https://deathmail-mac.j4a.uk"]
   : ["https://amibeingpwned.com"];
 
-console.log("[AIBP bg] DEV:", import.meta.env.DEV, "| ALLOWED_ORIGINS:", ALLOWED_ORIGINS);
 
 // ---------------------------------------------------------------------------
 // Rate limiter - sliding window, 10 requests per 60 seconds per origin
@@ -342,9 +341,7 @@ export default defineBackground(() => {
     (message: unknown, sender, sendResponse) => {
       // Defense-in-depth: validate sender origin even though Chrome filters
       const origin = sender.url ? new URL(sender.url).origin : "";
-      console.log("[AIBP bg] onMessageExternal — origin:", origin, "| allowed:", ALLOWED_ORIGINS);
       if (!ALLOWED_ORIGINS.includes(origin)) {
-        console.warn("[AIBP bg] FORBIDDEN — origin not in allowed list");
         sendResponse({
           type: "ERROR",
           version: 1,
