@@ -51,7 +51,8 @@ export function TypingTitle() {
         if (s.charIndex >= fullText.length) {
           // Finished typing - wait, then delete (or hold if paused)
           const annotationCount = slide.annotations?.length ?? 0;
-          const pauseTime = PAUSE_AFTER_TYPED_BASE + annotationCount * PAUSE_PER_ANNOTATION;
+          const pauseTime =
+            PAUSE_AFTER_TYPED_BASE + annotationCount * PAUSE_PER_ANNOTATION;
           timeoutRef.current = setTimeout(() => {
             if (pausedRef.current) {
               waitForResume();
@@ -109,7 +110,7 @@ export function TypingTitle() {
         </span>
       </span>
       <br />
-      are compromising your fleet.
+      are leaking company data.
     </h1>
   );
 }
