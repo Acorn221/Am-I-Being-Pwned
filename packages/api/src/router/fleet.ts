@@ -11,12 +11,38 @@ import {
   eqi,
 } from "@amibeingpwned/db";
 
+import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, managerProcedure, protectedProcedure } from "../trpc";
 
 const PaginationSchema = z.object({
   page: z.number().int().min(1).default(1),
   limit: z.number().int().min(1).max(100).default(20),
 });
+
+// ---------------------------------------------------------------------------
+// Shared helper — look up the manager's org membership
+// ---------------------------------------------------------------------------
+
+async function getManagerMembership(db: typeof import("@amibeingpwned/db/client").db, userId: string) {
+  const [membership] = await db
+    .select({
+      orgId: OrgMember.orgId,
+      orgRole: OrgMember.role,
+      orgName: Organization.name,
+      orgPlan: Organization.plan,
+      orgSuspendedAt: Organization.suspendedAt,
+    })
+    .from(OrgMember)
+    .innerJoin(Organization, eqi(OrgMember.orgId, Organization.id))
+    .where(
+      and(
+        eq(OrgMember.userId, userId),
+        or(eq(OrgMember.role, "owner"), eq(OrgMember.role, "admin")),
+      ),
+    )
+    .limit(1);
+  return membership ?? null;
+}
 
 export const fleetRouter = createTRPCRouter({
   /**
@@ -25,27 +51,7 @@ export const fleetRouter = createTRPCRouter({
    * console error for regular users on every dashboard load.
    */
   overview: protectedProcedure.query(async ({ ctx }) => {
-    const userId = ctx.session.user.id;
-
-    // Check org membership — must be owner or admin
-    const [membership] = await ctx.db
-      .select({
-        orgId: OrgMember.orgId,
-        orgRole: OrgMember.role,
-        orgName: Organization.name,
-        orgPlan: Organization.plan,
-        orgSuspendedAt: Organization.suspendedAt,
-      })
-      .from(OrgMember)
-      .innerJoin(Organization, eqi(OrgMember.orgId, Organization.id))
-      .where(
-        and(
-          eq(OrgMember.userId, userId),
-          or(eq(OrgMember.role, "owner"), eq(OrgMember.role, "admin")),
-        ),
-      )
-      .limit(1);
-
+    const membership = await getManagerMembership(ctx.db, ctx.session.user.id);
     if (!membership) return null;
 
     const orgId = membership.orgId;
@@ -73,10 +79,7 @@ export const fleetRouter = createTRPCRouter({
           .select({ total: countDistinct(UserExtension.chromeExtensionId) })
           .from(UserExtension)
           .innerJoin(Device, eqi(UserExtension.deviceId, Device.id))
-          .innerJoin(
-            Extension,
-            eq(UserExtension.chromeExtensionId, Extension.chromeExtensionId),
-          )
+          .innerJoin(Extension, eq(UserExtension.chromeExtensionId, Extension.chromeExtensionId))
           .where(
             and(
               eqi(Device.orgId, orgId),
@@ -114,7 +117,132 @@ export const fleetRouter = createTRPCRouter({
   }),
 
   /**
-   * Paginated list of devices belonging to the manager's org.
+   * Unread alerts for all members of the manager's org.
+   */
+  alerts: managerProcedure.query(async ({ ctx }) => {
+    const orgId = ctx.org.id;
+
+    return ctx.db
+      .select({
+        id: UserAlert.id,
+        alertType: UserAlert.alertType,
+        severity: UserAlert.severity,
+        title: UserAlert.title,
+        body: UserAlert.body,
+        createdAt: UserAlert.createdAt,
+        extensionName: Extension.name,
+        chromeExtensionId: Extension.chromeExtensionId,
+      })
+      .from(UserAlert)
+      .innerJoin(OrgMember, eq(UserAlert.userId, OrgMember.userId))
+      .leftJoin(Extension, eqi(UserAlert.extensionId, Extension.id))
+      .where(
+        and(
+          eqi(OrgMember.orgId, orgId),
+          eq(UserAlert.read, false),
+          eq(UserAlert.dismissed, false),
+        ),
+      )
+      .orderBy(desc(UserAlert.createdAt))
+      .limit(20);
+  }),
+
+  /**
+   * Mark a single alert as read + dismissed.
+   */
+  dismissAlert: managerProcedure
+    .input(z.object({ alertId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const orgId = ctx.org.id;
+
+      // Verify the alert belongs to a member of this org before touching it
+      const [alert] = await ctx.db
+        .select({ id: UserAlert.id })
+        .from(UserAlert)
+        .innerJoin(OrgMember, eq(UserAlert.userId, OrgMember.userId))
+        .where(
+          and(
+            eqi(UserAlert.id, input.alertId),
+            eqi(OrgMember.orgId, orgId),
+          ),
+        )
+        .limit(1);
+
+      if (!alert) throw new TRPCError({ code: "NOT_FOUND" });
+
+      await ctx.db
+        .update(UserAlert)
+        .set({ read: true, dismissed: true })
+        .where(eqi(UserAlert.id, input.alertId));
+    }),
+
+  /**
+   * Devices that currently have ≥1 flagged extension installed.
+   * Used to show the "affected devices" section.
+   */
+  threatenedDevices: managerProcedure.query(async ({ ctx }) => {
+    const orgId = ctx.org.id;
+
+    const rows = await ctx.db
+      .select({
+        deviceId: Device.id,
+        platform: Device.platform,
+        lastSeenAt: Device.lastSeenAt,
+        extensionName: Extension.name,
+        chromeExtensionId: Extension.chromeExtensionId,
+        riskScore: Extension.riskScore,
+        flaggedReason: Extension.flaggedReason,
+      })
+      .from(Device)
+      .innerJoin(
+        UserExtension,
+        and(eqi(UserExtension.deviceId, Device.id), isNull(UserExtension.removedAt)),
+      )
+      .innerJoin(
+        Extension,
+        and(
+          eq(UserExtension.chromeExtensionId, Extension.chromeExtensionId),
+          eq(Extension.isFlagged, true),
+        ),
+      )
+      .where(and(eqi(Device.orgId, orgId), isNull(Device.revokedAt)))
+      .orderBy(desc(Device.lastSeenAt));
+
+    // Group threats by device
+    const deviceMap = new Map<string, {
+      deviceId: string;
+      platform: "chrome" | "edge";
+      lastSeenAt: Date;
+      threats: Array<{
+        extensionName: string | null;
+        chromeExtensionId: string;
+        riskScore: number;
+        flaggedReason: string | null;
+      }>;
+    }>();
+
+    for (const row of rows) {
+      if (!deviceMap.has(row.deviceId)) {
+        deviceMap.set(row.deviceId, {
+          deviceId: row.deviceId,
+          platform: row.platform,
+          lastSeenAt: row.lastSeenAt,
+          threats: [],
+        });
+      }
+      deviceMap.get(row.deviceId)!.threats.push({
+        extensionName: row.extensionName,
+        chromeExtensionId: row.chromeExtensionId,
+        riskScore: row.riskScore,
+        flaggedReason: row.flaggedReason,
+      });
+    }
+
+    return Array.from(deviceMap.values());
+  }),
+
+  /**
+   * Paginated list of all devices belonging to the manager's org.
    */
   devices: managerProcedure
     .input(PaginationSchema)
@@ -129,18 +257,12 @@ export const fleetRouter = createTRPCRouter({
             platform: Device.platform,
             lastSeenAt: Device.lastSeenAt,
             extensionCount: count(UserExtension.chromeExtensionId),
-            flaggedExtensionCount: countDistinct(
-              // count distinct flagged extension IDs
-              UserExtension.chromeExtensionId,
-            ),
+            flaggedExtensionCount: countDistinct(UserExtension.chromeExtensionId),
           })
           .from(Device)
           .leftJoin(
             UserExtension,
-            and(
-              eqi(UserExtension.deviceId, Device.id),
-              isNull(UserExtension.removedAt),
-            ),
+            and(eqi(UserExtension.deviceId, Device.id), isNull(UserExtension.removedAt)),
           )
           .leftJoin(
             Extension,
@@ -189,10 +311,7 @@ export const fleetRouter = createTRPCRouter({
           })
           .from(UserExtension)
           .innerJoin(Device, eqi(UserExtension.deviceId, Device.id))
-          .leftJoin(
-            Extension,
-            eq(UserExtension.chromeExtensionId, Extension.chromeExtensionId),
-          )
+          .leftJoin(Extension, eq(UserExtension.chromeExtensionId, Extension.chromeExtensionId))
           .where(
             and(
               eqi(Device.orgId, orgId),

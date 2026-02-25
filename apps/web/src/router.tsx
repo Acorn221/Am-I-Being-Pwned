@@ -1,17 +1,21 @@
-import { useLayoutEffect, useRef, useSyncExternalStore } from "react";
+import { lazy, Suspense, useLayoutEffect, useSyncExternalStore } from "react";
 
-import App from "~/App";
-import { AdminLayout } from "~/components/admin/layout";
-import { OrgDetailPage } from "~/components/admin/org-detail-page";
-import { OrgsPage } from "~/components/admin/orgs-page";
-import { DashboardPage } from "~/components/dashboard/dashboard-page";
-import { FaqPage } from "~/components/faq-page";
 import { Footer } from "~/components/footer";
-import { LoginPage } from "~/components/login-page";
 import { Navbar } from "~/components/navbar";
-import { ReportPage } from "~/components/report-page";
 import { useExtensionDatabase } from "~/hooks/use-extension-database";
 import { authClient } from "~/lib/auth-client";
+
+const App = lazy(() => import("~/App"));
+const AdminLayout = lazy(() => import("~/components/admin/layout").then(m => ({ default: m.AdminLayout })));
+const OrgDetailPage = lazy(() => import("~/components/admin/org-detail-page").then(m => ({ default: m.OrgDetailPage })));
+const OrgsPage = lazy(() => import("~/components/admin/orgs-page").then(m => ({ default: m.OrgsPage })));
+const DashboardPage = lazy(() => import("~/components/dashboard/dashboard-page").then(m => ({ default: m.DashboardPage })));
+const FaqPage = lazy(() => import("~/components/faq-page").then(m => ({ default: m.FaqPage })));
+const LoginPage = lazy(() => import("~/components/login-page").then(m => ({ default: m.LoginPage })));
+const ReportPage = lazy(() => import("~/components/report-page").then(m => ({ default: m.ReportPage })));
+
+// Module-level so it survives App unmounting
+let savedHomeScroll = 0;
 
 const REPORT_RE = /^\/report\/([a-p]{32})$/;
 const ADMIN_ORG_RE = /^\/admin\/orgs\/([^/]+)$/;
@@ -39,8 +43,6 @@ export function Router() {
   const path = usePath();
   const { reports } = useExtensionDatabase();
   const { data: session, isPending } = authClient.useSession();
-  const scrollYRef = useRef(0);
-  const prevExtIdRef = useRef<string | undefined>(undefined);
 
   const reportMatch = path.match(REPORT_RE);
   const adminOrgMatch = path.match(ADMIN_ORG_RE);
@@ -53,15 +55,13 @@ export function Router() {
 
   const isSubPage = !!extensionId || isFaq || isLogin || isDashboard || isAdmin;
 
-  // Capture scroll position during render (before DOM mutations)
-  if (isSubPage && !prevExtIdRef.current) {
-    scrollYRef.current = window.scrollY;
-  }
-  prevExtIdRef.current = extensionId;
-
-  // Scroll after DOM commits but before browser paints
   useLayoutEffect(() => {
-    window.scrollTo(0, isSubPage ? 0 : scrollYRef.current);
+    if (isSubPage) {
+      savedHomeScroll = window.scrollY;
+      window.scrollTo(0, 0);
+    } else {
+      window.scrollTo(0, savedHomeScroll);
+    }
   }, [isSubPage]);
 
   // Redirect /admin → /admin/orgs
@@ -82,10 +82,8 @@ export function Router() {
   }, [isPending, session, isDashboard, isAdmin]);
 
   return (
-    <>
-      <div hidden={isSubPage}>
-        <App reports={reports} />
-      </div>
+    <Suspense>
+      {!isSubPage && <App reports={reports} />}
 
       {extensionId && (
         <div className="bg-background min-h-screen">
@@ -119,6 +117,6 @@ export function Router() {
           )}
         </AdminLayout>
       )}
-    </>
+    </Suspense>
   );
 }
