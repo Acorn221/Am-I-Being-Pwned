@@ -315,6 +315,29 @@ export const UserAlert = createTable(
 export type UserAlert = typeof UserAlert.$inferSelect;
 
 // ---------------------------------------------------------------------------
+// Org Webhooks
+// One row per configured endpoint. Events is a text[] of subscribed event types.
+// Secret is an HMAC-SHA256 signing key (format: "whsec_<64 hex chars>").
+// Treat the secret like a password — it's stored plaintext here but should
+// only be shown to the user once (on creation). Revoke by deleting + recreating.
+// ---------------------------------------------------------------------------
+
+export const OrgWebhook = createTable(
+  "org_webhook",
+  {
+    orgId: fk("org_id", () => Organization, { onDelete: "cascade" }).notNull(),
+    description: text(), // human label e.g. "Slack alerts"
+    url: text().notNull(),
+    secret: text().notNull(), // whsec_<hex> — HMAC signing key
+    events: text("events").array().notNull().default([]),
+    enabled: boolean().notNull().default(true),
+  },
+  (t) => [index("org_webhook_org_id_idx").on(t.orgId)],
+);
+
+export type OrgWebhook = typeof OrgWebhook.$inferSelect;
+
+// ---------------------------------------------------------------------------
 // User subscription
 // ---------------------------------------------------------------------------
 
@@ -340,6 +363,14 @@ export const OrganizationRelations = relations(Organization, ({ many }) => ({
   apiKeys: many(OrgApiKey),
   devices: many(Device),
   members: many(OrgMember),
+  webhooks: many(OrgWebhook),
+}));
+
+export const OrgWebhookRelations = relations(OrgWebhook, ({ one }) => ({
+  organization: one(Organization, {
+    fields: [OrgWebhook.orgId],
+    references: [Organization.id],
+  }),
 }));
 
 export const OrgApiKeyRelations = relations(OrgApiKey, ({ one }) => ({

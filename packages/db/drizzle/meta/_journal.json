@@ -15,6 +15,13 @@
       "when": 1771960712705,
       "tag": "0001_slow_jubilee",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1772038786906,
+      "tag": "0002_real_shocker",
+      "breakpoints": true
     }
   ]
 }

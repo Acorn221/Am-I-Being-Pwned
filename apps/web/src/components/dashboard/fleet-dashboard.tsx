@@ -1,6 +1,8 @@
 import { Badge } from "@amibeingpwned/ui/badge";
 import { Button } from "@amibeingpwned/ui/button";
 import { Card } from "@amibeingpwned/ui/card";
+import { Input } from "@amibeingpwned/ui/input";
+import { Label } from "@amibeingpwned/ui/label";
 import {
   Table,
   TableBody,
@@ -16,13 +18,20 @@ import {
   Bell,
   Building2,
   CheckCheck,
+  CheckCircle,
+  Copy,
   LogOut,
   Monitor,
+  Plus,
   Puzzle,
   RefreshCw,
+  Settings,
   Shield,
   ShieldCheck,
+  Trash2,
+  Webhook,
   X,
+  Zap,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -40,7 +49,7 @@ type FleetOverview = {
   unreadAlertCount: number;
 };
 
-type Tab = "overview" | "alerts" | "devices" | "extensions";
+type Tab = "overview" | "alerts" | "devices" | "extensions" | "settings";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -77,6 +86,7 @@ export function FleetDashboard({ overview }: { overview: FleetOverview }) {
     { id: "alerts",     label: "Alerts",     badge: overview.unreadAlertCount || undefined },
     { id: "devices",    label: "Devices" },
     { id: "extensions", label: "Extensions" },
+    { id: "settings",   label: "Settings" },
   ];
 
   return (
@@ -141,6 +151,7 @@ export function FleetDashboard({ overview }: { overview: FleetOverview }) {
         {tab === "alerts"     && <AlertsTab />}
         {tab === "devices"    && <DevicesTab    overview={overview} />}
         {tab === "extensions" && <ExtensionsTab />}
+        {tab === "settings"   && <SettingsTab   orgId={overview.org.id} />}
       </div>
     </div>
   );
@@ -602,6 +613,314 @@ function ExtensionsTab() {
         </TableBody>
       </Table>
     </Card>
+  );
+}
+
+// ─── Settings tab ────────────────────────────────────────────────────────────
+
+const ALL_EVENTS = [
+  { id: "threat.detected", label: "Threat detected", description: "A device has a flagged extension installed" },
+  { id: "alert.created",   label: "Alert created",   description: "A new security alert was raised for an org member" },
+  { id: "device.enrolled", label: "Device enrolled", description: "A new device joins the organisation" },
+] as const;
+
+type WebhookEventId = (typeof ALL_EVENTS)[number]["id"];
+
+function SettingsTab({ orgId }: { orgId: string }) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
+  const { data: webhooks, isPending } = useQuery(trpc.webhooks.list.queryOptions());
+
+  const invalidate = () => queryClient.invalidateQueries(trpc.webhooks.list.queryFilter());
+
+  const deleteMutation  = useMutation(trpc.webhooks.delete.mutationOptions({ onSuccess: invalidate }));
+  const toggleMutation  = useMutation(trpc.webhooks.setEnabled.mutationOptions({ onSuccess: invalidate }));
+  const testMutation    = useMutation(trpc.webhooks.test.mutationOptions());
+
+  // ── Create form state ──
+  const [showForm, setShowForm]         = useState(false);
+  const [formUrl, setFormUrl]           = useState("");
+  const [formDesc, setFormDesc]         = useState("");
+  const [formEvents, setFormEvents]     = useState<WebhookEventId[]>(["threat.detected"]);
+  const [newSecret, setNewSecret]       = useState<string | null>(null);
+  const [copied, setCopied]             = useState(false);
+  const [testedId, setTestedId]         = useState<string | null>(null);
+
+  const createMutation = useMutation(
+    trpc.webhooks.create.mutationOptions({
+      onSuccess: (data) => {
+        setNewSecret(data.secret);
+        setShowForm(false);
+        setFormUrl("");
+        setFormDesc("");
+        setFormEvents(["threat.detected"]);
+        invalidate();
+      },
+    }),
+  );
+
+  function toggleEvent(id: WebhookEventId) {
+    setFormEvents((prev) =>
+      prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id],
+    );
+  }
+
+  async function copySecret(secret: string) {
+    await navigator.clipboard.writeText(secret);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* ── New secret banner ────────────────────────────────────────────── */}
+      {newSecret && (
+        <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4">
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-emerald-600">
+            <CheckCircle className="h-4 w-4" />
+            Webhook created — copy your secret now
+          </div>
+          <p className="mb-3 text-xs text-muted-foreground">
+            This is the only time the full secret will be shown. Store it securely.
+          </p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 overflow-x-auto rounded bg-muted px-3 py-2 font-mono text-xs">
+              {newSecret}
+            </code>
+            <Button
+              size="sm"
+              variant="outline"
+              className="shrink-0 gap-1.5"
+              onClick={() => void copySecret(newSecret)}
+            >
+              {copied ? <CheckCircle className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied ? "Copied" : "Copy"}
+            </Button>
+          </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="mt-2 text-xs text-muted-foreground"
+            onClick={() => setNewSecret(null)}
+          >
+            I've saved it — dismiss
+          </Button>
+        </div>
+      )}
+
+      {/* ── Webhooks section ─────────────────────────────────────────────── */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-sm font-semibold">
+            <Webhook className="h-4 w-4" />
+            Webhooks
+          </h2>
+          {!showForm && (
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setShowForm(true)}>
+              <Plus className="h-3.5 w-3.5" />
+              Add webhook
+            </Button>
+          )}
+        </div>
+
+        {/* Create form */}
+        {showForm && (
+          <Card className="space-y-4 p-4">
+            <h3 className="text-sm font-semibold">New webhook</h3>
+
+            <div className="space-y-2">
+              <Label htmlFor="wh-url" className="text-xs">Endpoint URL</Label>
+              <Input
+                id="wh-url"
+                placeholder="https://your-server.example.com/webhooks/aibp"
+                value={formUrl}
+                onChange={(e) => setFormUrl(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="wh-desc" className="text-xs">Description (optional)</Label>
+              <Input
+                id="wh-desc"
+                placeholder="e.g. Slack alerts"
+                value={formDesc}
+                onChange={(e) => setFormDesc(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-foreground">Events to subscribe</p>
+              <div className="space-y-2">
+                {ALL_EVENTS.map((ev) => (
+                  <label key={ev.id} className="flex cursor-pointer items-start gap-3">
+                    <input
+                      type="checkbox"
+                      className="mt-0.5"
+                      checked={formEvents.includes(ev.id)}
+                      onChange={() => toggleEvent(ev.id)}
+                    />
+                    <div>
+                      <p className="text-sm font-medium">{ev.label}</p>
+                      <p className="text-xs text-muted-foreground">{ev.description}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                disabled={!formUrl || formEvents.length === 0 || createMutation.isPending}
+                onClick={() =>
+                  createMutation.mutate({
+                    url: formUrl,
+                    description: formDesc || undefined,
+                    events: formEvents,
+                  })
+                }
+              >
+                {createMutation.isPending ? (
+                  <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                ) : null}
+                Create webhook
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setShowForm(false)}>
+                Cancel
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        {/* List */}
+        {isPending && (
+          <div className="flex items-center justify-center py-12">
+            <RefreshCw className="h-5 w-5 animate-spin opacity-30" />
+          </div>
+        )}
+
+        {!isPending && (!webhooks || webhooks.length === 0) && !showForm && (
+          <div className="flex flex-col items-center gap-2 py-12 text-muted-foreground">
+            <Webhook className="h-8 w-8 opacity-20" />
+            <p className="text-sm">No webhooks configured yet.</p>
+            <p className="text-xs">Add one to receive real-time event notifications on your server.</p>
+          </div>
+        )}
+
+        {webhooks && webhooks.length > 0 && (
+          <div className="space-y-2">
+            {webhooks.map((wh) => (
+              <Card key={wh.id} className={`p-4 ${!wh.enabled ? "opacity-60" : ""}`}>
+                <div className="flex items-start gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="truncate text-sm font-mono font-medium">{wh.url}</span>
+                      {!wh.enabled && (
+                        <Badge variant="secondary" className="text-xs">Disabled</Badge>
+                      )}
+                    </div>
+                    {wh.description && (
+                      <p className="mt-0.5 text-xs text-muted-foreground">{wh.description}</p>
+                    )}
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {(wh.events as string[]).map((ev) => (
+                        <span
+                          key={ev}
+                          className="rounded-full bg-muted px-2 py-0.5 font-mono text-[10px] text-muted-foreground"
+                        >
+                          {ev}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="mt-2 font-mono text-[11px] text-muted-foreground">
+                      {wh.secretMasked}
+                    </p>
+                  </div>
+
+                  <div className="flex shrink-0 gap-1">
+                    {/* Test */}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 gap-1.5 px-2 text-xs"
+                      disabled={testMutation.isPending || !wh.enabled}
+                      title="Send test event"
+                      onClick={() => {
+                        setTestedId(wh.id);
+                        testMutation.mutate(
+                          { webhookId: wh.id },
+                          { onSettled: () => setTimeout(() => setTestedId(null), 2000) },
+                        );
+                      }}
+                    >
+                      {testedId === wh.id ? (
+                        <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                      ) : (
+                        <Zap className="h-3.5 w-3.5" />
+                      )}
+                      Test
+                    </Button>
+                    {/* Toggle enable */}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 px-2 text-xs"
+                      disabled={toggleMutation.isPending}
+                      onClick={() => toggleMutation.mutate({ webhookId: wh.id, enabled: !wh.enabled })}
+                    >
+                      {wh.enabled ? "Disable" : "Enable"}
+                    </Button>
+                    {/* Delete */}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                      disabled={deleteMutation.isPending}
+                      onClick={() => deleteMutation.mutate({ webhookId: wh.id })}
+                      title="Delete webhook"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ── Signing guide ─────────────────────────────────────────────────── */}
+      <section className="space-y-3">
+        <h2 className="flex items-center gap-2 text-sm font-semibold">
+          <Settings className="h-4 w-4" />
+          Verifying signatures
+        </h2>
+        <Card className="p-4">
+          <p className="mb-3 text-xs text-muted-foreground leading-relaxed">
+            Every delivery includes an <code className="rounded bg-muted px-1 py-0.5">X-AIBP-Signature</code> header.
+            Verify it with HMAC-SHA256 to confirm the payload came from us and wasn't tampered with.
+          </p>
+          <pre className="overflow-x-auto rounded bg-muted p-3 text-[11px] leading-relaxed text-foreground">{`// Node.js / Express example
+import { createHmac, timingSafeEqual } from "crypto";
+
+function verifySignature(secret, rawBody, header) {
+  const [tPart, v1Part] = header.split(",");
+  const timestamp = tPart.replace("t=", "");
+  const expected  = v1Part.replace("v1=", "");
+
+  const mac = createHmac("sha256", secret)
+    .update(\`\${timestamp}.\${rawBody}\`)
+    .digest("hex");
+
+  return timingSafeEqual(
+    Buffer.from(mac),
+    Buffer.from(expected),
+  );
+}`}</pre>
+        </Card>
+      </section>
+    </div>
   );
 }
 
