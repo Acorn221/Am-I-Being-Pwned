@@ -50,6 +50,7 @@ const extensionsResultResponse = z.object({
 const inviteRegisteredResponse = z.object({
   type: z.literal("INVITE_REGISTERED"),
   version: z.literal(1),
+  webSessionToken: z.string(),
 });
 
 const errorResponse = z.object({

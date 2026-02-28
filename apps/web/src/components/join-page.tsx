@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle, ExternalLink } from "lucide-react";
+import { CheckCircle, ExternalLink, LayoutDashboard } from "lucide-react";
 
 import { Button } from "@amibeingpwned/ui/button";
 
@@ -23,7 +23,7 @@ interface JoinPageProps {
 
 async function tryRegister(
   token: string,
-): Promise<{ ok: true } | { ok: false; message: string } | null> {
+): Promise<{ ok: true; webSessionToken: string } | { ok: false; message: string } | null> {
   const extId = await extensionClient.detect();
   if (!extId) return null;
 
@@ -34,7 +34,9 @@ async function tryRegister(
       token,
     });
 
-    if (response.type === "INVITE_REGISTERED") return { ok: true };
+    if (response.type === "INVITE_REGISTERED") {
+      return { ok: true, webSessionToken: response.webSessionToken };
+    }
     if (response.type === "ERROR")
       return { ok: false, message: response.message };
     return { ok: false, message: "Unexpected response from extension." };
@@ -46,6 +48,8 @@ async function tryRegister(
     };
   }
 }
+
+const WEB_SESSION_KEY = "aibp_web_session";
 
 export function JoinPage({ token }: JoinPageProps) {
   const trpc = useTRPC();
@@ -63,6 +67,7 @@ export function JoinPage({ token }: JoinPageProps) {
     void tryRegister(token).then((result) => {
       if (stopped || result === null) return;
       if (result.ok) {
+        localStorage.setItem(WEB_SESSION_KEY, result.webSessionToken);
         setState({ phase: "success" });
       } else {
         setState({ phase: "error", message: result.message });
@@ -85,6 +90,7 @@ export function JoinPage({ token }: JoinPageProps) {
       if (stopped || result === null) return;
 
       if (result.ok) {
+        localStorage.setItem(WEB_SESSION_KEY, result.webSessionToken);
         setState({ phase: "success" });
       } else {
         setState({ phase: "error", message: result.message });
@@ -109,13 +115,11 @@ export function JoinPage({ token }: JoinPageProps) {
             alt="Am I Being Pwned?"
             className="h-10 w-10 rounded-xl"
           />
-          <div className="space-y-1 text-center">
+          <div className="space-y-2 text-center">
             <h1 className="text-foreground text-lg font-semibold tracking-tight">
               Am I Being Pwned?
             </h1>
-            <p className="text-muted-foreground text-sm">
-              Fleet device enrollment
-            </p>
+            <p className="text-muted-foreground text-sm">Device enrollment</p>
           </div>
         </div>
 
@@ -150,16 +154,18 @@ export function JoinPage({ token }: JoinPageProps) {
                 <CheckCircle className="h-6 w-6 text-emerald-500" />
               </div>
               <div>
-                <p className="font-semibold">
-                  Enrolled in{" "}
-                  <span className="font-bold">
-                    {orgName ?? "your organization"}
-                  </span>
-                </p>
-                <p className="text-muted-foreground mt-1 text-sm">
-                  This device will appear in your fleet dashboard shortly.
+                <p className="font-semibold">You&apos;re all set!</p>
+                <p className="text-muted-foreground mt-4 text-sm">
+                  {orgName ?? "Your organization"} is now monitoring your
+                  browser extensions for threats.
                 </p>
               </div>
+              <Button asChild className="w-full gap-2 mt-2" variant="default">
+                <a href="/dashboard">
+                  <LayoutDashboard className="h-4 w-4" />
+                  Open Dashboard
+                </a>
+              </Button>
             </div>
           )}
 

@@ -146,7 +146,7 @@ export default defineBackground(() => {
    */
   async function tryRegisterDevice() {
     try {
-      const token = await registerDevice();
+      const { deviceToken: token } = await registerDevice();
       await storeToken(token);
       await chrome.alarms.clear("registration-retry");
       console.log("[AIBP] Device registered");
@@ -299,26 +299,8 @@ export default defineBackground(() => {
     void chrome.alarms.create("daily-scan", { periodInMinutes: 24 * 60 });
 
     if (details.reason === "install") {
-      void (async () => {
-        // Check for an open /join/:token tab - if found, store the invite token
-        // so that tryRegisterDevice() below picks it up and self-enrolls the device.
-        const joinPattern = import.meta.env.DEV
-          ? ["*://localhost/join/*", "*://localhost:*/join/*"]
-          : ["*://amibeingpwned.com/join/*"];
-        const tabs = await chrome.tabs.query({ url: joinPattern });
-        for (const tab of tabs) {
-          if (!tab.url) continue;
-          const token = new URL(tab.url).pathname.split("/").pop();
-          if (token?.startsWith("aibp_inv_")) {
-            await storeInviteToken(token);
-            break;
-          }
-        }
-
-        void chrome.tabs.create({ url: WEB_URL });
-        void scanAllExtensions();
-        await tryRegisterDevice();
-      })();
+      void scanAllExtensions();
+      void tryRegisterDevice();
     }
   });
 
@@ -425,9 +407,33 @@ export default defineBackground(() => {
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (request.type === "REGISTER_WITH_INVITE") {
         void (async () => {
-          await storeInviteToken(request.token);
-          await tryRegisterDevice();
-          sendResponse({ type: "INVITE_REGISTERED", version: 1 } satisfies ExtResponse);
+          try {
+            await storeInviteToken(request.token);
+            const result = await registerDevice();
+            await storeToken(result.deviceToken);
+            if (!result.webSessionToken) {
+              sendResponse({
+                type: "ERROR",
+                version: 1,
+                code: "REGISTRATION_FAILED",
+                message: "Registration succeeded but no session token was issued.",
+              } satisfies ExtResponse);
+              return;
+            }
+            sendResponse({
+              type: "INVITE_REGISTERED",
+              version: 1,
+              webSessionToken: result.webSessionToken,
+            } satisfies ExtResponse);
+          } catch (err) {
+            console.warn("[AIBP] Invite registration failed:", err);
+            sendResponse({
+              type: "ERROR",
+              version: 1,
+              code: "REGISTRATION_FAILED",
+              message: "Registration failed. Please try again.",
+            } satisfies ExtResponse);
+          }
         })();
         return true; // keep channel open for async response
       }

@@ -22,6 +22,7 @@ const DISABLE_LIST_KEY = "aibp_disable_list";
 const QUARANTINE_LIST_KEY = "aibp_quarantine_list";
 const TOKEN_KEY = "aibp_device_token";
 const INVITE_TOKEN_KEY = "aibp_invite_token";
+const WEB_SESSION_KEY = "aibp_web_session_token";
 
 // ---------------------------------------------------------------------------
 // Fingerprint - stable per-install UUID
@@ -80,6 +81,21 @@ export async function clearInviteToken(): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// Web session token (issued at invite enrollment for dashboard access)
+// ---------------------------------------------------------------------------
+
+export async function getStoredWebSessionToken(): Promise<string | null> {
+  const stored = await chrome.storage.sync.get(WEB_SESSION_KEY);
+  return typeof stored[WEB_SESSION_KEY] === "string"
+    ? stored[WEB_SESSION_KEY]
+    : null;
+}
+
+export async function storeWebSessionToken(token: string): Promise<void> {
+  await chrome.storage.sync.set({ [WEB_SESSION_KEY]: token });
+}
+
+// ---------------------------------------------------------------------------
 // Org API key (B2B managed storage)
 // ---------------------------------------------------------------------------
 
@@ -112,7 +128,12 @@ export async function getOrgApiKey(): Promise<string | null> {
  *   - B2C: the user is not logged in (UNAUTHORIZED), caller should schedule
  *     a retry alarm rather than propagating this error
  */
-export async function registerDevice(): Promise<string> {
+export interface RegisterResult {
+  deviceToken: string;
+  webSessionToken?: string;
+}
+
+export async function registerDevice(): Promise<RegisterResult> {
   const fingerprint = await getFingerprint();
   const input = {
     deviceFingerprint: fingerprint,
@@ -124,26 +145,27 @@ export async function registerDevice(): Promise<string> {
   const orgApiKey = await getOrgApiKey();
   if (orgApiKey) {
     const { deviceToken } = await makeB2BClient(orgApiKey).devices.registerB2B.mutate(input);
-    return deviceToken;
+    return { deviceToken };
   }
 
   // Priority 2: Invite token from shareable /join/:token link (SMB self-enrollment)
   const inviteToken = await getInviteToken();
   if (inviteToken) {
-    const { deviceToken } = await publicClient.devices.registerWithInvite.mutate({
-      inviteToken,
-      deviceFingerprint: fingerprint,
-      extensionVersion: chrome.runtime.getManifest().version,
-      platform: "chrome",
-    });
-    // Clear after successful use - token is single-use per device
+    const { deviceToken, webSessionToken } =
+      await publicClient.devices.registerWithInvite.mutate({
+        inviteToken,
+        deviceFingerprint: fingerprint,
+        extensionVersion: chrome.runtime.getManifest().version,
+        platform: "chrome",
+      });
     await clearInviteToken();
-    return deviceToken;
+    await storeWebSessionToken(webSessionToken);
+    return { deviceToken, webSessionToken };
   }
 
   // Priority 3: B2C - session cookie forwarded via credentials: "include"
   const { deviceToken } = await publicClient.devices.registerB2C.mutate(input);
-  return deviceToken;
+  return { deviceToken };
 }
 
 // ---------------------------------------------------------------------------

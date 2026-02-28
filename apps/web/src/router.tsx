@@ -1,4 +1,4 @@
-import { lazy, Suspense, useLayoutEffect, useSyncExternalStore } from "react";
+import { lazy, Suspense, useLayoutEffect, useSyncExternalStore, useState } from "react";
 
 import { Footer } from "~/components/footer";
 import { Navbar } from "~/components/navbar";
@@ -10,10 +10,13 @@ const AdminLayout = lazy(() => import("~/components/admin/layout").then(m => ({ 
 const OrgDetailPage = lazy(() => import("~/components/admin/org-detail-page").then(m => ({ default: m.OrgDetailPage })));
 const OrgsPage = lazy(() => import("~/components/admin/orgs-page").then(m => ({ default: m.OrgsPage })));
 const DashboardPage = lazy(() => import("~/components/dashboard/dashboard-page").then(m => ({ default: m.DashboardPage })));
+const DeviceDashboard = lazy(() => import("~/components/device-dashboard").then(m => ({ default: m.DeviceDashboard })));
 const FaqPage = lazy(() => import("~/components/faq-page").then(m => ({ default: m.FaqPage })));
 const JoinPage = lazy(() => import("~/components/join-page").then(m => ({ default: m.JoinPage })));
 const LoginPage = lazy(() => import("~/components/login-page").then(m => ({ default: m.LoginPage })));
 const ReportPage = lazy(() => import("~/components/report-page").then(m => ({ default: m.ReportPage })));
+
+const WEB_SESSION_KEY = "aibp_web_session";
 
 // Module-level so it survives App unmounting
 let savedHomeScroll = 0;
@@ -46,6 +49,12 @@ export function Router() {
   const { reports } = useExtensionDatabase();
   const { data: session, isPending } = authClient.useSession();
 
+  // Device web session - from ?wst= query param or localStorage
+  const [deviceToken] = useState<string | null>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("wst") ?? localStorage.getItem(WEB_SESSION_KEY);
+  });
+
   const reportMatch = REPORT_RE.exec(path);
   const adminOrgMatch = ADMIN_ORG_RE.exec(path);
   const joinMatch = JOIN_RE.exec(path);
@@ -77,6 +86,8 @@ export function Router() {
   // Auth guards (skip while session is loading)
   useLayoutEffect(() => {
     if (isPending) return;
+    // Allow device-enrolled users to access /dashboard via web session token
+    if (isDashboard && !session && deviceToken) return;
     if ((isDashboard || isAdmin) && !session) {
       navigate("/login");
       return;
@@ -84,7 +95,7 @@ export function Router() {
     if (isAdmin && session?.user.role !== "admin") {
       navigate("/dashboard");
     }
-  }, [isPending, session, isDashboard, isAdmin]);
+  }, [isPending, session, isDashboard, isAdmin, deviceToken]);
 
   return (
     <Suspense>
@@ -114,6 +125,7 @@ export function Router() {
       {isLogin && <LoginPage />}
 
       {isDashboard && session && <DashboardPage />}
+      {isDashboard && !session && deviceToken && <DeviceDashboard token={deviceToken} />}
 
       {isAdmin && session?.user.role === "admin" && (
         <AdminLayout path={path}>

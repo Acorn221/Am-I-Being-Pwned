@@ -63,6 +63,21 @@ export async function generateInviteToken() {
 }
 
 // ---------------------------------------------------------------------------
+// Web session token - "aibp_ws_<32 random bytes base64url>"
+// Issued at invite enrollment so the device owner can access their personal
+// dashboard without a full AIBP account. 90-day TTL. Revocable.
+// ---------------------------------------------------------------------------
+
+const WEB_SESSION_TOKEN_TTL_MS = 90 * 24 * 60 * 60 * 1000;
+
+export async function generateWebSessionToken() {
+  const raw = `aibp_ws_${randomBase64url()}`;
+  const hash = await sha256hex(raw);
+  const expiresAt = new Date(Date.now() + WEB_SESSION_TOKEN_TTL_MS);
+  return { raw, hash, expiresAt };
+}
+
+// ---------------------------------------------------------------------------
 // Hash any raw token for DB lookup
 // ---------------------------------------------------------------------------
 

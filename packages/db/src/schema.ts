@@ -150,6 +150,28 @@ export const Device = createTable(
 export type Device = typeof Device.$inferSelect;
 
 // ---------------------------------------------------------------------------
+// Device Web Session
+// Short-lived token issued at invite enrollment so the device owner can
+// access their personal dashboard without a full AIBP account.
+// Generated alongside the device token in registerWithInvite.
+// Revoked automatically when the parent Device is revoked.
+// ---------------------------------------------------------------------------
+
+export const DeviceWebSession = createTable(
+  "device_web_session",
+  {
+    deviceId: fk("device_id", () => Device, { onDelete: "cascade" }).notNull(),
+    // SHA-256 hex of raw "aibp_ws_..." token, plaintext never persisted
+    tokenHash: text().notNull().unique(),
+    expiresAt: timestamp({ withTimezone: true }).notNull(),
+    revokedAt: timestamp({ withTimezone: true }),
+  },
+  (t) => [index("device_web_session_device_id_idx").on(t.deviceId)],
+);
+
+export type DeviceWebSession = typeof DeviceWebSession.$inferSelect;
+
+// ---------------------------------------------------------------------------
 // Org Member
 // Links AIBP user accounts to organizations with a role.
 // ---------------------------------------------------------------------------

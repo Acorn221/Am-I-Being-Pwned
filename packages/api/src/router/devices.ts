@@ -24,6 +24,7 @@ import { z } from "zod/v4";
 import type { db as dbInstance } from "@amibeingpwned/db/client";
 import {
   Device,
+  DeviceWebSession,
   Extension,
   ExtensionScan,
   ExtensionVersion,
@@ -35,7 +36,7 @@ import {
   eqi,
 } from "@amibeingpwned/db";
 
-import { generateDeviceToken, hashToken } from "../lib/tokens";
+import { generateDeviceToken, generateWebSessionToken, hashToken } from "../lib/tokens";
 import { deviceProcedure } from "../middleware/device-auth";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 
@@ -312,6 +313,7 @@ export const devicesRouter = createTRPCRouter({
         .where(eq(OrgInvite.id, invite.id));
 
       const { raw, hash, expiresAt } = await generateDeviceToken();
+      const ws = await generateWebSessionToken();
       const { orgId } = invite;
 
       // 4. Re-use existing device row for this org+fingerprint
@@ -327,6 +329,8 @@ export const devicesRouter = createTRPCRouter({
         )
         .limit(1);
 
+      let deviceId: string;
+
       if (existing) {
         await ctx.db
           .update(Device)
@@ -339,33 +343,149 @@ export const devicesRouter = createTRPCRouter({
           })
           .where(eq(Device.id, existing.id));
 
-        return { deviceToken: raw };
+        deviceId = existing.id;
+      } else {
+        // 5. Enforce device cap before inserting a new row
+        const orgCountResult = await ctx.db
+          .select({ deviceCount: count() })
+          .from(Device)
+          .where(and(eq(Device.orgId, orgId), isNull(Device.revokedAt)));
+
+        if ((orgCountResult[0]?.deviceCount ?? 0) >= MAX_DEVICES_PER_ORG) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: `Org device limit reached (max ${MAX_DEVICES_PER_ORG}). Contact support to raise the limit.`,
+          });
+        }
+
+        const [inserted] = await ctx.db
+          .insert(Device)
+          .values({
+            orgId,
+            tokenHash: hash,
+            tokenExpiresAt: expiresAt,
+            deviceFingerprint: input.deviceFingerprint,
+            extensionVersion: input.extensionVersion,
+            platform: input.platform,
+          })
+          .returning({ id: Device.id });
+
+        if (!inserted) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create device." });
+        }
+        deviceId = inserted.id;
       }
 
-      // 5. Enforce device cap before inserting a new row
-      const orgCountResult = await ctx.db
-        .select({ deviceCount: count() })
-        .from(Device)
-        .where(and(eq(Device.orgId, orgId), isNull(Device.revokedAt)));
+      // Always issue a fresh web session on (re-)enrollment
+      await ctx.db.insert(DeviceWebSession).values({
+        deviceId,
+        tokenHash: ws.hash,
+        expiresAt: ws.expiresAt,
+      });
 
-      if ((orgCountResult[0]?.deviceCount ?? 0) >= MAX_DEVICES_PER_ORG) {
+      return { deviceToken: raw, webSessionToken: ws.raw };
+    }),
+
+  /**
+   * Validates a device web session token and returns the device's extension
+   * data. Used by the /dashboard page for device-enrolled users without a
+   * full AIBP account.
+   */
+  getWebSession: publicProcedure
+    .input(z.object({ token: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const tokenHash = await hashToken(input.token);
+      const now = new Date();
+
+      const [webSession] = await ctx.db
+        .select({ deviceId: DeviceWebSession.deviceId })
+        .from(DeviceWebSession)
+        .where(
+          and(
+            eq(DeviceWebSession.tokenHash, tokenHash),
+            isNull(DeviceWebSession.revokedAt),
+            gt(DeviceWebSession.expiresAt, now),
+          ),
+        )
+        .limit(1);
+
+      if (!webSession) {
         throw new TRPCError({
-          code: "FORBIDDEN",
-          message: `Org device limit reached (max ${MAX_DEVICES_PER_ORG}). Contact support to raise the limit.`,
+          code: "UNAUTHORIZED",
+          message: "Session is invalid or has expired.",
         });
       }
 
-      await ctx.db.insert(Device).values({
-        orgId,
-        tokenHash: hash,
-        tokenExpiresAt: expiresAt,
-        deviceFingerprint: input.deviceFingerprint,
-        extensionVersion: input.extensionVersion,
-        platform: input.platform,
-      });
+      const [device] = await ctx.db
+        .select({ orgId: Device.orgId })
+        .from(Device)
+        .where(and(eq(Device.id, webSession.deviceId), isNull(Device.revokedAt)))
+        .limit(1);
 
-      return { deviceToken: raw };
+      if (!device) {
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "Device has been revoked." });
+      }
+
+      let orgName: string | null = null;
+      if (device.orgId) {
+        const [org] = await ctx.db
+          .select({ name: Organization.name })
+          .from(Organization)
+          .where(eqi(Organization.id, device.orgId))
+          .limit(1);
+        orgName = org?.name ?? null;
+      }
+
+      const extensions = await ctx.db
+        .select({
+          chromeExtensionId: UserExtension.chromeExtensionId,
+          name: Extension.name,
+          riskScore: Extension.riskScore,
+          isFlagged: Extension.isFlagged,
+          enabled: UserExtension.enabled,
+        })
+        .from(UserExtension)
+        .leftJoin(
+          Extension,
+          eq(UserExtension.chromeExtensionId, Extension.chromeExtensionId),
+        )
+        .where(
+          and(
+            eq(UserExtension.deviceId, webSession.deviceId),
+            isNull(UserExtension.removedAt),
+          ),
+        );
+
+      return { orgName, extensions };
     }),
+
+  /**
+   * Returns risk data for all extensions currently on this device.
+   * Used by the extension popup to display the security score.
+   */
+  getRiskSummary: deviceProcedure.query(async ({ ctx }) => {
+    const { device } = ctx;
+
+    const rows = await ctx.db
+      .select({
+        chromeExtensionId: UserExtension.chromeExtensionId,
+        riskScore: Extension.riskScore,
+        isFlagged: Extension.isFlagged,
+      })
+      .from(UserExtension)
+      .leftJoin(
+        Extension,
+        eq(UserExtension.chromeExtensionId, Extension.chromeExtensionId),
+      )
+      .where(
+        and(
+          eq(UserExtension.deviceId, device.id),
+          isNull(UserExtension.removedAt),
+        ),
+      );
+
+    return rows;
+  }),
 
   /**
    * Extension inventory sync.

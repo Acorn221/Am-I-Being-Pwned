@@ -110,5 +110,5 @@ export type ExtRequest =
 export type ExtResponse =
   | { type: "PONG"; version: 1 }
   | { type: "EXTENSIONS_RESULT"; version: 1; extensions: InstalledExtensionInfo[] }
-  | { type: "INVITE_REGISTERED"; version: 1 }
+  | { type: "INVITE_REGISTERED"; version: 1; webSessionToken: string }
   | { type: "ERROR"; version: 1; code: string; message: string };
