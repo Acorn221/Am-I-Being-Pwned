@@ -13,6 +13,10 @@ export function LoginPage() {
     const { error } = await authClient.signIn.social({
       provider: "google",
       callbackURL: "/dashboard",
+      scopes: [
+        "https://www.googleapis.com/auth/chrome.management.appdetails.readonly",
+        "https://www.googleapis.com/auth/chrome.management.reports.readonly",
+      ],
     });
     if (error) {
       setError(error.message ?? "Sign in failed. Please try again.");
