@@ -14,6 +14,7 @@ export interface WorkspaceAppData {
 interface CountInstalledAppsResponse {
   installedApps?: {
     appId?: string;
+    appType?: string;
     displayName?: string;
     description?: string;
     homepageUri?: string;
@@ -26,6 +27,63 @@ interface CountInstalledAppsResponse {
   }[];
   nextPageToken?: string;
   totalSize?: number;
+}
+
+export interface WorkspaceDevice {
+  deviceId: string;
+  machine: string;
+}
+
+interface FindInstalledAppDevicesResponse {
+  devices?: { deviceId?: string; machine?: string }[];
+  nextPageToken?: string;
+  totalSize?: number;
+}
+
+/**
+ * Async generator that paginates through all devices with a specific Chrome
+ * extension installed, using the Chrome Management Reports API.
+ */
+export async function* fetchDevicesForApp(
+  accessToken: string,
+  appId: string,
+): AsyncGenerator<WorkspaceDevice> {
+  let pageToken: string | undefined;
+
+  do {
+    const params = new URLSearchParams({
+      appId,
+      appType: "EXTENSION",
+      pageSize: "100",
+    });
+    if (pageToken) params.set("pageToken", pageToken);
+
+    const res = await fetch(
+      `https://chromemanagement.googleapis.com/v1/customers/my_customer/reports:findInstalledAppDevices?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/json",
+        },
+      },
+    );
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(
+        `Chrome Management API error ${res.status.toString()} (findInstalledAppDevices): ${errText}`,
+      );
+    }
+
+    const data = (await res.json()) as FindInstalledAppDevicesResponse;
+
+    for (const device of data.devices ?? []) {
+      if (!device.deviceId) continue;
+      yield { deviceId: device.deviceId, machine: device.machine ?? "" };
+    }
+
+    pageToken = data.nextPageToken;
+  } while (pageToken);
 }
 
 /**
@@ -41,14 +99,11 @@ export async function* fetchWorkspaceApps(
   let pageToken: string | undefined;
 
   do {
-    const params = new URLSearchParams({
-      filter: "app_type=EXTENSION",
-      pageSize: "100",
-    });
+    const params = new URLSearchParams({ pageSize: "100" });
     if (pageToken) params.set("pageToken", pageToken);
 
     const res = await fetch(
-      `https://chromemanagement.googleapis.com/v1/customers/my_customer/reports/countInstalledApps?${params.toString()}`,
+      `https://chromemanagement.googleapis.com/v1/customers/my_customer/reports:countInstalledApps?${params.toString()}`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,

@@ -9,6 +9,8 @@ import {
   Organization,
   UserAlert,
   UserExtension,
+  WorkspaceApp,
+  WorkspaceDevice,
   eqi,
 } from "@amibeingpwned/db";
 
@@ -58,51 +60,81 @@ export const fleetRouter = createTRPCRouter({
 
     const orgId = membership.orgId;
 
-    const [deviceCountResult, extensionCountResult, flaggedCountResult, unreadAlertResult] =
-      await Promise.all([
-        ctx.db
-          .select({ total: count() })
-          .from(Device)
-          .where(and(eqi(Device.orgId, orgId), isNull(Device.revokedAt))),
+    const [
+      extDeviceCountResult,
+      extExtensionCountResult,
+      extFlaggedCountResult,
+      workspaceDeviceCountResult,
+      workspaceExtensionCountResult,
+      workspaceFlaggedCountResult,
+      unreadAlertResult,
+    ] = await Promise.all([
+      // Extension-synced device count
+      ctx.db
+        .select({ total: count() })
+        .from(Device)
+        .where(and(eqi(Device.orgId, orgId), isNull(Device.revokedAt))),
 
-        ctx.db
-          .select({ total: countDistinct(UserExtension.chromeExtensionId) })
-          .from(UserExtension)
-          .innerJoin(Device, eqi(UserExtension.deviceId, Device.id))
-          .where(
-            and(
-              eqi(Device.orgId, orgId),
-              isNull(Device.revokedAt),
-              isNull(UserExtension.removedAt),
-            ),
+      // Extension-synced extension count
+      ctx.db
+        .select({ total: countDistinct(UserExtension.chromeExtensionId) })
+        .from(UserExtension)
+        .innerJoin(Device, eqi(UserExtension.deviceId, Device.id))
+        .where(
+          and(
+            eqi(Device.orgId, orgId),
+            isNull(Device.revokedAt),
+            isNull(UserExtension.removedAt),
           ),
+        ),
 
-        ctx.db
-          .select({ total: countDistinct(UserExtension.chromeExtensionId) })
-          .from(UserExtension)
-          .innerJoin(Device, eqi(UserExtension.deviceId, Device.id))
-          .innerJoin(Extension, eq(UserExtension.chromeExtensionId, Extension.chromeExtensionId))
-          .where(
-            and(
-              eqi(Device.orgId, orgId),
-              isNull(Device.revokedAt),
-              isNull(UserExtension.removedAt),
-              eq(Extension.isFlagged, true),
-            ),
+      // Extension-synced flagged count
+      ctx.db
+        .select({ total: countDistinct(UserExtension.chromeExtensionId) })
+        .from(UserExtension)
+        .innerJoin(Device, eqi(UserExtension.deviceId, Device.id))
+        .innerJoin(Extension, eq(UserExtension.chromeExtensionId, Extension.chromeExtensionId))
+        .where(
+          and(
+            eqi(Device.orgId, orgId),
+            isNull(Device.revokedAt),
+            isNull(UserExtension.removedAt),
+            eq(Extension.isFlagged, true),
           ),
+        ),
 
-        ctx.db
-          .select({ total: count() })
-          .from(UserAlert)
-          .innerJoin(OrgMember, eq(UserAlert.userId, OrgMember.userId))
-          .where(
-            and(
-              eqi(OrgMember.orgId, orgId),
-              eq(UserAlert.read, false),
-              eq(UserAlert.dismissed, false),
-            ),
+      // OAuth workspace device count
+      ctx.db
+        .select({ total: count() })
+        .from(WorkspaceDevice)
+        .where(eqi(WorkspaceDevice.orgId, orgId)),
+
+      // OAuth workspace extension count
+      ctx.db
+        .select({ total: count() })
+        .from(WorkspaceApp)
+        .where(eqi(WorkspaceApp.orgId, orgId)),
+
+      // OAuth workspace flagged extension count
+      ctx.db
+        .select({ total: count() })
+        .from(WorkspaceApp)
+        .innerJoin(Extension, eq(WorkspaceApp.chromeExtensionId, Extension.chromeExtensionId))
+        .where(and(eqi(WorkspaceApp.orgId, orgId), eq(Extension.isFlagged, true))),
+
+      // Unread alerts
+      ctx.db
+        .select({ total: count() })
+        .from(UserAlert)
+        .innerJoin(OrgMember, eq(UserAlert.userId, OrgMember.userId))
+        .where(
+          and(
+            eqi(OrgMember.orgId, orgId),
+            eq(UserAlert.read, false),
+            eq(UserAlert.dismissed, false),
           ),
-      ]);
+        ),
+    ]);
 
     return {
       org: {
@@ -112,9 +144,15 @@ export const fleetRouter = createTRPCRouter({
         suspendedAt: membership.orgSuspendedAt,
         lastWorkspaceSyncAt: membership.orgLastWorkspaceSyncAt,
       },
-      deviceCount: deviceCountResult[0]?.total ?? 0,
-      extensionCount: extensionCountResult[0]?.total ?? 0,
-      flaggedCount: flaggedCountResult[0]?.total ?? 0,
+      deviceCount:
+        (extDeviceCountResult[0]?.total ?? 0) +
+        (workspaceDeviceCountResult[0]?.total ?? 0),
+      extensionCount:
+        (extExtensionCountResult[0]?.total ?? 0) +
+        (workspaceExtensionCountResult[0]?.total ?? 0),
+      flaggedCount:
+        (extFlaggedCountResult[0]?.total ?? 0) +
+        (workspaceFlaggedCountResult[0]?.total ?? 0),
       unreadAlertCount: unreadAlertResult[0]?.total ?? 0,
     };
   }),

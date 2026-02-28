@@ -4,9 +4,12 @@ export function Navbar() {
   return (
     <nav className="border-border/50 bg-background/95 sticky top-0 z-50 border-b backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <span className="text-foreground text-sm font-semibold tracking-tight">
-          Am I Being Pwned?
-        </span>
+        <div className="flex items-center gap-2">
+          <img src="/logo.png" alt="" className="h-8 w-auto" />
+          <span className="text-foreground text-sm font-semibold tracking-tight">
+            Am I Being Pwned?
+          </span>
+        </div>
         <div className="flex items-center gap-6">
           <a
             href="/#how-it-works"

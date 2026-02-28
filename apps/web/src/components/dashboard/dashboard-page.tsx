@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@amibeingpwned/ui/table";
 import { useQuery } from "@tanstack/react-query";
-import { Bell, LogOut, Puzzle, RefreshCw, Shield } from "lucide-react";
+import { Bell, LogOut, Puzzle, RefreshCw } from "lucide-react";
 
 import {  useExtension } from "~/hooks/use-extension";
 import type {ExtensionStatus} from "~/hooks/use-extension";
@@ -56,7 +56,7 @@ export function DashboardPage() {
       {/* Header */}
       <header className="border-border flex h-14 items-center justify-between border-b px-6">
         <div className="flex items-center gap-2">
-          <Shield className="text-primary h-5 w-5" />
+          <img src="/logo.png" alt="" className="h-7 w-auto" />
           <span className="text-foreground text-sm font-semibold">
             Am I Being Pwned?
           </span>

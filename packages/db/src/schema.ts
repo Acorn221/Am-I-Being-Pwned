@@ -362,6 +362,8 @@ export const WorkspaceApp = createTable(
     installType: text(),
     browserDeviceCount: integer().notNull().default(0),
     osUserCount: integer().notNull().default(0),
+    // Where this record came from — 'oauth' = Google Workspace API, 'ext' = AIBP browser extension
+    source: text({ enum: ["oauth", "ext"] as const }).notNull().default("oauth"),
     lastSyncedAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [
@@ -371,6 +373,33 @@ export const WorkspaceApp = createTable(
 );
 
 export type WorkspaceApp = typeof WorkspaceApp.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// Workspace device inventory
+// Individual Chrome Browser / ChromeOS devices enrolled in the org's Google
+// Workspace, discovered via findInstalledAppDevices during workspace sync.
+// One row per (org, googleDeviceId).
+// ---------------------------------------------------------------------------
+
+export const WorkspaceDevice = createTable(
+  "workspace_device",
+  {
+    orgId: fk("org_id", () => Organization, { onDelete: "cascade" }).notNull(),
+    // Stable device ID from the Chrome Management API
+    googleDeviceId: text().notNull(),
+    // Local network machine name (best-effort, may be null)
+    machineName: text(),
+    // Number of tracked extensions seen on this device in the last sync
+    extensionCount: integer().notNull().default(0),
+    lastSyncedAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    unique().on(t.orgId, t.googleDeviceId),
+    index("workspace_device_org_id_idx").on(t.orgId),
+  ],
+);
+
+export type WorkspaceDevice = typeof WorkspaceDevice.$inferSelect;
 
 // ---------------------------------------------------------------------------
 // User subscription
@@ -400,11 +429,19 @@ export const OrganizationRelations = relations(Organization, ({ many }) => ({
   members: many(OrgMember),
   webhooks: many(OrgWebhook),
   workspaceApps: many(WorkspaceApp),
+  workspaceDevices: many(WorkspaceDevice),
 }));
 
 export const WorkspaceAppRelations = relations(WorkspaceApp, ({ one }) => ({
   organization: one(Organization, {
     fields: [WorkspaceApp.orgId],
+    references: [Organization.id],
+  }),
+}));
+
+export const WorkspaceDeviceRelations = relations(WorkspaceDevice, ({ one }) => ({
+  organization: one(Organization, {
+    fields: [WorkspaceDevice.orgId],
     references: [Organization.id],
   }),
 }));

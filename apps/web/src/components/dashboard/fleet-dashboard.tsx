@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
@@ -15,7 +15,6 @@ import {
   Puzzle,
   RefreshCw,
   Settings,
-  Shield,
   ShieldCheck,
   Trash2,
   Webhook,
@@ -36,6 +35,7 @@ import {
   TableHeader,
   TableRow,
 } from "@amibeingpwned/ui/table";
+import { toast } from "@amibeingpwned/ui/toast";
 
 import { authClient } from "~/lib/auth-client";
 import { useTRPC } from "~/lib/trpc";
@@ -129,7 +129,7 @@ export function FleetDashboard({ overview }: { overview: FleetOverview }) {
       {/* Header */}
       <header className="border-border flex h-14 items-center justify-between border-b px-6">
         <div className="flex items-center gap-2">
-          <Shield className="text-primary h-5 w-5" />
+          <img src="/logo.png" alt="" className="h-7 w-auto" />
           <span className="text-foreground text-sm font-semibold">
             Am I Being Pwned?
           </span>
@@ -515,156 +515,248 @@ function AlertsTab() {
   );
 }
 
+// ─── Workspace requirements gate ─────────────────────────────────────────────
+
+function WorkspaceSetupCard({
+  onSync,
+  isSyncing,
+  blockedReason,
+  syncedButEmpty,
+}: {
+  onSync: () => void;
+  isSyncing: boolean;
+  blockedReason?: string;
+  syncedButEmpty?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-center py-12">
+      <Card className="w-full max-w-md space-y-6 p-8">
+        <div className="space-y-1.5">
+          <h3 className="font-semibold">Connect Google Workspace</h3>
+          <p className="text-muted-foreground text-sm">
+            Sync Chrome extensions and enrolled devices from your org via the
+            Chrome Management API.
+          </p>
+        </div>
+
+        {syncedButEmpty ? (
+          <div className="space-y-4">
+            <p className="text-muted-foreground text-sm">
+              Sync ran but Google's API returned no data yet. This is normal
+              right after enrolling — it can take a few hours for newly enrolled
+              browsers and their extensions to appear. Come back and hit{" "}
+              <strong className="text-foreground">Try again</strong> later.
+            </p>
+            <div className="space-y-2.5">
+              <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                How to enroll a browser
+              </p>
+              <ol className="text-muted-foreground list-none space-y-2 text-sm">
+                {[
+                  <>
+                    Go to{" "}
+                    <a
+                      href="https://admin.google.com/ac/chrome/browsers/"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-foreground underline underline-offset-2 hover:opacity-80"
+                    >
+                      Chrome Browsers in Admin Console
+                    </a>{" "}
+                    and generate an enrollment token.
+                  </>,
+                  <>
+                    Deploy the token as a Chrome policy:
+                    <br />
+                    <span className="bg-muted mt-1 inline-block rounded px-1.5 py-0.5 font-mono text-xs">
+                      CloudManagementEnrollmentToken = YOUR_TOKEN
+                    </span>
+                  </>,
+                  <>
+                    On Mac:{" "}
+                    <span className="bg-muted rounded px-1.5 py-0.5 font-mono text-xs">
+                      defaults write com.google.Chrome
+                      CloudManagementEnrollmentToken -string "TOKEN"
+                    </span>
+                  </>,
+                  <>
+                    On Windows: set via Group Policy or registry at{" "}
+                    <span className="bg-muted rounded px-1.5 py-0.5 font-mono text-xs break-all">
+                      HKLM\SOFTWARE\Policies\Google\Chrome
+                    </span>
+                  </>,
+                  "Restart Chrome, then sync again.",
+                ].map((step, i) => (
+                  <li key={i} className="flex items-start gap-2.5">
+                    <span className="bg-muted text-muted-foreground mt-px flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-medium">
+                      {i + 1}
+                    </span>
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <Button
+              className="w-full gap-2"
+              variant="outline"
+              disabled={isSyncing}
+              onClick={onSync}
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`}
+              />
+              {isSyncing ? "Syncing…" : "Try again"}
+            </Button>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-2.5">
+              <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                Requirements
+              </p>
+              {[
+                "Google Workspace account (not personal Gmail)",
+                "Super admin role on the domain",
+                "Chrome Browser Cloud Management (CBCM) enabled",
+              ].map((req) => (
+                <div key={req} className="flex items-center gap-2.5 text-sm">
+                  <CheckCircle className="h-4 w-4 shrink-0 text-emerald-500" />
+                  <span>{req}</span>
+                </div>
+              ))}
+            </div>
+
+            {blockedReason ? (
+              <div className="bg-destructive/10 border-destructive/20 text-destructive flex items-start gap-2.5 rounded-lg border p-3 text-sm">
+                <AlertTriangle className="mt-px h-4 w-4 shrink-0" />
+                <span>{blockedReason}</span>
+              </div>
+            ) : (
+              <Button
+                className="w-full gap-2"
+                disabled={isSyncing}
+                onClick={onSync}
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`}
+                />
+                {isSyncing ? "Connecting…" : "Connect & Sync"}
+              </Button>
+            )}
+          </>
+        )}
+      </Card>
+    </div>
+  );
+}
+
 // ─── Devices tab ──────────────────────────────────────────────────────────────
 
-function DevicesTab({ overview }: { overview: FleetOverview }) {
+function DevicesTab({ overview: _overview }: { overview: FleetOverview }) {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const [blockedReason, setBlockedReason] = useState<string | undefined>();
 
-  const { data: threatenedDevices, isPending: threatsPending } = useQuery(
-    trpc.fleet.threatenedDevices.queryOptions(),
-  );
-  const { data: allDevices, isPending: devicesPending } = useQuery(
-    trpc.fleet.devices.queryOptions({ page: 1, limit: 50 }),
+  const { data: workspaceDevices, isPending } = useQuery(
+    trpc.workspace.devices.queryOptions({ page: 1, limit: 100 }),
   );
 
-  const hasThreats = overview.flaggedCount > 0;
+  const syncMutation = useMutation(
+    trpc.workspace.sync.mutationOptions({
+      onSuccess: (data) => {
+        void queryClient.invalidateQueries(
+          trpc.workspace.devices.queryFilter(),
+        );
+        void queryClient.invalidateQueries(trpc.workspace.apps.queryFilter());
+        if (data.appCount === 0) {
+          toast.warning(
+            "Sync complete but no data yet — Google's API can take a few hours to reflect newly enrolled browsers. Try again later.",
+            { duration: 10000 },
+          );
+        } else {
+          toast.success(
+            `Sync complete — ${data.appCount} extensions, ${data.deviceCount} devices`,
+          );
+        }
+      },
+      onError: (err) => {
+        if (err.message.includes("Could not resolve 'my_customer'")) {
+          setBlockedReason(
+            "This account isn't a Google Workspace super admin, or Chrome Browser Cloud Management (CBCM) isn't enabled on your domain. Contact your Workspace admin.",
+          );
+        } else {
+          const msg =
+            err.message.includes("401") || err.message.includes("403")
+              ? "Google access denied — try signing out and back in to re-grant permissions."
+              : `Sync failed: ${err.message}`;
+          toast.error(msg, { duration: 8000 });
+        }
+      },
+    }),
+  );
+
+  if (isPending) {
+    return (
+      <div className="flex justify-center py-12">
+        <RefreshCw className="h-5 w-5 animate-spin opacity-30" />
+      </div>
+    );
+  }
+
+  if ((workspaceDevices?.rows.length ?? 0) === 0) {
+    return (
+      <WorkspaceSetupCard
+        onSync={() => syncMutation.mutate()}
+        isSyncing={syncMutation.isPending}
+        blockedReason={blockedReason}
+      />
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Threatened devices */}
-      {(hasThreats || threatsPending) && (
-        <section className="space-y-3">
-          <h2 className="text-destructive flex items-center gap-2 text-sm font-semibold">
-            <AlertTriangle className="h-4 w-4" />
-            Active Threats
-          </h2>
+    <div className="space-y-3">
+      <div className="text-muted-foreground flex items-center gap-2 text-sm">
+        <Cloud className="h-4 w-4" />
+        <span>Chrome browsers enrolled in Google Workspace</span>
+      </div>
 
-          {threatsPending ? (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {[0, 1].map((i) => (
-                <Card key={i} className="animate-pulse p-4">
-                  <div className="bg-muted h-4 w-24 rounded" />
-                  <div className="mt-3 space-y-2">
-                    <div className="bg-muted h-3 w-full rounded" />
-                    <div className="bg-muted h-3 w-3/4 rounded" />
-                  </div>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {threatenedDevices?.map((device) => (
-                <Card
-                  key={device.deviceId}
-                  className="border-destructive/30 overflow-hidden"
-                >
-                  <div className="bg-destructive/5 flex items-center gap-2 border-b px-4 py-2.5">
-                    <Monitor className="text-muted-foreground h-3.5 w-3.5" />
-                    <span className="text-sm font-medium capitalize">
-                      {device.platform}
+      <Card className="overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Machine</TableHead>
+              <TableHead className="w-32 text-right">Extensions</TableHead>
+              <TableHead className="w-36 text-right">Last synced</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {workspaceDevices?.rows.map((device) => (
+              <TableRow key={device.googleDeviceId}>
+                <TableCell className="text-sm font-medium">
+                  {device.machineName ?? (
+                    <span className="text-muted-foreground font-mono text-xs">
+                      {device.googleDeviceId.slice(0, 16)}…
                     </span>
-                    <span className="text-muted-foreground ml-auto text-xs">
-                      {timeAgo(device.lastSeenAt)}
-                    </span>
-                  </div>
-                  <div className="divide-y">
-                    {device.threats.map((threat) => (
-                      <div
-                        key={threat.chromeExtensionId}
-                        className="flex items-start gap-2 px-4 py-2.5"
-                      >
-                        <AlertTriangle className="text-destructive mt-0.5 h-3.5 w-3.5 shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-destructive truncate text-sm font-medium">
-                            {threat.extensionName ?? threat.chromeExtensionId}
-                          </p>
-                          {threat.flaggedReason && (
-                            <p className="text-muted-foreground mt-0.5 text-xs">
-                              {threat.flaggedReason}
-                            </p>
-                          )}
-                        </div>
-                        <RiskScore score={threat.riskScore} />
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-        </section>
-      )}
-
-      {/* All devices */}
-      <section className="space-y-3">
-        <h2 className="flex items-center gap-2 text-sm font-semibold">
-          <Monitor className="h-4 w-4" />
-          All Devices
-        </h2>
-        <Card className="overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Platform</TableHead>
-                <TableHead className="w-32 text-right">Extensions</TableHead>
-                <TableHead className="w-32 text-right">Flagged</TableHead>
-                <TableHead className="w-36 text-right">Last seen</TableHead>
+                  )}
+                </TableCell>
+                <TableCell className="text-right text-sm tabular-nums">
+                  {device.extensionCount}
+                </TableCell>
+                <TableCell className="text-muted-foreground text-right text-xs">
+                  {timeAgo(device.lastSyncedAt)}
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {devicesPending && (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className="text-muted-foreground py-12 text-center"
-                  >
-                    <RefreshCw className="mx-auto mb-2 h-5 w-5 animate-spin opacity-30" />
-                  </TableCell>
-                </TableRow>
-              )}
-              {!devicesPending && (allDevices?.rows.length ?? 0) === 0 && (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className="text-muted-foreground py-12 text-center text-sm"
-                  >
-                    No devices enrolled.
-                  </TableCell>
-                </TableRow>
-              )}
-              {allDevices?.rows.map((device) => (
-                <TableRow
-                  key={device.id}
-                  className={
-                    device.flaggedExtensionCount > 0
-                      ? "border-l-destructive bg-destructive/5 border-l-2"
-                      : ""
-                  }
-                >
-                  <TableCell className="text-sm font-medium capitalize">
-                    {device.platform}
-                  </TableCell>
-                  <TableCell className="text-right text-sm tabular-nums">
-                    {device.extensionCount}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {device.flaggedExtensionCount > 0 ? (
-                      <span className="text-destructive text-sm font-semibold tabular-nums">
-                        {device.flaggedExtensionCount}
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">-</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-right text-xs">
-                    {timeAgo(device.lastSeenAt)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Card>
-      </section>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
+
+      {workspaceDevices && workspaceDevices.total > workspaceDevices.limit && (
+        <p className="text-muted-foreground text-center text-xs">
+          Showing {workspaceDevices.rows.length} of {workspaceDevices.total}{" "}
+          devices
+        </p>
+      )}
     </div>
   );
 }
@@ -700,7 +792,7 @@ function InstallTypeChip({ type }: { type: string | null }) {
 function ExtensionsTab() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const autoSyncFired = useRef(false);
+  const [blockedReason, setBlockedReason] = useState<string | undefined>();
 
   const { data: appsData, isPending } = useQuery(
     trpc.workspace.apps.queryOptions({ page: 1, limit: 100 }),
@@ -708,22 +800,59 @@ function ExtensionsTab() {
 
   const syncMutation = useMutation(
     trpc.workspace.sync.mutationOptions({
-      onSuccess: () => {
+      onSuccess: (data) => {
         void queryClient.invalidateQueries(trpc.workspace.apps.queryFilter());
+        void queryClient.invalidateQueries(
+          trpc.workspace.devices.queryFilter(),
+        );
+        if (data.appCount === 0) {
+          toast.warning(
+            "Sync complete but no data yet, Google's API can take a few hours to reflect newly enrolled browsers. Try again later.",
+            { duration: 10000 },
+          );
+        } else {
+          toast.success(
+            `Sync complete, ${data.appCount} extensions, ${data.deviceCount} devices`,
+          );
+        }
+      },
+      onError: (err) => {
+        if (err.message.includes("Could not resolve 'my_customer'")) {
+          setBlockedReason(
+            "This account isn't a Google Workspace super admin, or Chrome Browser Cloud Management (CBCM) isn't enabled on your domain. Contact your Workspace admin.",
+          );
+        } else {
+          const msg =
+            err.message.includes("401") || err.message.includes("403")
+              ? "Google access denied, try signing out and back in to re-grant permissions."
+              : `Sync failed: ${err.message}`;
+          toast.error(msg, { duration: 8000 });
+        }
       },
     }),
   );
 
-  // Auto-sync on first visit if the org has never been synced
-  useEffect(() => {
-    if (!autoSyncFired.current && appsData?.lastSyncedAt === null) {
-      autoSyncFired.current = true;
-      syncMutation.mutate();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appsData]);
-
   const isSyncing = syncMutation.isPending;
+
+  if (isPending) {
+    return (
+      <div className="flex justify-center py-12">
+        <RefreshCw className="h-5 w-5 animate-spin opacity-30" />
+      </div>
+    );
+  }
+
+  if ((appsData?.rows.length ?? 0) === 0) {
+    const syncedButEmpty = appsData?.lastSyncedAt !== null;
+    return (
+      <WorkspaceSetupCard
+        onSync={() => syncMutation.mutate()}
+        isSyncing={isSyncing}
+        blockedReason={blockedReason}
+        syncedButEmpty={syncedButEmpty}
+      />
+    );
+  }
 
   return (
     <div className="space-y-3">

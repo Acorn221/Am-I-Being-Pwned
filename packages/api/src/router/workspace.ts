@@ -1,7 +1,9 @@
 import { count, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 
-import { Extension, Organization, WorkspaceApp, eqi } from "@amibeingpwned/db";
+import { Extension, Organization, WorkspaceApp, WorkspaceDevice, eqi } from "@amibeingpwned/db";
+
+import { TRPCError } from "@trpc/server";
 
 import { syncWorkspaceApps } from "../services/workspace-sync";
 import { createTRPCRouter, managerProcedure } from "../trpc";
@@ -18,12 +20,57 @@ export const workspaceRouter = createTRPCRouter({
    * and upserts them into the database.
    */
   sync: managerProcedure.mutation(async ({ ctx }) => {
-    return syncWorkspaceApps({
-      db: ctx.db,
-      userId: ctx.session.user.id,
-      orgId: ctx.org.id,
-    });
+    try {
+      return await syncWorkspaceApps({
+        db: ctx.db,
+        userId: ctx.session.user.id,
+        orgId: ctx.org.id,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("[workspace.sync] error:", message);
+      if (err instanceof TRPCError) throw err;
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message });
+    }
   }),
+
+  /**
+   * Paginated list of enrolled Chrome browser devices discovered during the
+   * last workspace sync via findInstalledAppDevices.
+   */
+  devices: managerProcedure
+    .input(PaginationSchema)
+    .query(async ({ ctx, input }) => {
+      const orgId = ctx.org.id;
+      const offset = (input.page - 1) * input.limit;
+
+      const [rows, totalResult] = await Promise.all([
+        ctx.db
+          .select({
+            googleDeviceId: WorkspaceDevice.googleDeviceId,
+            machineName: WorkspaceDevice.machineName,
+            extensionCount: WorkspaceDevice.extensionCount,
+            lastSyncedAt: WorkspaceDevice.lastSyncedAt,
+          })
+          .from(WorkspaceDevice)
+          .where(eqi(WorkspaceDevice.orgId, orgId))
+          .orderBy(desc(WorkspaceDevice.extensionCount))
+          .limit(input.limit)
+          .offset(offset),
+
+        ctx.db
+          .select({ total: count() })
+          .from(WorkspaceDevice)
+          .where(eqi(WorkspaceDevice.orgId, orgId)),
+      ]);
+
+      return {
+        rows,
+        total: totalResult[0]?.total ?? 0,
+        page: input.page,
+        limit: input.limit,
+      };
+    }),
 
   /**
    * Paginated list of Chrome extensions across the org's managed devices,

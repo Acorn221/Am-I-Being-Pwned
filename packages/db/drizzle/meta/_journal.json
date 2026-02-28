@@ -29,6 +29,13 @@
       "when": 1772301949943,
       "tag": "0003_smooth_crusher_hogan",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1772303647644,
+      "tag": "0004_sloppy_the_fury",
+      "breakpoints": true
     }
   ]
 }
