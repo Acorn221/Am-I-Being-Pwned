@@ -50,7 +50,7 @@ export function Router() {
   const extensionId = reportMatch?.[1];
   const isFaq = path === "/faq";
   const isLogin = path === "/login";
-  const isDashboard = path === "/dashboard";
+  const isDashboard = path === "/dashboard" || path.startsWith("/dashboard/");
   const isAdmin = path.startsWith("/admin");
 
   const isSubPage = !!extensionId || isFaq || isLogin || isDashboard || isAdmin;

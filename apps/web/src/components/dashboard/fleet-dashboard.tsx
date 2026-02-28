@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
@@ -102,10 +102,33 @@ function timeAgo(date: Date): string {
   return `${Math.floor(h / 24)}d ago`;
 }
 
+// ─── Tab routing helpers ──────────────────────────────────────────────────────
+
+const VALID_TABS = new Set<Tab>(["overview", "alerts", "devices", "extensions", "settings"]);
+
+function getTab(): Tab {
+  const segment = window.location.pathname.split("/")[2];
+  return VALID_TABS.has(segment as Tab) ? (segment as Tab) : "overview";
+}
+
+function subscribeToLocation(cb: () => void) {
+  window.addEventListener("popstate", cb);
+  return () => window.removeEventListener("popstate", cb);
+}
+
+function useTab(): [Tab, (t: Tab) => void] {
+  const tab = useSyncExternalStore(subscribeToLocation, getTab);
+  function setTab(t: Tab) {
+    window.history.pushState(null, "", `/dashboard/${t}`);
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }
+  return [tab, setTab];
+}
+
 // ─── Root component ───────────────────────────────────────────────────────────
 
 export function FleetDashboard({ overview }: { overview: FleetOverview }) {
-  const [tab, setTab] = useState<Tab>("overview");
+  const [tab, setTab] = useTab();
 
   async function handleSignOut() {
     await authClient.signOut();
