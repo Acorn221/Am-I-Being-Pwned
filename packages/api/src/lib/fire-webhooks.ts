@@ -28,16 +28,16 @@ export const WEBHOOK_EVENTS = [
 
 export type WebhookEventType = (typeof WEBHOOK_EVENTS)[number];
 
-export type WebhookPayloadMap = {
+export interface WebhookPayloadMap {
   "threat.detected": {
     deviceId: string;
     platform: string;
-    threats: Array<{
+    threats: {
       extensionName: string | null;
       chromeExtensionId: string;
       riskScore: number;
       flaggedReason: string | null;
-    }>;
+    }[];
   };
   "alert.created": {
     alertId: string;
@@ -55,7 +55,7 @@ export type WebhookPayloadMap = {
   test: {
     message: string;
   };
-};
+}
 
 // ─── Signing ──────────────────────────────────────────────────────────────────
 

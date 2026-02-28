@@ -1,6 +1,7 @@
-import { and, eq } from "drizzle-orm";
+import { and } from "drizzle-orm";
 import { z } from "zod/v4";
 
+import type { db as DbType } from "@amibeingpwned/db/client";
 import { OrgWebhook, eqi } from "@amibeingpwned/db";
 import { TRPCError } from "@trpc/server";
 
@@ -129,7 +130,7 @@ export const webhooksRouter = createTRPCRouter({
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 async function assertOwnership(
-  ctx: { db: typeof import("@amibeingpwned/db/client").db; org: { id: string } },
+  ctx: { db: typeof DbType; org: { id: string } },
   webhookId: string,
 ) {
   const [row] = await ctx.db

@@ -33,7 +33,7 @@ const TOKEN_KEY = "aibp_device_token";
 export async function getFingerprint(): Promise<string> {
   const stored = await chrome.storage.local.get(FINGERPRINT_KEY);
   if (typeof stored[FINGERPRINT_KEY] === "string") {
-    return stored[FINGERPRINT_KEY] as string;
+    return stored[FINGERPRINT_KEY];
   }
   const id = crypto.randomUUID();
   await chrome.storage.local.set({ [FINGERPRINT_KEY]: id });
@@ -47,7 +47,7 @@ export async function getFingerprint(): Promise<string> {
 export async function getStoredToken(): Promise<string | null> {
   const stored = await chrome.storage.local.get(TOKEN_KEY);
   return typeof stored[TOKEN_KEY] === "string"
-    ? (stored[TOKEN_KEY] as string)
+    ? (stored[TOKEN_KEY])
     : null;
 }
 

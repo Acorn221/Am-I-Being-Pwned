@@ -6,14 +6,16 @@ import { Line } from "@react-three/drei";
 import * as THREE from "three";
 
 import {
-  type PieceEdges,
-  createPuzzlePieceGeometry,
+  
+  createPuzzlePieceGeometry
 } from "./puzzle-piece-geometry";
+import type {PieceEdges} from "./puzzle-piece-geometry";
 import {
-  type RiskGroup,
+  
   riskToGroup,
-  useShatterAnimation,
+  useShatterAnimation
 } from "./use-shatter-animation";
+import type {RiskGroup} from "./use-shatter-animation";
 
 const RISK_COLORS: Record<RiskGroup, string> = {
   safe: "#4ade80",
@@ -42,6 +44,7 @@ export function PuzzlePiece({
 
   const geometry = useMemo(() => createPuzzlePieceGeometry(edges), [edges]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const { spring, crackLines } = useShatterAnimation(
     group,
     position,
@@ -64,7 +67,9 @@ export function PuzzlePiece({
 
   return (
     <animated.group
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       position={spring.position as unknown as THREE.Vector3}
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       rotation={spring.rotation as unknown as THREE.Euler}
     >
       <mesh ref={meshRef} geometry={geometry}>

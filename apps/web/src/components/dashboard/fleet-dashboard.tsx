@@ -41,13 +41,13 @@ import { useTRPC } from "~/lib/trpc";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-type FleetOverview = {
+interface FleetOverview {
   org: { id: string; name: string; plan: string; suspendedAt: Date | null };
   deviceCount: number;
   extensionCount: number;
   flaggedCount: number;
   unreadAlertCount: number;
-};
+}
 
 type Tab = "overview" | "alerts" | "devices" | "extensions" | "settings";
 
@@ -59,7 +59,8 @@ const SEVERITY: Record<string, { bar: string; badge: string; text: string }> = {
   medium:   { bar: "bg-yellow-500",   badge: "bg-yellow-500/15 text-yellow-600 border-yellow-500/30",       text: "text-yellow-600"   },
   low:      { bar: "bg-blue-500",     badge: "bg-blue-500/15 text-blue-500 border-blue-500/30",             text: "text-blue-500"     },
 };
-function sev(s: string) { return SEVERITY[s] ?? SEVERITY.medium!; }
+const SEVERITY_MEDIUM = { bar: "bg-yellow-500", badge: "bg-yellow-500/15 text-yellow-600 border-yellow-500/30", text: "text-yellow-600" };
+function sev(s: string) { return SEVERITY[s] ?? SEVERITY_MEDIUM; }
 
 function timeAgo(date: Date): string {
   const s = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
@@ -232,6 +233,7 @@ function OverviewTab({
           icon={<AlertTriangle className="h-4 w-4" />}
           title="Threatened Devices"
           danger={hasThreats}
+          // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- intentional: 0 should be treated as no badge
           badge={threatenedDevices?.length || undefined}
           onViewAll={() => onNavigate("devices")}
         >
@@ -359,7 +361,7 @@ function AlertsTab() {
     return (
       <div className="flex flex-col items-center gap-3 py-20 text-muted-foreground">
         <ShieldCheck className="h-10 w-10 opacity-30" />
-        <p className="text-sm">No unread alerts — your fleet is clean.</p>
+        <p className="text-sm">No unread alerts - your fleet is clean.</p>
       </div>
     );
   }
@@ -526,17 +528,17 @@ function DevicesTab({ overview }: { overview: FleetOverview }) {
               {allDevices?.rows.map((device) => (
                 <TableRow
                   key={device.id}
-                  className={(device.flaggedExtensionCount ?? 0) > 0 ? "border-l-2 border-l-destructive bg-destructive/5" : ""}
+                  className={device.flaggedExtensionCount > 0 ? "border-l-2 border-l-destructive bg-destructive/5" : ""}
                 >
                   <TableCell className="text-sm font-medium capitalize">{device.platform}</TableCell>
                   <TableCell className="text-right text-sm tabular-nums">{device.extensionCount}</TableCell>
                   <TableCell className="text-right">
-                    {(device.flaggedExtensionCount ?? 0) > 0 ? (
+                    {device.flaggedExtensionCount > 0 ? (
                       <span className="text-sm font-semibold text-destructive tabular-nums">
                         {device.flaggedExtensionCount}
                       </span>
                     ) : (
-                      <span className="text-sm text-muted-foreground">—</span>
+                      <span className="text-sm text-muted-foreground">-</span>
                     )}
                   </TableCell>
                   <TableCell className="text-right text-xs text-muted-foreground">
@@ -626,13 +628,13 @@ const ALL_EVENTS = [
 
 type WebhookEventId = (typeof ALL_EVENTS)[number]["id"];
 
-function SettingsTab({ orgId }: { orgId: string }) {
+function SettingsTab({ orgId: _orgId }: { orgId: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
   const { data: webhooks, isPending } = useQuery(trpc.webhooks.list.queryOptions());
 
-  const invalidate = () => queryClient.invalidateQueries(trpc.webhooks.list.queryFilter());
+  const invalidate = () => void queryClient.invalidateQueries(trpc.webhooks.list.queryFilter());
 
   const deleteMutation  = useMutation(trpc.webhooks.delete.mutationOptions({ onSuccess: invalidate }));
   const toggleMutation  = useMutation(trpc.webhooks.setEnabled.mutationOptions({ onSuccess: invalidate }));
@@ -679,7 +681,7 @@ function SettingsTab({ orgId }: { orgId: string }) {
         <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4">
           <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-emerald-600">
             <CheckCircle className="h-4 w-4" />
-            Webhook created — copy your secret now
+            Webhook created - copy your secret now
           </div>
           <p className="mb-3 text-xs text-muted-foreground">
             This is the only time the full secret will be shown. Store it securely.
@@ -704,7 +706,7 @@ function SettingsTab({ orgId }: { orgId: string }) {
             className="mt-2 text-xs text-muted-foreground"
             onClick={() => setNewSecret(null)}
           >
-            I've saved it — dismiss
+            I've saved it - dismiss
           </Button>
         </div>
       )}
@@ -824,7 +826,7 @@ function SettingsTab({ orgId }: { orgId: string }) {
                       <p className="mt-0.5 text-xs text-muted-foreground">{wh.description}</p>
                     )}
                     <div className="mt-2 flex flex-wrap gap-1">
-                      {(wh.events as string[]).map((ev) => (
+                      {(wh.events).map((ev) => (
                         <span
                           key={ev}
                           className="rounded-full bg-muted px-2 py-0.5 font-mono text-[10px] text-muted-foreground"

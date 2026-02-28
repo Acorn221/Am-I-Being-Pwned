@@ -2,9 +2,10 @@ import {
   createContext,
   useCallback,
   useContext,
-  useState,
-  type ReactNode,
+  useState
+  
 } from "react";
+import type {ReactNode} from "react";
 
 import { HERO_SLIDES } from "~/components/hero-slides";
 
@@ -20,9 +21,9 @@ interface HeroCycleState {
 const HeroCycleContext = createContext<HeroCycleState>({
   slideIndex: 0,
   paused: false,
-  pause: () => {},
-  resume: () => {},
-  advance: () => {},
+  pause: () => { /* noop */ },
+  resume: () => { /* noop */ },
+  advance: () => { /* noop */ },
 });
 
 export function HeroCycleProvider({ children }: { children: ReactNode }) {

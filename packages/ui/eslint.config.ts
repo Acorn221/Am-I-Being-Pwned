@@ -5,7 +5,7 @@ import { reactConfig } from "@amibeingpwned/eslint-config/react";
 
 export default defineConfig(
   {
-    ignores: ["dist/**"],
+    ignores: ["dist/**", "src/stories/**", ".storybook/**"],
   },
   baseConfig,
   reactConfig,

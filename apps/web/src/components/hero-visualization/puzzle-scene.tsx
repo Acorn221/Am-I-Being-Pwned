@@ -8,7 +8,8 @@ import type { RiskLevel } from "@amibeingpwned/types";
 
 import { riskOrder } from "~/lib/risk";
 
-import { type PieceEdges, assignEdges } from "./puzzle-piece-geometry";
+import {  assignEdges } from "./puzzle-piece-geometry";
+import type {PieceEdges} from "./puzzle-piece-geometry";
 import { PuzzlePiece } from "./puzzle-piece";
 
 interface PieceData {

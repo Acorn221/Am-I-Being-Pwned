@@ -1,4 +1,4 @@
-import { and, count, desc, eq, isNull } from "drizzle-orm";
+import { count, desc, eq, isNull } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import { Device, Extension, ExtensionScan, user } from "@amibeingpwned/db";

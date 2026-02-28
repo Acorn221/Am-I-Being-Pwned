@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { and, count, desc, eq, ilike, isNull, or } from "drizzle-orm";
 import { z } from "zod/v4";
 
-import { Device, UserAlert, UserSubscription, eqi, user } from "@amibeingpwned/db";
+import { Device, UserAlert, UserSubscription, user } from "@amibeingpwned/db";
 
 import { adminProcedure, createTRPCRouter } from "../../trpc";
 

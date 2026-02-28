@@ -1,6 +1,6 @@
 "use no memo";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import { useSpring } from "@react-spring/three";
 import * as THREE from "three";
 
@@ -30,8 +30,6 @@ export function useShatterAnimation(
   basePosition: [number, number, number],
   reducedMotion: boolean,
 ): ShatterResult {
-  const hasStarted = useRef(false);
-
   const [spring] = useSpring(() => {
     if (reducedMotion || group !== "danger") {
       return {
@@ -85,6 +83,10 @@ export function useShatterAnimation(
     };
   }, [group, reducedMotion]);
 
+  // Crack geometry is intentionally randomised once per group change.
+  // "use no memo" opts this file out of the React Compiler so these random
+  // values are stable across re-renders (memoised by useMemo).
+  /* eslint-disable react-hooks/purity */
   const crackLines = useMemo(() => {
     if (group !== "danger") return [];
 
@@ -109,6 +111,7 @@ export function useShatterAnimation(
 
     return lines;
   }, [group]);
+  /* eslint-enable react-hooks/purity */
 
   // Cleanup geometries
   useEffect(() => {

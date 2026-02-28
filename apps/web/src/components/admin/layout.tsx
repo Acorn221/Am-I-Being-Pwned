@@ -120,7 +120,7 @@ export function PageHeader({ breadcrumbs, actions }: PageHeaderProps) {
             )}
             {crumb.href ? (
               <button
-                onClick={() => navigate(crumb.href!)}
+                onClick={() => navigate(crumb.href ?? "/")}
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 {crumb.label}

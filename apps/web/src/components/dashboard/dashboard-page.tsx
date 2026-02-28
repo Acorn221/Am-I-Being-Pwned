@@ -13,7 +13,8 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { Bell, LogOut, Puzzle, RefreshCw, Shield } from "lucide-react";
 
-import { type ExtensionStatus, useExtension } from "~/hooks/use-extension";
+import {  useExtension } from "~/hooks/use-extension";
+import type {ExtensionStatus} from "~/hooks/use-extension";
 import { authClient } from "~/lib/auth-client";
 import { useTRPC } from "~/lib/trpc";
 import { navigate } from "~/router";

@@ -2,8 +2,6 @@
 
 import { Suspense, lazy, useMemo } from "react";
 
-import type { RiskLevel } from "@amibeingpwned/types";
-
 import type { ReportMap } from "~/hooks/use-extension-database";
 import { useExtension } from "~/hooks/use-extension";
 
@@ -34,7 +32,7 @@ export function HeroVisualization({ reports }: HeroVisualizationProps) {
         return {
           id: ext.id,
           name: ext.name,
-          risk: (report?.risk ?? "unavailable") as RiskLevel,
+          risk: (report?.risk ?? "unavailable"),
         };
       });
     }

@@ -123,11 +123,11 @@ export function OrgsPage() {
                         On
                       </Badge>
                     ) : (
-                      <span className="text-muted-foreground text-sm">—</span>
+                      <span className="text-muted-foreground text-sm">-</span>
                     )}
                   </TableCell>
                   <TableCell className="text-muted-foreground text-sm">
-                    —
+                    -
                   </TableCell>
                 </TableRow>
               ))}

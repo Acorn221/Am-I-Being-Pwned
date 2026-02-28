@@ -25,7 +25,7 @@ export function TypingTitle() {
   }, [paused]);
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+     
     slideRef.current = slideIndex;
   }, [slideIndex]);
 
@@ -39,7 +39,7 @@ export function TypingTitle() {
   useEffect(() => {
     function tick() {
       const s = state.current;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+       
       const slide = HERO_SLIDES[slideRef.current];
       if (!slide) return;
       const fullText = slide.phrase;
@@ -72,7 +72,7 @@ export function TypingTitle() {
           // Finished deleting - advance to next slide, then start typing
           s.deleting = false;
           s.charIndex = 0;
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+           
           advance();
           timeoutRef.current = setTimeout(tick, PAUSE_AFTER_DELETED);
         } else {

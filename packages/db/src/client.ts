@@ -25,7 +25,7 @@ function getDb(): Db {
     const url = _url ?? process.env.POSTGRES_URL;
     if (!url) {
       throw new Error(
-        "No DB URL — call initDb(env.POSTGRES_URL) at the start of the fetch handler",
+        "No DB URL - call initDb(env.POSTGRES_URL) at the start of the fetch handler",
       );
     }
     _db = drizzle(neon(url), { schema, casing: "snake_case" });
@@ -35,6 +35,7 @@ function getDb(): Db {
 
 export const db = new Proxy({} as Db, {
   get(_, prop) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return Reflect.get(getDb(), prop);
   },
 });

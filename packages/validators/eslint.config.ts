@@ -4,7 +4,7 @@ import { baseConfig } from "@amibeingpwned/eslint-config/base";
 
 export default defineConfig(
   {
-    ignores: ["dist/**"],
+    ignores: ["dist/**", "src/**/*.js"],
   },
   baseConfig,
 );

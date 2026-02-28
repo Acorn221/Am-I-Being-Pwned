@@ -21,12 +21,11 @@ export function OneTimeScan({ reports }: { reports: ReportMap }) {
   function handleScan() {
     const { extensions } = parseExtensionList(text);
     const found = extensions
-      .filter((e) => reports.has(e.id))
-      .map((e) => {
-        const report = reports.get(e.id)!;
-        return { id: e.id, name: report.name, risk: report.risk as keyof typeof riskConfig };
+      .flatMap((e) => {
+        const report = reports.get(e.id);
+        return report ? [{ id: e.id, name: report.name, risk: report.risk }] : [];
       })
-      .sort((a, b) => (riskOrder[a.risk] ?? 99) - (riskOrder[b.risk] ?? 99));
+      .sort((a, b) => riskOrder[a.risk] - riskOrder[b.risk]);
     setResults(found);
   }
 

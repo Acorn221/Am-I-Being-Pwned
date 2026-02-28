@@ -24,7 +24,6 @@ import {
 import { useState } from "react";
 
 import { useTRPC } from "~/lib/trpc";
-import { navigate } from "~/router";
 import { PageHeader } from "./layout";
 
 interface OrgDetailPageProps {
@@ -43,7 +42,7 @@ export function OrgDetailPage({ orgId }: OrgDetailPageProps) {
   );
 
   const invalidate = () =>
-    queryClient.invalidateQueries(trpc.admin.orgs.get.queryFilter({ orgId }));
+    void queryClient.invalidateQueries(trpc.admin.orgs.get.queryFilter({ orgId }));
 
   const setPlan = useMutation(
     trpc.admin.orgs.setPlan.mutationOptions({ onSuccess: invalidate }),
@@ -152,7 +151,7 @@ export function OrgDetailPage({ orgId }: OrgDetailPageProps) {
             <AlertTriangle className="text-destructive h-4 w-4 shrink-0" />
             <span>
               <strong>Suspended</strong>
-              {org.suspendedReason ? ` — ${org.suspendedReason}` : ""}
+              {org.suspendedReason ? ` - ${org.suspendedReason}` : ""}
             </span>
           </div>
         )}
@@ -161,7 +160,7 @@ export function OrgDetailPage({ orgId }: OrgDetailPageProps) {
         {rotatedKey && (
           <div className="bg-yellow-500/10 border-yellow-500/30 space-y-2 rounded-lg border px-4 py-3">
             <p className="text-sm font-medium text-yellow-700 dark:text-yellow-400">
-              New API key — copy it now, it won't be shown again.
+              New API key - copy it now, it won't be shown again.
             </p>
             <div className="flex items-center gap-2">
               <code className="bg-background text-foreground flex-1 rounded px-2 py-1 font-mono text-xs">

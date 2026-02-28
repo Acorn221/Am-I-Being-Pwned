@@ -22,6 +22,6 @@ export const encryptedText = customType<{
   },
   fromDriver(value: Buffer): string {
     // Return base64 so the app layer can decrypt it.
-    return value ? value.toString("base64") : "";
+    return value.toString("base64");
   },
 });

@@ -1,6 +1,7 @@
 import { and, count, countDistinct, desc, eq, isNull, or } from "drizzle-orm";
 import { z } from "zod/v4";
 
+import type { db as DbType } from "@amibeingpwned/db/client";
 import {
   Device,
   Extension,
@@ -23,7 +24,7 @@ const PaginationSchema = z.object({
 // Shared helper — look up the manager's org membership
 // ---------------------------------------------------------------------------
 
-async function getManagerMembership(db: typeof import("@amibeingpwned/db/client").db, userId: string) {
+async function getManagerMembership(db: typeof DbType, userId: string) {
   const [membership] = await db
     .select({
       orgId: OrgMember.orgId,
@@ -213,12 +214,12 @@ export const fleetRouter = createTRPCRouter({
       deviceId: string;
       platform: "chrome" | "edge";
       lastSeenAt: Date;
-      threats: Array<{
+      threats: {
         extensionName: string | null;
         chromeExtensionId: string;
         riskScore: number;
         flaggedReason: string | null;
-      }>;
+      }[];
     }>();
 
     for (const row of rows) {
@@ -230,7 +231,7 @@ export const fleetRouter = createTRPCRouter({
           threats: [],
         });
       }
-      deviceMap.get(row.deviceId)!.threats.push({
+      deviceMap.get(row.deviceId)?.threats.push({
         extensionName: row.extensionName,
         chromeExtensionId: row.chromeExtensionId,
         riskScore: row.riskScore,

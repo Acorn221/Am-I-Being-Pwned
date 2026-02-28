@@ -1,5 +1,3 @@
-import { TRPCError } from "@trpc/server";
-
 import { t } from "../trpc";
 
 /**
@@ -21,6 +19,7 @@ const RATE_LIMIT_ENABLED = false;
 const REQUESTS_PER_MINUTE = 60;
 
 export const rateLimitMiddleware = t.middleware(async ({ ctx, next }) => {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (!RATE_LIMIT_ENABLED) return next();
 
   // Authenticated users are keyed by user ID; unauthenticated by IP (best-effort).

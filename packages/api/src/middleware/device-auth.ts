@@ -53,7 +53,7 @@ export const deviceAuthMiddleware = t.middleware(async ({ ctx, next }) => {
   if (!device) {
     // Log enough to spot brute-force attempts without leaking the raw token
     console.warn(
-      `[device-auth] Token rejected — hash prefix: ${tokenHash.slice(0, 8)}… at ${now.toISOString()}`,
+      `[device-auth] Token rejected - hash prefix: ${tokenHash.slice(0, 8)}... at ${now.toISOString()}`,
     );
     throw new TRPCError({
       code: "UNAUTHORIZED",

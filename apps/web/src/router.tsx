@@ -44,8 +44,8 @@ export function Router() {
   const { reports } = useExtensionDatabase();
   const { data: session, isPending } = authClient.useSession();
 
-  const reportMatch = path.match(REPORT_RE);
-  const adminOrgMatch = path.match(ADMIN_ORG_RE);
+  const reportMatch = REPORT_RE.exec(path);
+  const adminOrgMatch = ADMIN_ORG_RE.exec(path);
 
   const extensionId = reportMatch?.[1];
   const isFaq = path === "/faq";
@@ -111,7 +111,7 @@ export function Router() {
       {isAdmin && session?.user.role === "admin" && (
         <AdminLayout path={path}>
           {adminOrgMatch ? (
-            <OrgDetailPage orgId={adminOrgMatch[1]!} />
+            <OrgDetailPage orgId={adminOrgMatch[1] ?? ""} />
           ) : (
             <OrgsPage />
           )}
