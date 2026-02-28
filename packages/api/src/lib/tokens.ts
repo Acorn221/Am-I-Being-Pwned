@@ -1,6 +1,6 @@
 /**
  * Token utilities using the Web Crypto API.
- * Works in Cloudflare Workers, browsers, and Node.js 18+ — no Node-specific imports.
+ * Works in Cloudflare Workers, browsers, and Node.js 18+, no Node-specific imports.
  */
 
 // ---------------------------------------------------------------------------
@@ -24,9 +24,9 @@ async function sha256hex(value: string): Promise<string> {
 }
 
 // ---------------------------------------------------------------------------
-// Device token  — "aibp_dev_<32 random bytes base64url>"
+// Device token - "aibp_dev_<32 random bytes base64url>"
 // Issued to every registered device. Rotated on every successful sync.
-// Short-lived: 7 days. Revocation is instant — just flip Device.revokedAt.
+// Short-lived: 7 days. Revocation is instant, just flip Device.revokedAt.
 // ---------------------------------------------------------------------------
 
 const DEVICE_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -39,12 +39,25 @@ export async function generateDeviceToken() {
 }
 
 // ---------------------------------------------------------------------------
-// Org API Key  — "aibp_org_<32 random bytes base64url>"
-// Provisioning credential. Never rotates automatically — admin rotates manually.
+// Org API Key - "aibp_org_<32 random bytes base64url>"
+// Provisioning credential. Never rotates automatically, admin rotates manually.
 // ---------------------------------------------------------------------------
 
 export async function generateOrgApiKey() {
   const raw = `aibp_org_${randomBase64url()}`;
+  const hash = await sha256hex(raw);
+  return { raw, hash };
+}
+
+// ---------------------------------------------------------------------------
+// Invite token - "aibp_inv_<32 random bytes base64url>"
+// Shareable link credential for employee self-enrollment.
+// One active token per org, rotated by the admin via the dashboard.
+// Raw token shown once, never stored - only the SHA-256 hash is persisted.
+// ---------------------------------------------------------------------------
+
+export async function generateInviteToken() {
+  const raw = `aibp_inv_${randomBase64url()}`;
   const hash = await sha256hex(raw);
   return { raw, hash };
 }

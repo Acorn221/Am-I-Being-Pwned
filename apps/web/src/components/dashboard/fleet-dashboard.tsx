@@ -9,11 +9,13 @@ import {
   CheckCircle,
   Cloud,
   Copy,
+  Link2,
   LogOut,
   Monitor,
   Plus,
   Puzzle,
   RefreshCw,
+  RotateCcw,
   Settings,
   ShieldCheck,
   Trash2,
@@ -247,7 +249,7 @@ function OverviewTab({
 
   return (
     <div className="space-y-5">
-      {/* Stats strip — full width */}
+      {/* Stats strip - full width */}
       <div className="divide-border bg-card flex w-full gap-0 divide-x overflow-hidden rounded-lg border">
         <StatItem
           icon={<Monitor className="h-4 w-4" />}
@@ -566,7 +568,7 @@ function WorkspaceSetupCard({
           <div className="space-y-4">
             <p className="text-muted-foreground text-sm">
               Sync ran but Google's API returned no data yet. This is normal
-              right after enrolling — it can take a few hours for newly enrolled
+              right after enrolling, it can take a few hours for newly enrolled
               browsers and their extensions to appear. Come back and hit{" "}
               <strong className="text-foreground">Try again</strong> later.
             </p>
@@ -693,12 +695,12 @@ function DevicesTab({ overview: _overview }: { overview: FleetOverview }) {
         void queryClient.invalidateQueries(trpc.workspace.apps.queryFilter());
         if (data.appCount === 0) {
           toast.warning(
-            "Sync complete but no data yet — Google's API can take a few hours to reflect newly enrolled browsers. Try again later.",
+            "Sync complete but no data yet - Google's API can take a few hours to reflect newly enrolled browsers. Try again later.",
             { duration: 10000 },
           );
         } else {
           toast.success(
-            `Sync complete — ${data.appCount} extensions, ${data.deviceCount} devices`,
+            `Sync complete - ${data.appCount} extensions, ${data.deviceCount} devices`,
           );
         }
       },
@@ -710,7 +712,7 @@ function DevicesTab({ overview: _overview }: { overview: FleetOverview }) {
         } else {
           const msg =
             err.message.includes("401") || err.message.includes("403")
-              ? "Google access denied — try signing out and back in to re-grant permissions."
+              ? "Google access denied - try signing out and back in to re-grant permissions."
               : `Sync failed: ${err.message}`;
           toast.error(msg, { duration: 8000 });
         }
@@ -1018,6 +1020,33 @@ function SettingsTab({ orgId: _orgId }: { orgId: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
+  // ── Invite link state ──
+  const { data: inviteLinkData } = useQuery(trpc.org.hasInviteLink.queryOptions());
+  const [inviteToken, setInviteToken] = useState<string | null>(null);
+  const [inviteCopied, setInviteCopied] = useState(false);
+  const [showRotateConfirm, setShowRotateConfirm] = useState(false);
+
+  const rotateMutation = useMutation(
+    trpc.org.rotateInviteLink.mutationOptions({
+      onSuccess: (data) => {
+        setInviteToken(data.token);
+        setShowRotateConfirm(false);
+        void queryClient.invalidateQueries(trpc.org.hasInviteLink.queryFilter());
+      },
+    }),
+  );
+
+  const inviteUrl = inviteToken
+    ? `${window.location.origin}/join/${inviteToken}`
+    : null;
+
+  async function copyInviteLink() {
+    if (!inviteUrl) return;
+    await navigator.clipboard.writeText(inviteUrl);
+    setInviteCopied(true);
+    setTimeout(() => setInviteCopied(false), 2000);
+  }
+
   const { data: webhooks, isPending } = useQuery(
     trpc.webhooks.list.queryOptions(),
   );
@@ -1071,6 +1100,138 @@ function SettingsTab({ orgId: _orgId }: { orgId: string }) {
 
   return (
     <div className="space-y-6">
+      {/* ── Team Enrollment ──────────────────────────────────────────────── */}
+      <section className="space-y-3">
+        <h2 className="flex items-center gap-2 text-sm font-semibold">
+          <Link2 className="h-4 w-4" />
+          Team Enrollment
+        </h2>
+        <p className="text-muted-foreground text-xs">
+          Share an invite link with your team. Any employee who clicks it and
+          installs the extension will be automatically added to your fleet, no
+          IT involvement required.
+        </p>
+
+        {/* No active link yet - show generate button */}
+        {!inviteLinkData?.hasActiveLink && !inviteToken && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5"
+            disabled={rotateMutation.isPending}
+            onClick={() => rotateMutation.mutate()}
+          >
+            {rotateMutation.isPending ? (
+              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Link2 className="h-3.5 w-3.5" />
+            )}
+            Generate invite link
+          </Button>
+        )}
+
+        {/* Active link exists but token not in state (navigated away and back) */}
+        {inviteLinkData?.hasActiveLink && !inviteToken && (
+          <div className="space-y-2">
+            <p className="text-muted-foreground text-xs italic">
+              An invite link is active. Rotate it to get a new shareable URL.
+            </p>
+            {showRotateConfirm ? (
+              <div className="flex items-center gap-2">
+                <span className="text-xs">Revoke current link and generate a new one?</span>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  disabled={rotateMutation.isPending}
+                  onClick={() => rotateMutation.mutate()}
+                >
+                  {rotateMutation.isPending ? (
+                    <RefreshCw className="mr-1 h-3.5 w-3.5 animate-spin" />
+                  ) : null}
+                  Confirm rotate
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setShowRotateConfirm(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5"
+                onClick={() => setShowRotateConfirm(true)}
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                Rotate link
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* Token in state - show copyable URL */}
+        {inviteToken && inviteUrl && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <code className="bg-muted flex-1 overflow-x-auto rounded px-3 py-2 font-mono text-xs">
+                {inviteUrl}
+              </code>
+              <Button
+                size="sm"
+                variant="outline"
+                className="shrink-0 gap-1.5"
+                onClick={() => void copyInviteLink()}
+              >
+                {inviteCopied ? (
+                  <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
+                {inviteCopied ? "Copied" : "Copy"}
+              </Button>
+              {showRotateConfirm ? (
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    disabled={rotateMutation.isPending}
+                    onClick={() => rotateMutation.mutate()}
+                  >
+                    {rotateMutation.isPending ? (
+                      <RefreshCw className="mr-1 h-3.5 w-3.5 animate-spin" />
+                    ) : null}
+                    Confirm
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowRotateConfirm(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="shrink-0 gap-1.5"
+                  onClick={() => setShowRotateConfirm(true)}
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Rotate
+                </Button>
+              )}
+            </div>
+            <p className="text-muted-foreground text-xs">
+              This link is shown once. Save it somewhere safe or copy it now.
+            </p>
+          </div>
+        )}
+      </section>
+
       {/* ── New secret banner ────────────────────────────────────────────── */}
       {newSecret && (
         <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4">

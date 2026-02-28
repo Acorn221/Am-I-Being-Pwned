@@ -2,12 +2,12 @@
  * Device registration and token management for the extension.
  *
  * Registration flows:
- *   B2B — IT admin pushes `orgApiKey` via MDM (chrome.storage.managed).
+ *   B2B - IT admin pushes `orgApiKey` via MDM (chrome.storage.managed).
  *          No user session needed; device binds to the org.
- *   B2C — Requires an active amibeingpwned.com session cookie.
+ *   B2C - Requires an active amibeingpwned.com session cookie.
  *          Retried automatically until the user logs in.
  *
- * The device token ("aibp_dev_…") is rotated on every sync — the server
+ * The device token ("aibp_dev_...") is rotated on every sync - the server
  * returns `newToken` and we replace the stored one immediately.
  */
 
@@ -21,9 +21,10 @@ const FINGERPRINT_KEY = "aibp_fingerprint";
 const DISABLE_LIST_KEY = "aibp_disable_list";
 const QUARANTINE_LIST_KEY = "aibp_quarantine_list";
 const TOKEN_KEY = "aibp_device_token";
+const INVITE_TOKEN_KEY = "aibp_invite_token";
 
 // ---------------------------------------------------------------------------
-// Fingerprint — stable per-install UUID
+// Fingerprint - stable per-install UUID
 // ---------------------------------------------------------------------------
 
 /**
@@ -60,6 +61,25 @@ export async function clearToken(): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// Invite token storage (B2B self-enrollment via shareable link)
+// ---------------------------------------------------------------------------
+
+export async function getInviteToken(): Promise<string | null> {
+  const stored = await chrome.storage.local.get(INVITE_TOKEN_KEY);
+  return typeof stored[INVITE_TOKEN_KEY] === "string"
+    ? (stored[INVITE_TOKEN_KEY])
+    : null;
+}
+
+export async function storeInviteToken(token: string): Promise<void> {
+  await chrome.storage.local.set({ [INVITE_TOKEN_KEY]: token });
+}
+
+export async function clearInviteToken(): Promise<void> {
+  await chrome.storage.local.remove(INVITE_TOKEN_KEY);
+}
+
+// ---------------------------------------------------------------------------
 // Org API key (B2B managed storage)
 // ---------------------------------------------------------------------------
 
@@ -89,7 +109,7 @@ export async function getOrgApiKey(): Promise<string | null> {
  *
  * Throws if:
  *   - B2B: the org API key is invalid/revoked
- *   - B2C: the user is not logged in (UNAUTHORIZED) — caller should schedule
+ *   - B2C: the user is not logged in (UNAUTHORIZED), caller should schedule
  *     a retry alarm rather than propagating this error
  */
 export async function registerDevice(): Promise<string> {
@@ -100,20 +120,34 @@ export async function registerDevice(): Promise<string> {
     platform: "chrome" as const,
   };
 
-  // B2B takes priority — org API key from MDM managed storage
+  // Priority 1: Org API key from MDM managed storage (enterprise GPO/CBCM)
   const orgApiKey = await getOrgApiKey();
   if (orgApiKey) {
     const { deviceToken } = await makeB2BClient(orgApiKey).devices.registerB2B.mutate(input);
     return deviceToken;
   }
 
-  // B2C — session cookie forwarded via credentials: "include"
+  // Priority 2: Invite token from shareable /join/:token link (SMB self-enrollment)
+  const inviteToken = await getInviteToken();
+  if (inviteToken) {
+    const { deviceToken } = await publicClient.devices.registerWithInvite.mutate({
+      inviteToken,
+      deviceFingerprint: fingerprint,
+      extensionVersion: chrome.runtime.getManifest().version,
+      platform: "chrome",
+    });
+    // Clear after successful use - token is single-use per device
+    await clearInviteToken();
+    return deviceToken;
+  }
+
+  // Priority 3: B2C - session cookie forwarded via credentials: "include"
   const { deviceToken } = await publicClient.devices.registerB2C.mutate(input);
   return deviceToken;
 }
 
 // ---------------------------------------------------------------------------
-// Disable list — persisted locally so enforcement survives API downtime.
+// Disable list - persisted locally so enforcement survives API downtime.
 //
 // The server is authoritative, but once it says "disable X", we store that
 // decision and re-enforce it on every SW wake regardless of API availability.
@@ -131,7 +165,7 @@ export async function setDisableList(list: string[]): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
-// Quarantine list — server-authoritative, fully replaced on each sync.
+// Quarantine list - server-authoritative, fully replaced on each sync.
 //
 // Unlike the disable list (additive-only), the quarantine list can shrink:
 // once a scan completes clean, the extension drops off and gets re-enabled.
@@ -160,11 +194,11 @@ export interface SyncExtension {
 }
 
 export interface SyncResult {
-  /** Confirmed malicious — permanently disabled until admin un-flags. */
+  /** Confirmed malicious - permanently disabled until admin un-flags. */
   disableList: string[];
-  /** Unscanned updates — temporarily disabled until scan completes clean. */
+  /** Unscanned updates - temporarily disabled until scan completes clean. */
   quarantineList: string[];
-  /** Rotated device token — must be stored immediately. */
+  /** Rotated device token - must be stored immediately. */
   newToken: string;
 }
 

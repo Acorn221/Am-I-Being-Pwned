@@ -53,7 +53,7 @@ export const severityEnum = pgEnum("severity", ["info", "warning", "critical"]);
 
 export const planEnum = pgEnum("plan", ["free", "pro"]);
 
-// orgRoleEnum removed — OrgMember.role uses a plain text column with enum values
+// orgRoleEnum removed, OrgMember.role uses a plain text column with enum values
 // (matches the style of user.role in auth-schema.ts)
 
 export const devicePlatformEnum = pgEnum("device_platform", ["chrome", "edge"]);
@@ -68,7 +68,7 @@ export const Organization = createTable("organization", {
   // URL-safe slug used in dashboard routes, e.g. "acme-corp"
   slug: text().notNull().unique(),
   plan: planEnum().notNull().default("free"),
-  // Soft-suspend — set to kill all B2B device auth for this org instantly
+  // Soft-suspend, set to kill all B2B device auth for this org instantly
   suspendedAt: timestamp({ withTimezone: true }),
   suspendedReason: text(),
   // Zero-trust policy: disable any extension whose new version hasn't been
@@ -82,7 +82,7 @@ export type Organization = typeof Organization.$inferSelect;
 
 // ---------------------------------------------------------------------------
 // Org API Key
-// Provisioning credential — IT admin creates one, bakes it into CDM policy.
+// Provisioning credential - IT admin creates one, bakes it into CDM policy.
 // NEVER store the raw key. Only the SHA-256 hex hash lives here.
 // ---------------------------------------------------------------------------
 
@@ -91,7 +91,7 @@ export const OrgApiKey = createTable(
   {
     orgId: fk("org_id", () => Organization, { onDelete: "cascade" }).notNull(),
     name: text().notNull(), // human label, e.g. "Production fleet key"
-    // SHA-256 hex of the raw "aibp_org_..." token — plaintext never persisted
+    // SHA-256 hex of the raw "aibp_org_..." token, plaintext never persisted
     keyHash: text().notNull().unique(),
     createdBy: text("created_by").references(() => user.id, {
       onDelete: "set null",
@@ -115,9 +115,9 @@ export type OrgApiKey = typeof OrgApiKey.$inferSelect;
 export const Device = createTable(
   "device",
   {
-    // B2B managed device — belongs to an org
+    // B2B managed device - belongs to an org
     orgId: fk("org_id", () => Organization, { onDelete: "cascade" }),
-    // B2C personal device — belongs to a user directly
+    // B2C personal device - belongs to a user directly
     userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
     // SHA-256 hex of the raw rotating device token ("aibp_dev_...")
     tokenHash: text().notNull().unique(),
@@ -127,14 +127,14 @@ export const Device = createTable(
     // crashes before persisting it.
     previousTokenHash: text().unique(),
     previousTokenExpiresAt: timestamp({ withTimezone: true }),
-    // Hash of stable machine identifiers — used to detect re-registration
+    // Hash of stable machine identifiers, used to detect re-registration
     // so we reuse the existing Device row rather than creating duplicates
     deviceFingerprint: text().notNull(),
     extensionVersion: text().notNull(),
     platform: devicePlatformEnum().notNull().default("chrome"),
     lastSeenAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
     lastSyncAt: timestamp({ withTimezone: true }),
-    // Soft revoke — set this to kill a device's access instantly
+    // Soft revoke, set this to kill a device's access instantly
     revokedAt: timestamp({ withTimezone: true }),
   },
   (t) => [
@@ -222,7 +222,7 @@ export const ExtensionVersion = createTable(
 export type ExtensionVersion = typeof ExtensionVersion.$inferSelect;
 
 // ---------------------------------------------------------------------------
-// Scan job / result — shared across all users
+// Scan job / result, shared across all users
 // ---------------------------------------------------------------------------
 
 export const ExtensionScan = createTable("extension_scan", {
@@ -248,7 +248,7 @@ export const UserExtension = createTable(
   "user_extension",
   {
     deviceId: fk("device_id", () => Device, { onDelete: "cascade" }).notNull(),
-    // Denormalized from device.userId — null for B2B without AIBP accounts
+    // Denormalized from device.userId, null for B2B without AIBP accounts
     userId: text("user_id").references(() => user.id, {
       onDelete: "set null",
     }),
@@ -320,9 +320,35 @@ export type UserAlert = typeof UserAlert.$inferSelect;
 // Org Webhooks
 // One row per configured endpoint. Events is a text[] of subscribed event types.
 // Secret is an HMAC-SHA256 signing key (format: "whsec_<64 hex chars>").
-// Treat the secret like a password — it's stored plaintext here but should
+// Treat the secret like a password - it's stored plaintext here but should
 // only be shown to the user once (on creation). Revoke by deleting + recreating.
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Org Invite
+// One shareable invite link per org - employees click it to self-enroll their
+// browser extension without requiring IT/MDM involvement.
+// Raw token is "aibp_inv_<base64url>", only the SHA-256 hash is stored.
+// ---------------------------------------------------------------------------
+
+export const OrgInvite = createTable(
+  "org_invite",
+  {
+    orgId: fk("org_id", () => Organization, { onDelete: "cascade" }).notNull(),
+    // SHA-256 hex of the raw "aibp_inv_..." token, plaintext never persisted
+    tokenHash: text().notNull().unique(),
+    createdBy: text("created_by").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    // How many devices have enrolled using this link (informational only)
+    usedCount: integer().notNull().default(0),
+    // Set when the link is rotated or revoked
+    revokedAt: timestamp({ withTimezone: true }),
+  },
+  (t) => [index("org_invite_org_id_idx").on(t.orgId)],
+);
+
+export type OrgInvite = typeof OrgInvite.$inferSelect;
 
 export const OrgWebhook = createTable(
   "org_webhook",
@@ -330,7 +356,7 @@ export const OrgWebhook = createTable(
     orgId: fk("org_id", () => Organization, { onDelete: "cascade" }).notNull(),
     description: text(), // human label e.g. "Slack alerts"
     url: text().notNull(),
-    secret: text().notNull(), // whsec_<hex> — HMAC signing key
+    secret: text().notNull(), // whsec_<hex>, HMAC signing key
     events: text("events").array().notNull().default([]),
     enabled: boolean().notNull().default(true),
   },
@@ -343,7 +369,7 @@ export type OrgWebhook = typeof OrgWebhook.$inferSelect;
 // Workspace extension inventory
 // Org-level aggregate of extensions seen across all Chrome-managed devices,
 // sourced from the Google Chrome Management API (not the AIBP browser extension).
-// One row per (org, chromeExtensionId) — updated on every workspace sync.
+// One row per (org, chromeExtensionId), updated on every workspace sync.
 // ---------------------------------------------------------------------------
 
 export const WorkspaceApp = createTable(
@@ -362,7 +388,7 @@ export const WorkspaceApp = createTable(
     installType: text(),
     browserDeviceCount: integer().notNull().default(0),
     osUserCount: integer().notNull().default(0),
-    // Where this record came from — 'oauth' = Google Workspace API, 'ext' = AIBP browser extension
+    // Where this record came from: 'oauth' = Google Workspace API, 'ext' = AIBP browser extension
     source: text({ enum: ["oauth", "ext"] as const }).notNull().default("oauth"),
     lastSyncedAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
   },
@@ -426,6 +452,7 @@ export type UserSubscription = typeof UserSubscription.$inferSelect;
 export const OrganizationRelations = relations(Organization, ({ many }) => ({
   apiKeys: many(OrgApiKey),
   devices: many(Device),
+  invites: many(OrgInvite),
   members: many(OrgMember),
   webhooks: many(OrgWebhook),
   workspaceApps: many(WorkspaceApp),
@@ -557,7 +584,7 @@ export const CreateUserExtensionSchema = createInsertSchema(UserExtension).omit(
 export * from "./auth-schema";
 
 // ---------------------------------------------------------------------------
-// Placeholder — remove once extension routers replace the post router
+// Placeholder, remove once extension routers replace the post router
 // ---------------------------------------------------------------------------
 
 export const Post = pgTable("post", (t) => ({

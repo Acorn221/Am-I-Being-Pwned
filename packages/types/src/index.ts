@@ -103,10 +103,12 @@ export interface BridgeReadyMessage {
 /** Messages the web page can send to the extension */
 export type ExtRequest =
   | { type: "PING"; version: 1 }
-  | { type: "GET_EXTENSIONS"; version: 1 };
+  | { type: "GET_EXTENSIONS"; version: 1 }
+  | { type: "REGISTER_WITH_INVITE"; version: 1; token: string };
 
 /** Messages the extension sends back */
 export type ExtResponse =
   | { type: "PONG"; version: 1 }
   | { type: "EXTENSIONS_RESULT"; version: 1; extensions: InstalledExtensionInfo[] }
+  | { type: "INVITE_REGISTERED"; version: 1 }
   | { type: "ERROR"; version: 1; code: string; message: string };

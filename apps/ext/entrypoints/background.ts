@@ -11,6 +11,7 @@ import {
   registerDevice,
   setDisableList,
   setQuarantineList,
+  storeInviteToken,
   storeToken,
   syncExtensions,
 } from "../lib/device";
@@ -113,7 +114,7 @@ export default defineBackground(() => {
   // Offline-safe disable enforcement
   //
   // Re-applied on every SW wake from the locally persisted list.
-  // This means a DoS attack against the API cannot leave users exposed —
+  // This means a DoS attack against the API cannot leave users exposed -
   // once the server flags an extension, the decision is enforced locally
   // until the server explicitly removes it from the disable list.
   // -------------------------------------------------------------------------
@@ -128,7 +129,7 @@ export default defineBackground(() => {
           await chrome.management.setEnabled(extId, false);
         }
       } catch {
-        // Extension may have been uninstalled — ignore
+        // Extension may have been uninstalled - ignore
       }
     }
   }
@@ -141,7 +142,7 @@ export default defineBackground(() => {
    * Tries to register this device with the AIBP API.
    * On success: stores the token and cancels the retry alarm.
    * On failure: schedules a retry alarm (fires every 30 min).
-   *   B2C failure is usually "user not logged in yet" — harmless.
+   *   B2C failure is usually "user not logged in yet", harmless.
    */
   async function tryRegisterDevice() {
     try {
@@ -151,7 +152,7 @@ export default defineBackground(() => {
       console.log("[AIBP] Device registered");
     } catch (err) {
       // For B2C, UNAUTHORIZED just means the user hasn't logged in yet.
-      // Don't log it as an error — schedule a quiet retry.
+      // Don't log it as an error - schedule a quiet retry.
       const isUnauthed =
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         err instanceof TRPCClientError && ("httpStatus" in err.data && err.data.httpStatus === 401);
@@ -198,11 +199,11 @@ export default defineBackground(() => {
     try {
       const result = await syncExtensions(token, extensions);
 
-      // Rotate token immediately — server already invalidated the old one
+      // Rotate token immediately - server already invalidated the old one
       await storeToken(result.newToken);
 
       // --- Disable list (permanent, additive-only) ---
-      // Only ever grows locally — DoS can't shrink it.
+      // Only ever grows locally - DoS can't shrink it.
       const existingDisabled = await getDisableList();
       const mergedDisabled = [...new Set([...existingDisabled, ...result.disableList])];
       await setDisableList(mergedDisabled);
@@ -222,7 +223,7 @@ export default defineBackground(() => {
       await enforceDisableList();
 
       // --- Quarantine list (temporary, fully server-authoritative) ---
-      // Extensions dropped from the list have been scanned clean — re-enable
+      // Extensions dropped from the list have been scanned clean - re-enable
       // them unless they're also on the permanent disable list.
       const prevQuarantine = await getQuarantineList();
       const newQuarantine = result.quarantineList;
@@ -236,7 +237,7 @@ export default defineBackground(() => {
         try {
           await chrome.management.setEnabled(extId, true);
         } catch {
-          // Extension may have been uninstalled — ignore
+          // Extension may have been uninstalled - ignore
         }
       }
 
@@ -254,7 +255,7 @@ export default defineBackground(() => {
               priority: 1,
             });
           } catch {
-            // Extension may have been uninstalled — ignore
+            // Extension may have been uninstalled - ignore
           }
         }
       }
@@ -262,7 +263,7 @@ export default defineBackground(() => {
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if (err instanceof TRPCClientError && err.data?.httpStatus === 401) {
-        // Token was revoked server-side — clear and re-register
+        // Token was revoked server-side - clear and re-register
         console.warn("[AIBP] Device token rejected, re-registering");
         await clearToken();
         await tryRegisterDevice();
@@ -298,9 +299,26 @@ export default defineBackground(() => {
     void chrome.alarms.create("daily-scan", { periodInMinutes: 24 * 60 });
 
     if (details.reason === "install") {
-      void chrome.tabs.create({ url: WEB_URL });
-      void scanAllExtensions();
-      void tryRegisterDevice();
+      void (async () => {
+        // Check for an open /join/:token tab - if found, store the invite token
+        // so that tryRegisterDevice() below picks it up and self-enrolls the device.
+        const joinPattern = import.meta.env.DEV
+          ? ["*://localhost/join/*", "*://localhost:*/join/*"]
+          : ["*://amibeingpwned.com/join/*"];
+        const tabs = await chrome.tabs.query({ url: joinPattern });
+        for (const tab of tabs) {
+          if (!tab.url) continue;
+          const token = new URL(tab.url).pathname.split("/").pop();
+          if (token?.startsWith("aibp_inv_")) {
+            await storeInviteToken(token);
+            break;
+          }
+        }
+
+        void chrome.tabs.create({ url: WEB_URL });
+        void scanAllExtensions();
+        await tryRegisterDevice();
+      })();
     }
   });
 
@@ -381,7 +399,6 @@ export default defineBackground(() => {
         return;
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (request.type === "GET_EXTENSIONS") {
         // Async - return true to keep the message channel open
         void chrome.management.getAll().then((installed) => {
@@ -402,6 +419,16 @@ export default defineBackground(() => {
             extensions,
           } satisfies ExtResponse);
         });
+        return true; // keep channel open for async response
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      if (request.type === "REGISTER_WITH_INVITE") {
+        void (async () => {
+          await storeInviteToken(request.token);
+          await tryRegisterDevice();
+          sendResponse({ type: "INVITE_REGISTERED", version: 1 } satisfies ExtResponse);
+        })();
         return true; // keep channel open for async response
       }
     },

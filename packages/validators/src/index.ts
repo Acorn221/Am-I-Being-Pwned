@@ -17,10 +17,17 @@ const getExtensionsRequest = z.object({
   version: z.literal(1),
 });
 
+const registerWithInviteRequest = z.object({
+  type: z.literal("REGISTER_WITH_INVITE"),
+  version: z.literal(1),
+  token: z.string(),
+});
+
 /** Validates incoming messages from the web page */
 export const ExtRequestSchema = z.discriminatedUnion("type", [
   pingRequest,
   getExtensionsRequest,
+  registerWithInviteRequest,
 ]);
 
 const installedExtensionInfoSchema = z.object({
@@ -40,6 +47,11 @@ const extensionsResultResponse = z.object({
   extensions: z.array(installedExtensionInfoSchema).max(500),
 });
 
+const inviteRegisteredResponse = z.object({
+  type: z.literal("INVITE_REGISTERED"),
+  version: z.literal(1),
+});
+
 const errorResponse = z.object({
   type: z.literal("ERROR"),
   version: z.literal(1),
@@ -51,5 +63,6 @@ const errorResponse = z.object({
 export const ExtResponseSchema = z.discriminatedUnion("type", [
   pongResponse,
   extensionsResultResponse,
+  inviteRegisteredResponse,
   errorResponse,
 ]);
