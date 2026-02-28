@@ -3,7 +3,18 @@ import { expo } from "@better-auth/expo";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
+import { OrgMember, Organization } from "@amibeingpwned/db";
 import { db } from "@amibeingpwned/db/client";
+
+function makeSlug(name: string): string {
+  const base = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 32);
+  const suffix = Math.random().toString(36).slice(2, 8);
+  return `${base || "org"}-${suffix}`;
+}
 
 export function initAuth<
   TExtraPlugins extends BetterAuthPlugin[] = [],
@@ -34,6 +45,32 @@ export function initAuth<
       google: {
         clientId: options.googleClientId,
         clientSecret: options.googleClientSecret,
+      },
+    },
+    databaseHooks: {
+      user: {
+        create: {
+          after: async (user) => {
+            try {
+              const [org] = await db
+                .insert(Organization)
+                .values({
+                  name: user.name || user.email,
+                  slug: makeSlug(user.name || user.email),
+                })
+                .returning();
+              if (org) {
+                await db.insert(OrgMember).values({
+                  orgId: org.id,
+                  userId: user.id,
+                  role: "owner",
+                });
+              }
+            } catch (err) {
+              console.error("[auth] Failed to create org for new user", err);
+            }
+          },
+        },
       },
     },
     trustedOrigins: ["expo://"],

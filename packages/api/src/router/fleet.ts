@@ -32,6 +32,7 @@ async function getManagerMembership(db: typeof DbType, userId: string) {
       orgName: Organization.name,
       orgPlan: Organization.plan,
       orgSuspendedAt: Organization.suspendedAt,
+      orgLastWorkspaceSyncAt: Organization.lastWorkspaceSyncAt,
     })
     .from(OrgMember)
     .innerJoin(Organization, eqi(OrgMember.orgId, Organization.id))
@@ -109,6 +110,7 @@ export const fleetRouter = createTRPCRouter({
         name: membership.orgName,
         plan: membership.orgPlan,
         suspendedAt: membership.orgSuspendedAt,
+        lastWorkspaceSyncAt: membership.orgLastWorkspaceSyncAt,
       },
       deviceCount: deviceCountResult[0]?.total ?? 0,
       extensionCount: extensionCountResult[0]?.total ?? 0,

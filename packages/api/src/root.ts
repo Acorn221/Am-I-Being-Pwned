@@ -7,6 +7,7 @@ import { fleetRouter } from "./router/fleet";
 import { postRouter } from "./router/post";
 import { subscriptionRouter } from "./router/subscription";
 import { webhooksRouter } from "./router/webhooks";
+import { workspaceRouter } from "./router/workspace";
 import { createTRPCRouter } from "./trpc";
 
 export const appRouter = createTRPCRouter({
@@ -19,6 +20,7 @@ export const appRouter = createTRPCRouter({
   extensions: extensionsRouter,
   subscription: subscriptionRouter,
   webhooks: webhooksRouter,
+  workspace: workspaceRouter,
 });
 
 // export type definition of API

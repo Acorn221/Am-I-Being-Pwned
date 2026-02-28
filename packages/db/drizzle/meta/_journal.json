@@ -22,6 +22,13 @@
       "when": 1772038786906,
       "tag": "0002_real_shocker",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1772301949943,
+      "tag": "0003_smooth_crusher_hogan",
+      "breakpoints": true
     }
   ]
 }

@@ -74,6 +74,8 @@ export const Organization = createTable("organization", {
   // Zero-trust policy: disable any extension whose new version hasn't been
   // scanned yet. Auto-re-enabled once the scan comes back clean.
   quarantineUnscannedUpdates: boolean().notNull().default(false),
+  // Timestamp of the last successful Google Workspace extension sync
+  lastWorkspaceSyncAt: timestamp({ withTimezone: true }),
 });
 
 export type Organization = typeof Organization.$inferSelect;
@@ -338,6 +340,39 @@ export const OrgWebhook = createTable(
 export type OrgWebhook = typeof OrgWebhook.$inferSelect;
 
 // ---------------------------------------------------------------------------
+// Workspace extension inventory
+// Org-level aggregate of extensions seen across all Chrome-managed devices,
+// sourced from the Google Chrome Management API (not the AIBP browser extension).
+// One row per (org, chromeExtensionId) — updated on every workspace sync.
+// ---------------------------------------------------------------------------
+
+export const WorkspaceApp = createTable(
+  "workspace_app",
+  {
+    orgId: fk("org_id", () => Organization, { onDelete: "cascade" }).notNull(),
+    chromeExtensionId: varchar({ length: 32 }).notNull(),
+    displayName: text(),
+    description: text(),
+    homepageUrl: text(),
+    iconUrl: text(),
+    // As reported by the Chrome Management API
+    permissions: jsonb().$type<string[]>(),
+    siteAccess: jsonb().$type<string[]>(),
+    // FORCED | NORMAL | ADMIN | DEVELOPMENT | SIDELOAD | OTHER
+    installType: text(),
+    browserDeviceCount: integer().notNull().default(0),
+    osUserCount: integer().notNull().default(0),
+    lastSyncedAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    unique().on(t.orgId, t.chromeExtensionId),
+    index("workspace_app_org_id_idx").on(t.orgId),
+  ],
+);
+
+export type WorkspaceApp = typeof WorkspaceApp.$inferSelect;
+
+// ---------------------------------------------------------------------------
 // User subscription
 // ---------------------------------------------------------------------------
 
@@ -364,6 +399,14 @@ export const OrganizationRelations = relations(Organization, ({ many }) => ({
   devices: many(Device),
   members: many(OrgMember),
   webhooks: many(OrgWebhook),
+  workspaceApps: many(WorkspaceApp),
+}));
+
+export const WorkspaceAppRelations = relations(WorkspaceApp, ({ one }) => ({
+  organization: one(Organization, {
+    fields: [WorkspaceApp.orgId],
+    references: [Organization.id],
+  }),
 }));
 
 export const OrgWebhookRelations = relations(OrgWebhook, ({ one }) => ({

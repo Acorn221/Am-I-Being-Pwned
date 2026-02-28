@@ -1,16 +1,4 @@
-import { Badge } from "@amibeingpwned/ui/badge";
-import { Button } from "@amibeingpwned/ui/button";
-import { Card } from "@amibeingpwned/ui/card";
-import { Input } from "@amibeingpwned/ui/input";
-import { Label } from "@amibeingpwned/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@amibeingpwned/ui/table";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
@@ -19,6 +7,7 @@ import {
   Building2,
   CheckCheck,
   CheckCircle,
+  Cloud,
   Copy,
   LogOut,
   Monitor,
@@ -33,16 +22,35 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { useState } from "react";
+
+import { Badge } from "@amibeingpwned/ui/badge";
+import { Button } from "@amibeingpwned/ui/button";
+import { Card } from "@amibeingpwned/ui/card";
+import { Input } from "@amibeingpwned/ui/input";
+import { Label } from "@amibeingpwned/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@amibeingpwned/ui/table";
 
 import { authClient } from "~/lib/auth-client";
-import { navigate } from "~/router";
 import { useTRPC } from "~/lib/trpc";
+import { navigate } from "~/router";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface FleetOverview {
-  org: { id: string; name: string; plan: string; suspendedAt: Date | null };
+  org: {
+    id: string;
+    name: string;
+    plan: string;
+    suspendedAt: Date | null;
+    lastWorkspaceSyncAt: Date | null;
+  };
   deviceCount: number;
   extensionCount: number;
   flaggedCount: number;
@@ -54,13 +62,35 @@ type Tab = "overview" | "alerts" | "devices" | "extensions" | "settings";
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const SEVERITY: Record<string, { bar: string; badge: string; text: string }> = {
-  critical: { bar: "bg-destructive",  badge: "bg-destructive/15 text-destructive border-destructive/30",   text: "text-destructive"  },
-  high:     { bar: "bg-orange-500",   badge: "bg-orange-500/15 text-orange-500 border-orange-500/30",       text: "text-orange-500"   },
-  medium:   { bar: "bg-yellow-500",   badge: "bg-yellow-500/15 text-yellow-600 border-yellow-500/30",       text: "text-yellow-600"   },
-  low:      { bar: "bg-blue-500",     badge: "bg-blue-500/15 text-blue-500 border-blue-500/30",             text: "text-blue-500"     },
+  critical: {
+    bar: "bg-destructive",
+    badge: "bg-destructive/15 text-destructive border-destructive/30",
+    text: "text-destructive",
+  },
+  high: {
+    bar: "bg-orange-500",
+    badge: "bg-orange-500/15 text-orange-500 border-orange-500/30",
+    text: "text-orange-500",
+  },
+  medium: {
+    bar: "bg-yellow-500",
+    badge: "bg-yellow-500/15 text-yellow-600 border-yellow-500/30",
+    text: "text-yellow-600",
+  },
+  low: {
+    bar: "bg-blue-500",
+    badge: "bg-blue-500/15 text-blue-500 border-blue-500/30",
+    text: "text-blue-500",
+  },
 };
-const SEVERITY_MEDIUM = { bar: "bg-yellow-500", badge: "bg-yellow-500/15 text-yellow-600 border-yellow-500/30", text: "text-yellow-600" };
-function sev(s: string) { return SEVERITY[s] ?? SEVERITY_MEDIUM; }
+const SEVERITY_MEDIUM = {
+  bar: "bg-yellow-500",
+  badge: "bg-yellow-500/15 text-yellow-600 border-yellow-500/30",
+  text: "text-yellow-600",
+};
+function sev(s: string) {
+  return SEVERITY[s] ?? SEVERITY_MEDIUM;
+}
 
 function timeAgo(date: Date): string {
   const s = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
@@ -83,11 +113,15 @@ export function FleetDashboard({ overview }: { overview: FleetOverview }) {
   }
 
   const tabs: { id: Tab; label: string; badge?: number }[] = [
-    { id: "overview",   label: "Overview" },
-    { id: "alerts",     label: "Alerts",     badge: overview.unreadAlertCount || undefined },
-    { id: "devices",    label: "Devices" },
+    { id: "overview", label: "Overview" },
+    {
+      id: "alerts",
+      label: "Alerts",
+      badge: overview.unreadAlertCount || undefined,
+    },
+    { id: "devices", label: "Devices" },
     { id: "extensions", label: "Extensions" },
-    { id: "settings",   label: "Settings" },
+    { id: "settings", label: "Settings" },
   ];
 
   return (
@@ -96,17 +130,24 @@ export function FleetDashboard({ overview }: { overview: FleetOverview }) {
       <header className="border-border flex h-14 items-center justify-between border-b px-6">
         <div className="flex items-center gap-2">
           <Shield className="text-primary h-5 w-5" />
-          <span className="text-foreground text-sm font-semibold">Am I Being Pwned?</span>
+          <span className="text-foreground text-sm font-semibold">
+            Am I Being Pwned?
+          </span>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
             <Building2 className="h-4 w-4" />
             <span>{overview.org.name}</span>
             <Badge variant="outline" className="ml-1 text-xs capitalize">
               {overview.org.plan}
             </Badge>
           </div>
-          <Button size="sm" variant="ghost" className="gap-1.5" onClick={() => void handleSignOut()}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="gap-1.5"
+            onClick={() => void handleSignOut()}
+          >
             <LogOut className="h-4 w-4" />
             Sign out
           </Button>
@@ -123,12 +164,12 @@ export function FleetDashboard({ overview }: { overview: FleetOverview }) {
               className={`flex items-center gap-1.5 border-b-2 px-3 py-3 text-sm font-medium transition-colors ${
                 tab === t.id
                   ? "border-foreground text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground border-transparent"
               }`}
             >
               {t.label}
               {t.badge != null && (
-                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+                <span className="bg-destructive text-destructive-foreground flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold">
                   {t.badge}
                 </span>
               )}
@@ -140,7 +181,7 @@ export function FleetDashboard({ overview }: { overview: FleetOverview }) {
       {/* Suspended warning */}
       {overview.org.suspendedAt && (
         <div className="mx-auto max-w-5xl px-6 pt-4">
-          <div className="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          <div className="border-destructive/50 bg-destructive/10 text-destructive rounded-md border px-4 py-3 text-sm">
             This organisation is suspended. Device connections are disabled.
           </div>
         </div>
@@ -148,11 +189,13 @@ export function FleetDashboard({ overview }: { overview: FleetOverview }) {
 
       {/* Tab content */}
       <div className="mx-auto max-w-5xl p-6">
-        {tab === "overview"   && <OverviewTab   overview={overview} onNavigate={setTab} />}
-        {tab === "alerts"     && <AlertsTab />}
-        {tab === "devices"    && <DevicesTab    overview={overview} />}
+        {tab === "overview" && (
+          <OverviewTab overview={overview} onNavigate={setTab} />
+        )}
+        {tab === "alerts" && <AlertsTab />}
+        {tab === "devices" && <DevicesTab overview={overview} />}
         {tab === "extensions" && <ExtensionsTab />}
-        {tab === "settings"   && <SettingsTab   orgId={overview.org.id} />}
+        {tab === "settings" && <SettingsTab orgId={overview.org.id} />}
       </div>
     </div>
   );
@@ -170,20 +213,35 @@ function OverviewTab({
   const trpc = useTRPC();
 
   const { data: alerts } = useQuery(trpc.fleet.alerts.queryOptions());
-  const { data: threatenedDevices } = useQuery(trpc.fleet.threatenedDevices.queryOptions());
+  const { data: threatenedDevices } = useQuery(
+    trpc.fleet.threatenedDevices.queryOptions(),
+  );
 
-  const hasThreats  = overview.flaggedCount > 0;
-  const hasAlerts   = (alerts?.length ?? overview.unreadAlertCount) > 0;
-  const alertList   = alerts?.slice(0, 3) ?? [];
-  const threatList  = threatenedDevices?.slice(0, 3) ?? [];
+  const hasThreats = overview.flaggedCount > 0;
+  const hasAlerts = (alerts?.length ?? overview.unreadAlertCount) > 0;
+  const alertList = alerts?.slice(0, 3) ?? [];
+  const threatList = threatenedDevices?.slice(0, 3) ?? [];
 
   return (
     <div className="space-y-5">
       {/* Stats strip — full width */}
-      <div className="flex w-full gap-0 divide-x divide-border overflow-hidden rounded-lg border bg-card">
-        <StatItem icon={<Monitor className="h-4 w-4" />}       label="Devices"    value={overview.deviceCount}    />
-        <StatItem icon={<Puzzle className="h-4 w-4" />}        label="Extensions" value={overview.extensionCount} />
-        <StatItem icon={<AlertTriangle className="h-4 w-4" />} label="Flagged"    value={overview.flaggedCount}   danger={hasThreats} />
+      <div className="divide-border bg-card flex w-full gap-0 divide-x overflow-hidden rounded-lg border">
+        <StatItem
+          icon={<Monitor className="h-4 w-4" />}
+          label="Devices"
+          value={overview.deviceCount}
+        />
+        <StatItem
+          icon={<Puzzle className="h-4 w-4" />}
+          label="Extensions"
+          value={overview.extensionCount}
+        />
+        <StatItem
+          icon={<AlertTriangle className="h-4 w-4" />}
+          label="Flagged"
+          value={overview.flaggedCount}
+          danger={hasThreats}
+        />
       </div>
 
       {/* Summary cards row */}
@@ -196,7 +254,7 @@ function OverviewTab({
           onViewAll={() => onNavigate("alerts")}
         >
           {!hasAlerts ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="text-muted-foreground flex items-center gap-2 text-sm">
               <ShieldCheck className="h-4 w-4 text-emerald-500" />
               No unread alerts
             </div>
@@ -206,21 +264,29 @@ function OverviewTab({
                 const styles = sev(a.severity);
                 return (
                   <li key={a.id} className="flex items-start gap-2">
-                    <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${styles.bar}`} />
+                    <span
+                      className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${styles.bar}`}
+                    />
                     <div className="min-w-0">
-                      <p className={`truncate text-sm font-medium ${styles.text}`}>{a.title}</p>
+                      <p
+                        className={`truncate text-sm font-medium ${styles.text}`}
+                      >
+                        {a.title}
+                      </p>
                       {a.extensionName && (
-                        <p className="truncate text-xs text-muted-foreground">{a.extensionName}</p>
+                        <p className="text-muted-foreground truncate text-xs">
+                          {a.extensionName}
+                        </p>
                       )}
                     </div>
-                    <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+                    <span className="text-muted-foreground ml-auto shrink-0 text-xs">
                       {timeAgo(a.createdAt)}
                     </span>
                   </li>
                 );
               })}
               {(alerts?.length ?? 0) > 3 && (
-                <li className="text-xs text-muted-foreground">
+                <li className="text-muted-foreground text-xs">
                   +{(alerts?.length ?? 0) - 3} more
                 </li>
               )}
@@ -238,7 +304,7 @@ function OverviewTab({
           onViewAll={() => onNavigate("devices")}
         >
           {!hasThreats ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="text-muted-foreground flex items-center gap-2 text-sm">
               <ShieldCheck className="h-4 w-4 text-emerald-500" />
               No active threats detected
             </div>
@@ -246,20 +312,24 @@ function OverviewTab({
             <ul className="space-y-2">
               {threatList.map((d) => (
                 <li key={d.deviceId} className="flex items-start gap-2">
-                  <Monitor className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <Monitor className="text-muted-foreground mt-0.5 h-3.5 w-3.5 shrink-0" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium capitalize">{d.platform}</p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {d.threats.map((t) => t.extensionName ?? t.chromeExtensionId).join(", ")}
+                    <p className="text-sm font-medium capitalize">
+                      {d.platform}
+                    </p>
+                    <p className="text-muted-foreground truncate text-xs">
+                      {d.threats
+                        .map((t) => t.extensionName ?? t.chromeExtensionId)
+                        .join(", ")}
                     </p>
                   </div>
-                  <span className="shrink-0 text-xs text-destructive font-semibold">
+                  <span className="text-destructive shrink-0 text-xs font-semibold">
                     {d.threats.length} threat{d.threats.length !== 1 && "s"}
                   </span>
                 </li>
               ))}
               {(threatenedDevices?.length ?? 0) > 3 && (
-                <li className="text-xs text-muted-foreground">
+                <li className="text-muted-foreground text-xs">
                   +{(threatenedDevices?.length ?? 0) - 3} more devices
                 </li>
               )}
@@ -289,18 +359,20 @@ function SummaryCard({
   return (
     <Card className="flex flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
-        <div className={`flex items-center gap-2 text-sm font-semibold ${danger ? "text-destructive" : ""}`}>
+        <div
+          className={`flex items-center gap-2 text-sm font-semibold ${danger ? "text-destructive" : ""}`}
+        >
           {icon}
           {title}
           {badge != null && (
-            <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+            <span className="bg-destructive text-destructive-foreground flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold">
               {badge}
             </span>
           )}
         </div>
         <button
           onClick={onViewAll}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs transition-colors"
         >
           View all
           <ArrowRight className="h-3 w-3" />
@@ -312,7 +384,10 @@ function SummaryCard({
 }
 
 function StatItem({
-  icon, label, value, danger = false,
+  icon,
+  label,
+  value,
+  danger = false,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -321,12 +396,16 @@ function StatItem({
 }) {
   return (
     <div className="flex flex-1 items-center gap-3 px-6 py-4">
-      <span className={danger ? "text-destructive" : "text-muted-foreground"}>{icon}</span>
+      <span className={danger ? "text-destructive" : "text-muted-foreground"}>
+        {icon}
+      </span>
       <div>
-        <p className={`text-2xl font-bold tabular-nums leading-none ${danger ? "text-destructive" : "text-foreground"}`}>
+        <p
+          className={`text-2xl leading-none font-bold tabular-nums ${danger ? "text-destructive" : "text-foreground"}`}
+        >
           {value}
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">{label}</p>
+        <p className="text-muted-foreground mt-1 text-xs">{label}</p>
       </div>
     </div>
   );
@@ -338,7 +417,9 @@ function AlertsTab() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const { data: alerts, isPending } = useQuery(trpc.fleet.alerts.queryOptions());
+  const { data: alerts, isPending } = useQuery(
+    trpc.fleet.alerts.queryOptions(),
+  );
 
   const dismiss = useMutation(
     trpc.fleet.dismissAlert.mutationOptions({
@@ -359,7 +440,7 @@ function AlertsTab() {
 
   if (!alerts || alerts.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-3 py-20 text-muted-foreground">
+      <div className="text-muted-foreground flex flex-col items-center gap-3 py-20">
         <ShieldCheck className="h-10 w-10 opacity-30" />
         <p className="text-sm">No unread alerts - your fleet is clean.</p>
       </div>
@@ -369,13 +450,15 @@ function AlertsTab() {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between pb-1">
-        <p className="text-sm text-muted-foreground">{alerts.length} unread</p>
+        <p className="text-muted-foreground text-sm">{alerts.length} unread</p>
         <Button
           size="sm"
           variant="ghost"
-          className="gap-1.5 text-xs text-muted-foreground"
+          className="text-muted-foreground gap-1.5 text-xs"
           disabled={dismiss.isPending}
-          onClick={() => { for (const a of alerts) dismiss.mutate({ alertId: a.id }); }}
+          onClick={() => {
+            for (const a of alerts) dismiss.mutate({ alertId: a.id });
+          }}
         >
           <CheckCheck className="h-3.5 w-3.5" />
           Dismiss all
@@ -387,30 +470,38 @@ function AlertsTab() {
         return (
           <div
             key={alert.id}
-            className="relative flex gap-3 overflow-hidden rounded-lg border bg-card px-4 py-3"
+            className="bg-card relative flex gap-3 overflow-hidden rounded-lg border px-4 py-3"
           >
             <div className={`absolute inset-y-0 left-0 w-1 ${styles.bar}`} />
             <div className="ml-1 min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <span className={`text-sm font-semibold ${styles.text}`}>{alert.title}</span>
-                <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${styles.badge}`}>
+                <span className={`text-sm font-semibold ${styles.text}`}>
+                  {alert.title}
+                </span>
+                <span
+                  className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase ${styles.badge}`}
+                >
                   {alert.severity}
                 </span>
                 {alert.extensionName && (
-                  <span className="rounded bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                  <span className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 text-[11px]">
                     {alert.extensionName}
                   </span>
                 )}
-                <span className="ml-auto text-xs text-muted-foreground">{timeAgo(alert.createdAt)}</span>
+                <span className="text-muted-foreground ml-auto text-xs">
+                  {timeAgo(alert.createdAt)}
+                </span>
               </div>
               {alert.body && (
-                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{alert.body}</p>
+                <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+                  {alert.body}
+                </p>
               )}
             </div>
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 w-7 shrink-0 p-0 text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground h-7 w-7 shrink-0 p-0"
               disabled={dismiss.isPending}
               onClick={() => dismiss.mutate({ alertId: alert.id })}
               title="Dismiss"
@@ -443,7 +534,7 @@ function DevicesTab({ overview }: { overview: FleetOverview }) {
       {/* Threatened devices */}
       {(hasThreats || threatsPending) && (
         <section className="space-y-3">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-destructive">
+          <h2 className="text-destructive flex items-center gap-2 text-sm font-semibold">
             <AlertTriangle className="h-4 w-4" />
             Active Threats
           </h2>
@@ -452,10 +543,10 @@ function DevicesTab({ overview }: { overview: FleetOverview }) {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {[0, 1].map((i) => (
                 <Card key={i} className="animate-pulse p-4">
-                  <div className="h-4 w-24 rounded bg-muted" />
+                  <div className="bg-muted h-4 w-24 rounded" />
                   <div className="mt-3 space-y-2">
-                    <div className="h-3 w-full rounded bg-muted" />
-                    <div className="h-3 w-3/4 rounded bg-muted" />
+                    <div className="bg-muted h-3 w-full rounded" />
+                    <div className="bg-muted h-3 w-3/4 rounded" />
                   </div>
                 </Card>
               ))}
@@ -463,24 +554,34 @@ function DevicesTab({ overview }: { overview: FleetOverview }) {
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {threatenedDevices?.map((device) => (
-                <Card key={device.deviceId} className="overflow-hidden border-destructive/30">
-                  <div className="flex items-center gap-2 border-b bg-destructive/5 px-4 py-2.5">
-                    <Monitor className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-sm font-medium capitalize">{device.platform}</span>
-                    <span className="ml-auto text-xs text-muted-foreground">
+                <Card
+                  key={device.deviceId}
+                  className="border-destructive/30 overflow-hidden"
+                >
+                  <div className="bg-destructive/5 flex items-center gap-2 border-b px-4 py-2.5">
+                    <Monitor className="text-muted-foreground h-3.5 w-3.5" />
+                    <span className="text-sm font-medium capitalize">
+                      {device.platform}
+                    </span>
+                    <span className="text-muted-foreground ml-auto text-xs">
                       {timeAgo(device.lastSeenAt)}
                     </span>
                   </div>
                   <div className="divide-y">
                     {device.threats.map((threat) => (
-                      <div key={threat.chromeExtensionId} className="flex items-start gap-2 px-4 py-2.5">
-                        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" />
+                      <div
+                        key={threat.chromeExtensionId}
+                        className="flex items-start gap-2 px-4 py-2.5"
+                      >
+                        <AlertTriangle className="text-destructive mt-0.5 h-3.5 w-3.5 shrink-0" />
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-destructive">
+                          <p className="text-destructive truncate text-sm font-medium">
                             {threat.extensionName ?? threat.chromeExtensionId}
                           </p>
                           {threat.flaggedReason && (
-                            <p className="mt-0.5 text-xs text-muted-foreground">{threat.flaggedReason}</p>
+                            <p className="text-muted-foreground mt-0.5 text-xs">
+                              {threat.flaggedReason}
+                            </p>
                           )}
                         </div>
                         <RiskScore score={threat.riskScore} />
@@ -513,14 +614,20 @@ function DevicesTab({ overview }: { overview: FleetOverview }) {
             <TableBody>
               {devicesPending && (
                 <TableRow>
-                  <TableCell colSpan={4} className="py-12 text-center text-muted-foreground">
+                  <TableCell
+                    colSpan={4}
+                    className="text-muted-foreground py-12 text-center"
+                  >
                     <RefreshCw className="mx-auto mb-2 h-5 w-5 animate-spin opacity-30" />
                   </TableCell>
                 </TableRow>
               )}
               {!devicesPending && (allDevices?.rows.length ?? 0) === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="py-12 text-center text-sm text-muted-foreground">
+                  <TableCell
+                    colSpan={4}
+                    className="text-muted-foreground py-12 text-center text-sm"
+                  >
                     No devices enrolled.
                   </TableCell>
                 </TableRow>
@@ -528,20 +635,28 @@ function DevicesTab({ overview }: { overview: FleetOverview }) {
               {allDevices?.rows.map((device) => (
                 <TableRow
                   key={device.id}
-                  className={device.flaggedExtensionCount > 0 ? "border-l-2 border-l-destructive bg-destructive/5" : ""}
+                  className={
+                    device.flaggedExtensionCount > 0
+                      ? "border-l-destructive bg-destructive/5 border-l-2"
+                      : ""
+                  }
                 >
-                  <TableCell className="text-sm font-medium capitalize">{device.platform}</TableCell>
-                  <TableCell className="text-right text-sm tabular-nums">{device.extensionCount}</TableCell>
+                  <TableCell className="text-sm font-medium capitalize">
+                    {device.platform}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">
+                    {device.extensionCount}
+                  </TableCell>
                   <TableCell className="text-right">
                     {device.flaggedExtensionCount > 0 ? (
-                      <span className="text-sm font-semibold text-destructive tabular-nums">
+                      <span className="text-destructive text-sm font-semibold tabular-nums">
                         {device.flaggedExtensionCount}
                       </span>
                     ) : (
-                      <span className="text-sm text-muted-foreground">-</span>
+                      <span className="text-muted-foreground text-sm">-</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-right text-xs text-muted-foreground">
+                  <TableCell className="text-muted-foreground text-right text-xs">
                     {timeAgo(device.lastSeenAt)}
                   </TableCell>
                 </TableRow>
@@ -556,74 +671,193 @@ function DevicesTab({ overview }: { overview: FleetOverview }) {
 
 // ─── Extensions tab ───────────────────────────────────────────────────────────
 
+const INSTALL_TYPE_LABELS: Record<string, string> = {
+  FORCED: "Forced",
+  ADMIN: "Admin",
+  NORMAL: "User",
+  DEVELOPMENT: "Dev",
+  SIDELOAD: "Sideloaded",
+  OTHER: "Other",
+  UNKNOWN: "Unknown",
+};
+
+function InstallTypeChip({ type }: { type: string | null }) {
+  const label = INSTALL_TYPE_LABELS[type ?? ""] ?? type ?? "Unknown";
+  const isForced = type === "FORCED" || type === "ADMIN";
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase ${
+        isForced
+          ? "border border-blue-500/30 bg-blue-500/15 text-blue-600"
+          : "bg-muted text-muted-foreground"
+      }`}
+    >
+      {label}
+    </span>
+  );
+}
+
 function ExtensionsTab() {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const autoSyncFired = useRef(false);
 
-  const { data: extensionsData, isPending } = useQuery(
-    trpc.fleet.extensions.queryOptions({ page: 1, limit: 50 }),
+  const { data: appsData, isPending } = useQuery(
+    trpc.workspace.apps.queryOptions({ page: 1, limit: 100 }),
   );
 
-  const sorted = extensionsData?.rows
-    ? [...extensionsData.rows].sort((a, b) => {
-        if (a.isFlagged !== b.isFlagged) return a.isFlagged ? -1 : 1;
-        return (b.riskScore ?? 0) - (a.riskScore ?? 0);
-      })
-    : [];
+  const syncMutation = useMutation(
+    trpc.workspace.sync.mutationOptions({
+      onSuccess: () => {
+        void queryClient.invalidateQueries(trpc.workspace.apps.queryFilter());
+      },
+    }),
+  );
+
+  // Auto-sync on first visit if the org has never been synced
+  useEffect(() => {
+    if (!autoSyncFired.current && appsData?.lastSyncedAt === null) {
+      autoSyncFired.current = true;
+      syncMutation.mutate();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appsData]);
+
+  const isSyncing = syncMutation.isPending;
 
   return (
-    <Card className="overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Extension</TableHead>
-            <TableHead className="w-28">Risk</TableHead>
-            <TableHead className="w-24 text-right">Devices</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isPending && (
-            <TableRow>
-              <TableCell colSpan={3} className="py-12 text-center text-muted-foreground">
-                <RefreshCw className="mx-auto h-5 w-5 animate-spin opacity-30" />
-              </TableCell>
-            </TableRow>
+    <div className="space-y-3">
+      {/* Header row */}
+      <div className="flex items-center justify-between">
+        <div className="text-muted-foreground flex items-center gap-2 text-sm">
+          <Cloud className="h-4 w-4" />
+          {appsData?.lastSyncedAt ? (
+            <span>Last synced {timeAgo(appsData.lastSyncedAt)}</span>
+          ) : isSyncing ? (
+            <span className="flex items-center gap-1.5">
+              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+              Syncing from Google Workspace…
+            </span>
+          ) : (
+            <span>Never synced</span>
           )}
-          {!isPending && sorted.length === 0 && (
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          className="gap-1.5"
+          disabled={isSyncing}
+          onClick={() => syncMutation.mutate()}
+        >
+          <RefreshCw
+            className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`}
+          />
+          {isSyncing ? "Syncing…" : "Sync now"}
+        </Button>
+      </div>
+
+      <Card className="overflow-hidden">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={3} className="py-12 text-center text-sm text-muted-foreground">
-                No extensions found across fleet devices.
-              </TableCell>
+              <TableHead>Extension</TableHead>
+              <TableHead className="w-28">Install type</TableHead>
+              <TableHead className="w-28">Risk</TableHead>
+              <TableHead className="w-24 text-right">Devices</TableHead>
             </TableRow>
-          )}
-          {sorted.map((ext) => (
-            <TableRow
-              key={ext.chromeExtensionId}
-              className={ext.isFlagged ? "border-l-2 border-l-destructive bg-destructive/5" : ""}
-            >
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  {ext.isFlagged && <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-destructive" />}
-                  <span className={`text-sm font-medium ${ext.isFlagged ? "text-destructive" : ""}`}>
-                    {ext.name ?? ext.chromeExtensionId}
-                  </span>
-                </div>
-              </TableCell>
-              <TableCell><RiskScore score={ext.riskScore ?? 0} /></TableCell>
-              <TableCell className="text-right text-sm font-medium tabular-nums">{ext.deviceCount}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </Card>
+          </TableHeader>
+          <TableBody>
+            {(isPending || isSyncing) && (appsData?.rows.length ?? 0) === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={4}
+                  className="text-muted-foreground py-12 text-center"
+                >
+                  <RefreshCw className="mx-auto h-5 w-5 animate-spin opacity-30" />
+                </TableCell>
+              </TableRow>
+            )}
+            {!isPending && !isSyncing && (appsData?.rows.length ?? 0) === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={4}
+                  className="text-muted-foreground py-12 text-center text-sm"
+                >
+                  No extensions found. Click "Sync now" to fetch from Google
+                  Workspace.
+                </TableCell>
+              </TableRow>
+            )}
+            {appsData?.rows.map((ext) => (
+              <TableRow
+                key={ext.chromeExtensionId}
+                className={
+                  ext.isFlagged
+                    ? "border-l-destructive bg-destructive/5 border-l-2"
+                    : ""
+                }
+              >
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    {ext.isFlagged && (
+                      <AlertTriangle className="text-destructive h-3.5 w-3.5 shrink-0" />
+                    )}
+                    <div className="min-w-0">
+                      <p
+                        className={`truncate text-sm font-medium ${ext.isFlagged ? "text-destructive" : ""}`}
+                      >
+                        {ext.displayName ?? ext.chromeExtensionId}
+                      </p>
+                      {ext.flaggedReason && (
+                        <p className="text-muted-foreground truncate text-xs">
+                          {ext.flaggedReason}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <InstallTypeChip type={ext.installType} />
+                </TableCell>
+                <TableCell>
+                  <RiskScore score={ext.riskScore ?? 0} />
+                </TableCell>
+                <TableCell className="text-right text-sm font-medium tabular-nums">
+                  {ext.browserDeviceCount}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
+
+      {appsData && appsData.total > appsData.limit && (
+        <p className="text-muted-foreground text-center text-xs">
+          Showing {appsData.rows.length} of {appsData.total} extensions
+        </p>
+      )}
+    </div>
   );
 }
 
 // ─── Settings tab ────────────────────────────────────────────────────────────
 
 const ALL_EVENTS = [
-  { id: "threat.detected", label: "Threat detected", description: "A device has a flagged extension installed" },
-  { id: "alert.created",   label: "Alert created",   description: "A new security alert was raised for an org member" },
-  { id: "device.enrolled", label: "Device enrolled", description: "A new device joins the organisation" },
+  {
+    id: "threat.detected",
+    label: "Threat detected",
+    description: "A device has a flagged extension installed",
+  },
+  {
+    id: "alert.created",
+    label: "Alert created",
+    description: "A new security alert was raised for an org member",
+  },
+  {
+    id: "device.enrolled",
+    label: "Device enrolled",
+    description: "A new device joins the organisation",
+  },
 ] as const;
 
 type WebhookEventId = (typeof ALL_EVENTS)[number]["id"];
@@ -632,22 +866,31 @@ function SettingsTab({ orgId: _orgId }: { orgId: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const { data: webhooks, isPending } = useQuery(trpc.webhooks.list.queryOptions());
+  const { data: webhooks, isPending } = useQuery(
+    trpc.webhooks.list.queryOptions(),
+  );
 
-  const invalidate = () => void queryClient.invalidateQueries(trpc.webhooks.list.queryFilter());
+  const invalidate = () =>
+    void queryClient.invalidateQueries(trpc.webhooks.list.queryFilter());
 
-  const deleteMutation  = useMutation(trpc.webhooks.delete.mutationOptions({ onSuccess: invalidate }));
-  const toggleMutation  = useMutation(trpc.webhooks.setEnabled.mutationOptions({ onSuccess: invalidate }));
-  const testMutation    = useMutation(trpc.webhooks.test.mutationOptions());
+  const deleteMutation = useMutation(
+    trpc.webhooks.delete.mutationOptions({ onSuccess: invalidate }),
+  );
+  const toggleMutation = useMutation(
+    trpc.webhooks.setEnabled.mutationOptions({ onSuccess: invalidate }),
+  );
+  const testMutation = useMutation(trpc.webhooks.test.mutationOptions());
 
   // ── Create form state ──
-  const [showForm, setShowForm]         = useState(false);
-  const [formUrl, setFormUrl]           = useState("");
-  const [formDesc, setFormDesc]         = useState("");
-  const [formEvents, setFormEvents]     = useState<WebhookEventId[]>(["threat.detected"]);
-  const [newSecret, setNewSecret]       = useState<string | null>(null);
-  const [copied, setCopied]             = useState(false);
-  const [testedId, setTestedId]         = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [formUrl, setFormUrl] = useState("");
+  const [formDesc, setFormDesc] = useState("");
+  const [formEvents, setFormEvents] = useState<WebhookEventId[]>([
+    "threat.detected",
+  ]);
+  const [newSecret, setNewSecret] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [testedId, setTestedId] = useState<string | null>(null);
 
   const createMutation = useMutation(
     trpc.webhooks.create.mutationOptions({
@@ -683,11 +926,12 @@ function SettingsTab({ orgId: _orgId }: { orgId: string }) {
             <CheckCircle className="h-4 w-4" />
             Webhook created - copy your secret now
           </div>
-          <p className="mb-3 text-xs text-muted-foreground">
-            This is the only time the full secret will be shown. Store it securely.
+          <p className="text-muted-foreground mb-3 text-xs">
+            This is the only time the full secret will be shown. Store it
+            securely.
           </p>
           <div className="flex items-center gap-2">
-            <code className="flex-1 overflow-x-auto rounded bg-muted px-3 py-2 font-mono text-xs">
+            <code className="bg-muted flex-1 overflow-x-auto rounded px-3 py-2 font-mono text-xs">
               {newSecret}
             </code>
             <Button
@@ -696,14 +940,18 @@ function SettingsTab({ orgId: _orgId }: { orgId: string }) {
               className="shrink-0 gap-1.5"
               onClick={() => void copySecret(newSecret)}
             >
-              {copied ? <CheckCircle className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied ? (
+                <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
               {copied ? "Copied" : "Copy"}
             </Button>
           </div>
           <Button
             size="sm"
             variant="ghost"
-            className="mt-2 text-xs text-muted-foreground"
+            className="text-muted-foreground mt-2 text-xs"
             onClick={() => setNewSecret(null)}
           >
             I've saved it - dismiss
@@ -719,7 +967,12 @@ function SettingsTab({ orgId: _orgId }: { orgId: string }) {
             Webhooks
           </h2>
           {!showForm && (
-            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setShowForm(true)}>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() => setShowForm(true)}
+            >
               <Plus className="h-3.5 w-3.5" />
               Add webhook
             </Button>
@@ -732,7 +985,9 @@ function SettingsTab({ orgId: _orgId }: { orgId: string }) {
             <h3 className="text-sm font-semibold">New webhook</h3>
 
             <div className="space-y-2">
-              <Label htmlFor="wh-url" className="text-xs">Endpoint URL</Label>
+              <Label htmlFor="wh-url" className="text-xs">
+                Endpoint URL
+              </Label>
               <Input
                 id="wh-url"
                 placeholder="https://your-server.example.com/webhooks/aibp"
@@ -742,7 +997,9 @@ function SettingsTab({ orgId: _orgId }: { orgId: string }) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="wh-desc" className="text-xs">Description (optional)</Label>
+              <Label htmlFor="wh-desc" className="text-xs">
+                Description (optional)
+              </Label>
               <Input
                 id="wh-desc"
                 placeholder="e.g. Slack alerts"
@@ -752,10 +1009,15 @@ function SettingsTab({ orgId: _orgId }: { orgId: string }) {
             </div>
 
             <div className="space-y-2">
-              <p className="text-xs font-medium text-foreground">Events to subscribe</p>
+              <p className="text-foreground text-xs font-medium">
+                Events to subscribe
+              </p>
               <div className="space-y-2">
                 {ALL_EVENTS.map((ev) => (
-                  <label key={ev.id} className="flex cursor-pointer items-start gap-3">
+                  <label
+                    key={ev.id}
+                    className="flex cursor-pointer items-start gap-3"
+                  >
                     <input
                       type="checkbox"
                       className="mt-0.5"
@@ -764,7 +1026,9 @@ function SettingsTab({ orgId: _orgId }: { orgId: string }) {
                     />
                     <div>
                       <p className="text-sm font-medium">{ev.label}</p>
-                      <p className="text-xs text-muted-foreground">{ev.description}</p>
+                      <p className="text-muted-foreground text-xs">
+                        {ev.description}
+                      </p>
                     </div>
                   </label>
                 ))}
@@ -774,7 +1038,11 @@ function SettingsTab({ orgId: _orgId }: { orgId: string }) {
             <div className="flex gap-2">
               <Button
                 size="sm"
-                disabled={!formUrl || formEvents.length === 0 || createMutation.isPending}
+                disabled={
+                  !formUrl ||
+                  formEvents.length === 0 ||
+                  createMutation.isPending
+                }
                 onClick={() =>
                   createMutation.mutate({
                     url: formUrl,
@@ -788,7 +1056,11 @@ function SettingsTab({ orgId: _orgId }: { orgId: string }) {
                 ) : null}
                 Create webhook
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => setShowForm(false)}>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowForm(false)}
+              >
                 Cancel
               </Button>
             </div>
@@ -803,39 +1075,50 @@ function SettingsTab({ orgId: _orgId }: { orgId: string }) {
         )}
 
         {!isPending && (!webhooks || webhooks.length === 0) && !showForm && (
-          <div className="flex flex-col items-center gap-2 py-12 text-muted-foreground">
+          <div className="text-muted-foreground flex flex-col items-center gap-2 py-12">
             <Webhook className="h-8 w-8 opacity-20" />
             <p className="text-sm">No webhooks configured yet.</p>
-            <p className="text-xs">Add one to receive real-time event notifications on your server.</p>
+            <p className="text-xs">
+              Add one to receive real-time event notifications on your server.
+            </p>
           </div>
         )}
 
         {webhooks && webhooks.length > 0 && (
           <div className="space-y-2">
             {webhooks.map((wh) => (
-              <Card key={wh.id} className={`p-4 ${!wh.enabled ? "opacity-60" : ""}`}>
+              <Card
+                key={wh.id}
+                className={`p-4 ${!wh.enabled ? "opacity-60" : ""}`}
+              >
                 <div className="flex items-start gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="truncate text-sm font-mono font-medium">{wh.url}</span>
+                      <span className="truncate font-mono text-sm font-medium">
+                        {wh.url}
+                      </span>
                       {!wh.enabled && (
-                        <Badge variant="secondary" className="text-xs">Disabled</Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          Disabled
+                        </Badge>
                       )}
                     </div>
                     {wh.description && (
-                      <p className="mt-0.5 text-xs text-muted-foreground">{wh.description}</p>
+                      <p className="text-muted-foreground mt-0.5 text-xs">
+                        {wh.description}
+                      </p>
                     )}
                     <div className="mt-2 flex flex-wrap gap-1">
-                      {(wh.events).map((ev) => (
+                      {wh.events.map((ev) => (
                         <span
                           key={ev}
-                          className="rounded-full bg-muted px-2 py-0.5 font-mono text-[10px] text-muted-foreground"
+                          className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 font-mono text-[10px]"
                         >
                           {ev}
                         </span>
                       ))}
                     </div>
-                    <p className="mt-2 font-mono text-[11px] text-muted-foreground">
+                    <p className="text-muted-foreground mt-2 font-mono text-[11px]">
                       {wh.secretMasked}
                     </p>
                   </div>
@@ -852,7 +1135,10 @@ function SettingsTab({ orgId: _orgId }: { orgId: string }) {
                         setTestedId(wh.id);
                         testMutation.mutate(
                           { webhookId: wh.id },
-                          { onSettled: () => setTimeout(() => setTestedId(null), 2000) },
+                          {
+                            onSettled: () =>
+                              setTimeout(() => setTestedId(null), 2000),
+                          },
                         );
                       }}
                     >
@@ -869,7 +1155,12 @@ function SettingsTab({ orgId: _orgId }: { orgId: string }) {
                       variant="ghost"
                       className="h-8 px-2 text-xs"
                       disabled={toggleMutation.isPending}
-                      onClick={() => toggleMutation.mutate({ webhookId: wh.id, enabled: !wh.enabled })}
+                      onClick={() =>
+                        toggleMutation.mutate({
+                          webhookId: wh.id,
+                          enabled: !wh.enabled,
+                        })
+                      }
                     >
                       {wh.enabled ? "Disable" : "Enable"}
                     </Button>
@@ -877,9 +1168,11 @@ function SettingsTab({ orgId: _orgId }: { orgId: string }) {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                      className="text-muted-foreground hover:text-destructive h-8 w-8 p-0"
                       disabled={deleteMutation.isPending}
-                      onClick={() => deleteMutation.mutate({ webhookId: wh.id })}
+                      onClick={() =>
+                        deleteMutation.mutate({ webhookId: wh.id })
+                      }
                       title="Delete webhook"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -899,11 +1192,15 @@ function SettingsTab({ orgId: _orgId }: { orgId: string }) {
           Verifying signatures
         </h2>
         <Card className="p-4">
-          <p className="mb-3 text-xs text-muted-foreground leading-relaxed">
-            Every delivery includes an <code className="rounded bg-muted px-1 py-0.5">X-AIBP-Signature</code> header.
-            Verify it with HMAC-SHA256 to confirm the payload came from us and wasn't tampered with.
+          <p className="text-muted-foreground mb-3 text-xs leading-relaxed">
+            Every delivery includes an{" "}
+            <code className="bg-muted rounded px-1 py-0.5">
+              X-AIBP-Signature
+            </code>{" "}
+            header. Verify it with HMAC-SHA256 to confirm the payload came from
+            us and wasn't tampered with.
           </p>
-          <pre className="overflow-x-auto rounded bg-muted p-3 text-[11px] leading-relaxed text-foreground">{`// Node.js / Express example
+          <pre className="bg-muted text-foreground overflow-x-auto rounded p-3 text-[11px] leading-relaxed">{`// Node.js / Express example
 import { createHmac, timingSafeEqual } from "crypto";
 
 function verifySignature(secret, rawBody, header) {
@@ -929,13 +1226,30 @@ function verifySignature(secret, rawBody, header) {
 // ─── Shared sub-components ────────────────────────────────────────────────────
 
 function RiskScore({ score }: { score: number }) {
-  const color     = score >= 70 ? "bg-destructive" : score >= 40 ? "bg-orange-500" : "bg-emerald-500";
-  const textColor = score >= 70 ? "text-destructive" : score >= 40 ? "text-orange-500" : "text-muted-foreground";
+  const color =
+    score >= 70
+      ? "bg-destructive"
+      : score >= 40
+        ? "bg-orange-500"
+        : "bg-emerald-500";
+  const textColor =
+    score >= 70
+      ? "text-destructive"
+      : score >= 40
+        ? "text-orange-500"
+        : "text-muted-foreground";
   return (
     <div className="flex items-center gap-2">
-      <span className={`w-7 text-right text-xs font-semibold tabular-nums ${textColor}`}>{score}</span>
-      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
-        <div className={`h-full rounded-full ${color}`} style={{ width: `${score}%` }} />
+      <span
+        className={`w-7 text-right text-xs font-semibold tabular-nums ${textColor}`}
+      >
+        {score}
+      </span>
+      <div className="bg-muted h-1.5 w-16 overflow-hidden rounded-full">
+        <div
+          className={`h-full rounded-full ${color}`}
+          style={{ width: `${score}%` }}
+        />
       </div>
     </div>
   );
