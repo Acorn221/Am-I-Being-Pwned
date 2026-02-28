@@ -1,107 +1,103 @@
-/**
- * /join/:token - Employee self-enrollment page.
- *
- * Two cases:
- *   A. Extension already installed: bridge fires → send REGISTER_WITH_INVITE
- *      message → device enrolled within seconds.
- *   B. Extension not installed: show install CTA. After install, the background
- *      script scans for this open tab, extracts the token, and self-enrolls.
- */
-
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle, ExternalLink, Loader2 } from "lucide-react";
+import { CheckCircle, ExternalLink } from "lucide-react";
 
 import { Button } from "@amibeingpwned/ui/button";
 
 import { extensionClient } from "~/lib/extension-client";
 import { useTRPC } from "~/lib/trpc";
 
-type JoinState =
-  | { phase: "validating" }
-  | { phase: "detecting"; orgName: string }
-  | { phase: "registering"; orgName: string }
-  | { phase: "success"; orgName: string }
-  | { phase: "install_needed"; orgName: string }
-  | { phase: "error"; message: string };
-
 const CHROME_STORE_URL =
   "https://chromewebstore.google.com/detail/am-i-being-pwned/amibeingpndbmhcmnjdekhljpjcbjnpl";
+
+const POLL_INTERVAL_MS = 2000;
+
+type JoinState =
+  | { phase: "install_needed" }
+  | { phase: "success" }
+  | { phase: "error"; message: string };
 
 interface JoinPageProps {
   token: string;
 }
 
+async function tryRegister(
+  token: string,
+): Promise<{ ok: true } | { ok: false; message: string } | null> {
+  const extId = await extensionClient.detect();
+  if (!extId) return null;
+
+  try {
+    const response = await extensionClient.send({
+      type: "REGISTER_WITH_INVITE",
+      version: 1,
+      token,
+    });
+
+    if (response.type === "INVITE_REGISTERED") return { ok: true };
+    if (response.type === "ERROR")
+      return { ok: false, message: response.message };
+    return { ok: false, message: "Unexpected response from extension." };
+  } catch (err) {
+    return {
+      ok: false,
+      message:
+        err instanceof Error ? err.message : "Failed to register device.",
+    };
+  }
+}
+
 export function JoinPage({ token }: JoinPageProps) {
   const trpc = useTRPC();
-  const [state, setState] = useState<JoinState>({ phase: "validating" });
+  const [state, setState] = useState<JoinState>({ phase: "install_needed" });
 
-  // 1. Validate the token server-side to get the org name
-  const validateQuery = useQuery(
+  const { data } = useQuery(
     trpc.org.validateInviteToken.queryOptions({ token }),
   );
+  const orgName = data?.orgName ?? null;
 
-  // 2. Once validated, detect extension and attempt registration
+  // On mount: detect extension and register if present
   useEffect(() => {
-    if (validateQuery.isPending) return;
+    let stopped = false;
 
-    if (validateQuery.isError || !validateQuery.data) {
-      const err = validateQuery.error as unknown;
-      setState({
-        phase: "error",
-        message:
-          (err instanceof Error ? err.message : null) ??
-          "Invite link is invalid or has been revoked.",
-      });
-      return;
-    }
-
-    const { orgName } = validateQuery.data;
-    setState({ phase: "detecting", orgName });
-
-    void (async () => {
-      const extId = await extensionClient.detect();
-
-      if (!extId) {
-        // Extension not installed - show install CTA
-        setState({ phase: "install_needed", orgName });
-        return;
+    void tryRegister(token).then((result) => {
+      if (stopped || result === null) return;
+      if (result.ok) {
+        setState({ phase: "success" });
+      } else {
+        setState({ phase: "error", message: result.message });
       }
+    });
 
-      // Extension detected - send registration message
-      setState({ phase: "registering", orgName });
-      try {
-        const response = await extensionClient.send({
-          type: "REGISTER_WITH_INVITE",
-          version: 1,
-          token,
-        });
+    return () => {
+      stopped = true;
+    };
+  }, [token]);
 
-        if (response.type === "INVITE_REGISTERED") {
-          setState({ phase: "success", orgName });
-        } else if (response.type === "ERROR") {
-          setState({ phase: "error", message: response.message });
-        } else {
-          setState({
-            phase: "error",
-            message: "Unexpected response from extension.",
-          });
-        }
-      } catch (err) {
-        setState({
-          phase: "error",
-          message:
-            err instanceof Error ? err.message : "Failed to register device.",
-        });
+  // Poll for extension in background while showing install CTA
+  useEffect(() => {
+    if (state.phase !== "install_needed") return;
+
+    let stopped = false;
+
+    const poll = async () => {
+      const result = await tryRegister(token);
+      if (stopped || result === null) return;
+
+      if (result.ok) {
+        setState({ phase: "success" });
+      } else {
+        setState({ phase: "error", message: result.message });
       }
-    })();
-  }, [
-    validateQuery.isPending,
-    validateQuery.isError,
-    validateQuery.data,
-    validateQuery.error,
-    token,
-  ]);
+    };
+
+    const interval = setInterval(() => void poll(), POLL_INTERVAL_MS);
+
+    return () => {
+      stopped = true;
+      clearInterval(interval);
+    };
+  }, [state.phase, token]);
 
   return (
     <div className="bg-background flex min-h-screen flex-col items-center justify-center px-4">
@@ -125,23 +121,26 @@ export function JoinPage({ token }: JoinPageProps) {
 
         {/* Card */}
         <div className="bg-card border-border rounded-xl border p-6 shadow-sm">
-          {state.phase === "validating" && (
-            <div className="flex flex-col items-center gap-3 py-2">
-              <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
-              <p className="text-muted-foreground text-sm">
-                Validating invite…
-              </p>
-            </div>
-          )}
-
-          {(state.phase === "detecting" || state.phase === "registering") && (
-            <div className="flex flex-col items-center gap-3 py-2 text-center">
-              <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
-              <p className="text-muted-foreground text-sm">
-                {state.phase === "detecting"
-                  ? "Detecting extension…"
-                  : "Enrolling device…"}
-              </p>
+          {state.phase === "install_needed" && (
+            <div className="space-y-4">
+              <div className="text-center">
+                <p className="text-foreground mt-1 text-sm">
+                  <span className="">{orgName ?? "Your organization"}</span>{" "}
+                  uses Am I Being Pwned to make sure your extensions aren&apos;t
+                  malicious or vulnerable to attacks.
+                  <p className="text-muted-foreground mt-4">
+                    {" "}
+                    Keep this tab open after installing - enrollment is
+                    automatic.
+                  </p>
+                </p>
+              </div>
+              <Button asChild className="w-full gap-2" variant="default">
+                <a href={CHROME_STORE_URL} target="_blank" rel="noreferrer">
+                  <ExternalLink className="h-4 w-4" />
+                  Install on Chrome
+                </a>
+              </Button>
             </div>
           )}
 
@@ -152,34 +151,15 @@ export function JoinPage({ token }: JoinPageProps) {
               </div>
               <div>
                 <p className="font-semibold">
-                  Enrolled in <span className="font-bold">{state.orgName}</span>
+                  Enrolled in{" "}
+                  <span className="font-bold">
+                    {orgName ?? "your organization"}
+                  </span>
                 </p>
                 <p className="text-muted-foreground mt-1 text-sm">
                   This device will appear in your fleet dashboard shortly.
                 </p>
               </div>
-            </div>
-          )}
-
-          {state.phase === "install_needed" && (
-            <div className="space-y-4">
-              <div className="text-center">
-                <p className="font-semibold">Install the extension</p>
-                <p className="text-muted-foreground mt-1 text-sm">
-                  You&apos;ve been invited to{" "}
-                  <span className="text-foreground font-semibold">
-                    {state.orgName}
-                  </span>
-                  . Keep this tab open after installing - enrollment is
-                  automatic.
-                </p>
-              </div>
-              <Button asChild className="w-full gap-2" variant="default">
-                <a href={CHROME_STORE_URL} target="_blank" rel="noreferrer">
-                  <ExternalLink className="h-4 w-4" />
-                  Install on Chrome
-                </a>
-              </Button>
             </div>
           )}
 
