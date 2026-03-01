@@ -953,27 +953,6 @@ function ExtensionsTab() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {(isPending || isSyncing) && (appsData?.rows.length ?? 0) === 0 && (
-              <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="text-muted-foreground py-12 text-center"
-                >
-                  <RefreshCw className="mx-auto h-5 w-5 animate-spin opacity-30" />
-                </TableCell>
-              </TableRow>
-            )}
-            {!isPending && !isSyncing && (appsData?.rows.length ?? 0) === 0 && (
-              <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="text-muted-foreground py-12 text-center text-sm"
-                >
-                  No extensions found. Click "Sync now" to fetch from Google
-                  Workspace.
-                </TableCell>
-              </TableRow>
-            )}
             {appsData?.rows.map((ext) => (
               <TableRow
                 key={ext.chromeExtensionId}
@@ -1382,7 +1361,7 @@ function WebhooksPage() {
                     {ALL_EVENTS.map((ev) => (
                       <label
                         key={ev.id}
-                        className="has-[:checked]:border-primary has-[:checked]:bg-primary/5 dark:has-[:checked]:bg-primary/10 flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors"
+                        className="has-checked:border-primary has-checked:bg-primary/5 dark:has-checked:bg-primary/10 flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors"
                       >
                         <input
                           type="checkbox"
