@@ -1,10 +1,23 @@
-import { useState, useSyncExternalStore } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  type Column,
+  type ColumnDef,
+  type Row,
+  type SortingState,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 import {
   AlertTriangle,
+  ArrowDown,
   ArrowLeft,
   ArrowRight,
+  ArrowUp,
+  ArrowUpDown,
   Bell,
+  Braces,
   Building2,
   CheckCheck,
   CheckCircle,
@@ -17,6 +30,7 @@ import {
   Puzzle,
   RefreshCw,
   RotateCcw,
+  Search,
   Settings,
   ShieldCheck,
   Trash2,
@@ -27,6 +41,13 @@ import {
 
 import { Badge } from "@amibeingpwned/ui/badge";
 import { Button } from "@amibeingpwned/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@amibeingpwned/ui/dropdown-menu";
 import {
   Card,
   CardAction,
@@ -714,7 +735,11 @@ function DevicesTab({ overview: _overview }: { overview: FleetOverview }) {
   const queryClient = useQueryClient();
   const [blockedReason, setBlockedReason] = useState<string | undefined>();
 
-  const { data: workspaceDevices, isPending } = useQuery(
+  const { data: fleetDevices, isPending: fleetPending } = useQuery(
+    trpc.fleet.devices.queryOptions({ page: 1, limit: 100 }),
+  );
+
+  const { data: workspaceDevices, isPending: workspacePending } = useQuery(
     trpc.workspace.devices.queryOptions({ page: 1, limit: 100 }),
   );
 
@@ -752,7 +777,7 @@ function DevicesTab({ overview: _overview }: { overview: FleetOverview }) {
     }),
   );
 
-  if (isPending) {
+  if (fleetPending || workspacePending) {
     return (
       <div className="flex justify-center py-12">
         <RefreshCw className="h-5 w-5 animate-spin opacity-30" />
@@ -760,7 +785,10 @@ function DevicesTab({ overview: _overview }: { overview: FleetOverview }) {
     );
   }
 
-  if ((workspaceDevices?.rows.length ?? 0) === 0) {
+  const hasFleetDevices = (fleetDevices?.rows.length ?? 0) > 0;
+  const hasWorkspaceDevices = (workspaceDevices?.rows.length ?? 0) > 0;
+
+  if (!hasFleetDevices && !hasWorkspaceDevices) {
     return (
       <WorkspaceSetupCard
         onSync={() => syncMutation.mutate()}
@@ -771,48 +799,579 @@ function DevicesTab({ overview: _overview }: { overview: FleetOverview }) {
   }
 
   return (
-    <div className="space-y-3">
-      <div className="text-muted-foreground flex items-center gap-2 text-sm">
-        <Cloud className="h-4 w-4" />
-        <span>Chrome browsers enrolled in Google Workspace</span>
+    <div className="space-y-6">
+      {/* Extension-registered devices */}
+      {hasFleetDevices && (
+        <div className="space-y-3">
+          <div className="text-muted-foreground flex items-center gap-2 text-sm">
+            <Monitor className="h-4 w-4" />
+            <span>Devices registered via extension</span>
+          </div>
+
+          <Card className="overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Device ID</TableHead>
+                  <TableHead className="w-28">Platform</TableHead>
+                  <TableHead className="w-32 text-right">Extensions</TableHead>
+                  <TableHead className="w-32 text-right">Flagged</TableHead>
+                  <TableHead className="w-36 text-right">Last seen</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {fleetDevices?.rows.map((device) => (
+                  <TableRow key={device.id}>
+                    <TableCell className="text-muted-foreground font-mono text-xs">
+                      {device.id.slice(0, 16)}…
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs capitalize">
+                        {device.platform}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {device.extensionCount}
+                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {device.flaggedExtensionCount > 0 ? (
+                        <span className="text-destructive font-medium">
+                          {device.flaggedExtensionCount}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">0</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-right text-xs">
+                      {timeAgo(device.lastSeenAt)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Card>
+
+          {fleetDevices && fleetDevices.total > fleetDevices.limit && (
+            <p className="text-muted-foreground text-center text-xs">
+              Showing {fleetDevices.rows.length} of {fleetDevices.total} devices
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Google Workspace enrolled browsers */}
+      {hasWorkspaceDevices && (
+        <div className="space-y-3">
+          <div className="text-muted-foreground flex items-center gap-2 text-sm">
+            <Cloud className="h-4 w-4" />
+            <span>Chrome browsers enrolled in Google Workspace</span>
+          </div>
+
+          <Card className="overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Machine</TableHead>
+                  <TableHead className="w-32 text-right">Extensions</TableHead>
+                  <TableHead className="w-36 text-right">Last synced</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {workspaceDevices?.rows.map((device) => (
+                  <TableRow key={device.googleDeviceId}>
+                    <TableCell className="text-sm font-medium">
+                      {device.machineName ?? (
+                        <span className="text-muted-foreground font-mono text-xs">
+                          {device.googleDeviceId.slice(0, 16)}…
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {device.extensionCount}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-right text-xs">
+                      {timeAgo(device.lastSyncedAt)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Card>
+
+          {workspaceDevices && workspaceDevices.total > workspaceDevices.limit && (
+            <p className="text-muted-foreground text-center text-xs">
+              Showing {workspaceDevices.rows.length} of {workspaceDevices.total}{" "}
+              devices
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Nudge to connect Workspace if only using extension devices */}
+      {hasFleetDevices && !hasWorkspaceDevices && (
+        <Card className="border-dashed">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Cloud className="h-4 w-4" />
+              Connect Google Workspace
+            </CardTitle>
+            <CardDescription>
+              Also sync managed Chrome browsers via the Chrome Management API
+              for fuller device coverage.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              disabled={syncMutation.isPending}
+              onClick={() => syncMutation.mutate()}
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${syncMutation.isPending ? "animate-spin" : ""}`}
+              />
+              {syncMutation.isPending ? "Connecting…" : "Connect & Sync"}
+            </Button>
+            {blockedReason && (
+              <p className="text-destructive mt-2 text-xs">{blockedReason}</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// ─── Extensions data table ────────────────────────────────────────────────────
+
+interface ExtRow {
+  chromeExtensionId: string;
+  displayName: string | null;
+  installType: string | null | undefined;
+  flaggedReason: string | null | undefined;
+  riskScore: number | null;
+  isFlagged: boolean | null;
+  deviceCount: number;
+  enabledCount?: number;
+}
+
+function SortableHeader({
+  column,
+  label,
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  column: Column<ExtRow, any>;
+  label: string;
+}) {
+  const sorted = column.getIsSorted();
+  return (
+    <button
+      className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide hover:text-foreground"
+      onClick={() => column.toggleSorting(sorted === "asc")}
+    >
+      {label}
+      {sorted === "asc" ? (
+        <ArrowUp className="h-3 w-3" />
+      ) : sorted === "desc" ? (
+        <ArrowDown className="h-3 w-3" />
+      ) : (
+        <ArrowUpDown className="h-3 w-3 opacity-40" />
+      )}
+    </button>
+  );
+}
+
+type SortBy = "name" | "riskScore" | "deviceCount";
+type RiskLevel = "all" | "low" | "medium" | "high";
+
+// Maps TanStack column IDs to the sortBy param the server expects
+const COLUMN_TO_SORT: Record<string, SortBy> = {
+  displayName: "name",
+  riskScore: "riskScore",
+  deviceCount: "deviceCount",
+};
+
+function ExtensionsDataTable({
+  source,
+  showInstallType = false,
+}: {
+  source: "fleet" | "workspace";
+  showInstallType?: boolean;
+}) {
+  const trpc = useTRPC();
+
+  // Filter / sort / pagination state
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [sortBy, setSortBy] = useState<SortBy>("deviceCount");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [showFlaggedOnly, setShowFlaggedOnly] = useState(false);
+  const [riskFilter, setRiskFilter] = useState<RiskLevel>("all");
+  const [installTypeFilter, setInstallTypeFilter] = useState("");
+
+  // Debounce search - reset to page 1 when it fires
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  // Reset page when filters change
+  useEffect(() => { setPage(1); }, [showFlaggedOnly, riskFilter, installTypeFilter]);
+
+  const sharedParams = {
+    page,
+    limit: pageSize,
+    search: debouncedSearch || undefined,
+    sortBy,
+    sortDir,
+    isFlagged: showFlaggedOnly ? true : undefined,
+    riskLevel: riskFilter === "all" ? undefined : riskFilter,
+  } as const;
+
+  const fleetQuery = useQuery({
+    ...trpc.fleet.extensions.queryOptions(sharedParams),
+    enabled: source === "fleet",
+    placeholderData: keepPreviousData,
+  });
+
+  const workspaceQuery = useQuery({
+    ...trpc.workspace.apps.queryOptions({
+      ...sharedParams,
+      installType: installTypeFilter || undefined,
+    }),
+    enabled: source === "workspace",
+    placeholderData: keepPreviousData,
+  });
+
+  const activeQuery = source === "fleet" ? fleetQuery : workspaceQuery;
+  const isFetching = activeQuery.isFetching;
+  const total = activeQuery.data?.total ?? 0;
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+
+  const rows = useMemo<ExtRow[]>(() => {
+    if (source === "fleet") {
+      return (fleetQuery.data?.rows ?? []).map((r) => ({
+        chromeExtensionId: r.chromeExtensionId,
+        displayName: r.name,
+        installType: undefined,
+        flaggedReason: undefined,
+        riskScore: r.riskScore,
+        isFlagged: r.isFlagged,
+        deviceCount: r.deviceCount,
+        enabledCount: r.enabledCount,
+      }));
+    }
+    return (workspaceQuery.data?.rows ?? []).map((r) => ({
+      chromeExtensionId: r.chromeExtensionId,
+      displayName: r.displayName,
+      installType: r.installType,
+      flaggedReason: r.flaggedReason,
+      riskScore: r.riskScore,
+      isFlagged: r.isFlagged,
+      deviceCount: r.browserDeviceCount,
+    }));
+  }, [source, fleetQuery.data, workspaceQuery.data]);
+
+  const columns = useMemo<ColumnDef<ExtRow>[]>(() => {
+    const cols: ColumnDef<ExtRow>[] = [
+      {
+        accessorKey: "displayName",
+        header: ({ column }) => <SortableHeader column={column} label="Extension" />,
+        cell: ({ row }) => {
+          const r = row.original;
+          return (
+            <div className="flex min-w-0 items-center gap-2">
+              {r.isFlagged && (
+                <AlertTriangle className="text-destructive h-3.5 w-3.5 shrink-0" />
+              )}
+              <div className="min-w-0">
+                <p
+                  className={`truncate text-sm font-medium ${r.isFlagged ? "text-destructive" : ""}`}
+                >
+                  {r.displayName ?? r.chromeExtensionId}
+                </p>
+                {r.flaggedReason && (
+                  <p className="text-muted-foreground truncate text-xs">
+                    {r.flaggedReason}
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        },
+      },
+      ...(showInstallType
+        ? [
+            {
+              accessorKey: "installType" as const,
+              header: "Install type",
+              enableSorting: false,
+              cell: ({ row }: { row: Row<ExtRow> }) => (
+                <InstallTypeChip type={row.original.installType ?? null} />
+              ),
+            },
+          ]
+        : []),
+      {
+        accessorKey: "riskScore",
+        header: ({ column }) => <SortableHeader column={column} label="Risk" />,
+        cell: ({ row }) => <RiskScore score={row.original.riskScore ?? 0} />,
+      },
+      {
+        accessorKey: "deviceCount",
+        header: ({ column }) => (
+          <div className="text-right">
+            <SortableHeader column={column} label="Devices" />
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div className="text-right text-sm font-medium tabular-nums">
+            {row.original.deviceCount}
+          </div>
+        ),
+      },
+      ...(source === "fleet"
+        ? [
+            {
+              accessorKey: "enabledCount" as const,
+              header: () => <div className="text-right text-xs font-medium uppercase tracking-wide">Enabled</div>,
+              enableSorting: false,
+              cell: ({ row }: { row: Row<ExtRow> }) => {
+                const { enabledCount, deviceCount } = row.original;
+                if (enabledCount === undefined) return null;
+                const allEnabled = enabledCount === deviceCount;
+                const allDisabled = enabledCount === 0;
+                return (
+                  <div className="text-right">
+                    <span
+                      className={`text-xs tabular-nums font-medium ${
+                        allEnabled
+                          ? "text-emerald-500"
+                          : allDisabled
+                            ? "text-muted-foreground"
+                            : "text-yellow-500"
+                      }`}
+                    >
+                      {enabledCount}/{deviceCount}
+                    </span>
+                  </div>
+                );
+              },
+            },
+          ]
+        : []),
+    ];
+    return cols;
+  }, [source, showInstallType]);
+
+  const sorting: SortingState = [{ id: sortBy === "name" ? "displayName" : sortBy, desc: sortDir === "desc" }];
+
+  const table = useReactTable({
+    data: rows,
+    columns,
+    state: {
+      sorting,
+      pagination: { pageIndex: page - 1, pageSize },
+    },
+    manualSorting: true,
+    manualPagination: true,
+    pageCount,
+    onSortingChange: (updater) => {
+      const next = typeof updater === "function" ? updater(sorting) : updater;
+      const first = next[0];
+      if (first) {
+        setSortBy(COLUMN_TO_SORT[first.id] ?? "deviceCount");
+        setSortDir(first.desc ? "desc" : "asc");
+        setPage(1);
+      }
+    },
+    onPaginationChange: (updater) => {
+      const next = typeof updater === "function"
+        ? updater({ pageIndex: page - 1, pageSize })
+        : updater;
+      setPage(next.pageIndex + 1);
+      setPageSize(next.pageSize);
+    },
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  const hasActiveFilters = showFlaggedOnly || riskFilter !== "all" || installTypeFilter !== "";
+  const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const end = Math.min(page * pageSize, total);
+
+  return (
+    <div className="space-y-2">
+      {/* Toolbar */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search className="text-muted-foreground absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2" />
+          <Input
+            className="pl-8 focus-visible:ring-0"
+            placeholder="Search by name or ID..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
+          {isFetching && (
+            <RefreshCw className="text-muted-foreground absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 animate-spin" />
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowFlaggedOnly(!showFlaggedOnly)}
+            className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-[7px] text-xs font-medium transition-colors ${
+              showFlaggedOnly
+                ? "border-destructive/50 bg-destructive/10 text-destructive"
+                : "border-input text-muted-foreground hover:text-foreground dark:bg-input/30 bg-transparent"
+            }`}
+          >
+            <AlertTriangle className="h-3.5 w-3.5" />
+            Flagged
+          </button>
+          <select
+            value={riskFilter}
+            onChange={(e) => setRiskFilter(e.target.value as typeof riskFilter)}
+            className="border-input dark:bg-input/30 rounded-md border bg-transparent px-2 py-[7px] text-xs outline-none"
+          >
+            <option value="all">All risks</option>
+            <option value="low">Low (0-39)</option>
+            <option value="medium">Medium (40-69)</option>
+            <option value="high">High (70+)</option>
+          </select>
+          {showInstallType && (
+            <select
+              value={installTypeFilter}
+              onChange={(e) => setInstallTypeFilter(e.target.value)}
+              className="border-input dark:bg-input/30 rounded-md border bg-transparent px-2 py-[7px] text-xs outline-none"
+            >
+              <option value="">All types</option>
+              <option value="FORCED">Forced</option>
+              <option value="ADMIN">Admin</option>
+              <option value="NORMAL">User</option>
+              <option value="DEVELOPMENT">Dev</option>
+              <option value="SIDELOAD">Sideloaded</option>
+            </select>
+          )}
+          {hasActiveFilters && (
+            <button
+              onClick={() => {
+                setShowFlaggedOnly(false);
+                setRiskFilter("all");
+                setInstallTypeFilter("");
+              }}
+              className="border-input dark:bg-input/30 text-muted-foreground hover:text-foreground rounded-md border bg-transparent p-[7px] transition-colors"
+              title="Clear filters"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
-      <Card className="overflow-hidden">
+      {/* Table */}
+      <Card className="overflow-hidden py-0">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Machine</TableHead>
-              <TableHead className="w-32 text-right">Extensions</TableHead>
-              <TableHead className="w-36 text-right">Last synced</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {workspaceDevices?.rows.map((device) => (
-              <TableRow key={device.googleDeviceId}>
-                <TableCell className="text-sm font-medium">
-                  {device.machineName ?? (
-                    <span className="text-muted-foreground font-mono text-xs">
-                      {device.googleDeviceId.slice(0, 16)}…
-                    </span>
-                  )}
-                </TableCell>
-                <TableCell className="text-right text-sm tabular-nums">
-                  {device.extensionCount}
-                </TableCell>
-                <TableCell className="text-muted-foreground text-right text-xs">
-                  {timeAgo(device.lastSyncedAt)}
-                </TableCell>
+            {table.getHeaderGroups().map((hg) => (
+              <TableRow key={hg.id} className="hover:bg-transparent">
+                {hg.headers.map((header) => (
+                  <TableHead key={header.id} className="h-9 px-3">
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="text-muted-foreground py-8 text-center text-sm"
+                >
+                  No extensions match your filters.
+                </TableCell>
+              </TableRow>
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  className={
+                    row.original.isFlagged
+                      ? "border-l-destructive bg-destructive/5 border-l-2"
+                      : row.index % 2 === 1
+                        ? "bg-muted/20"
+                        : ""
+                  }
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} className="px-3">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </Card>
 
-      {workspaceDevices && workspaceDevices.total > workspaceDevices.limit && (
-        <p className="text-muted-foreground text-center text-xs">
-          Showing {workspaceDevices.rows.length} of {workspaceDevices.total}{" "}
-          devices
-        </p>
+      {/* Pagination */}
+      {total > 0 && (
+        <div className="flex items-center justify-between pt-1">
+          <span className="text-muted-foreground text-xs">
+            {`Showing ${start}-${end} of ${total}`}
+          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground text-xs">Rows per page</span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-7 gap-1 px-2 text-xs">
+                  {pageSize}
+                  <ArrowDown className="h-3 w-3 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[4rem]">
+                <DropdownMenuRadioGroup
+                  value={String(pageSize)}
+                  onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}
+                >
+                  {[10, 25, 50].map((ps) => (
+                    <DropdownMenuRadioItem key={ps} value={String(ps)} className="text-xs">
+                      {ps}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              className="h-7 w-7 p-0"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+            </Button>
+            <span className="text-muted-foreground text-xs tabular-nums">
+              {page} / {pageCount}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              className="h-7 w-7 p-0"
+            >
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -851,8 +1410,13 @@ function ExtensionsTab() {
   const queryClient = useQueryClient();
   const [blockedReason, setBlockedReason] = useState<string | undefined>();
 
-  const { data: appsData, isPending } = useQuery(
-    trpc.workspace.apps.queryOptions({ page: 1, limit: 100 }),
+  // Lightweight existence checks - the tables own their own full queries
+  const { data: appsData, isPending: appsLoading } = useQuery(
+    trpc.workspace.apps.queryOptions({ page: 1, limit: 1 }),
+  );
+
+  const { data: fleetExtData, isPending: fleetLoading } = useQuery(
+    trpc.fleet.extensions.queryOptions({ page: 1, limit: 1 }),
   );
 
   const syncMutation = useMutation(
@@ -890,6 +1454,10 @@ function ExtensionsTab() {
   );
 
   const isSyncing = syncMutation.isPending;
+  const isPending = appsLoading || fleetLoading;
+
+  const hasWorkspaceData = (appsData?.rows.length ?? 0) > 0;
+  const hasFleetData = (fleetExtData?.rows.length ?? 0) > 0;
 
   if (isPending) {
     return (
@@ -899,7 +1467,7 @@ function ExtensionsTab() {
     );
   }
 
-  if ((appsData?.rows.length ?? 0) === 0) {
+  if (!hasWorkspaceData && !hasFleetData) {
     const syncedButEmpty = appsData?.lastSyncedAt !== null;
     return (
       <WorkspaceSetupCard
@@ -912,94 +1480,84 @@ function ExtensionsTab() {
   }
 
   return (
-    <div className="space-y-3">
-      {/* Header row */}
-      <div className="flex items-center justify-between">
-        <div className="text-muted-foreground flex items-center gap-2 text-sm">
-          <Cloud className="h-4 w-4" />
-          {appsData?.lastSyncedAt ? (
-            <span>Last synced {timeAgo(appsData.lastSyncedAt)}</span>
-          ) : isSyncing ? (
-            <span className="flex items-center gap-1.5">
-              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-              Syncing from Google Workspace…
-            </span>
-          ) : (
-            <span>Never synced</span>
-          )}
+    <div className="space-y-8">
+      {/* Extension agent section */}
+      {hasFleetData && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Puzzle className="text-muted-foreground h-4 w-4" />
+            <span className="text-sm font-medium">Installed Extensions</span>
+          </div>
+          <ExtensionsDataTable source="fleet" />
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          className="gap-1.5"
-          disabled={isSyncing}
-          onClick={() => syncMutation.mutate()}
-        >
-          <RefreshCw
-            className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`}
-          />
-          {isSyncing ? "Syncing…" : "Sync now"}
-        </Button>
-      </div>
+      )}
 
-      <Card className="overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Extension</TableHead>
-              <TableHead className="w-28">Install type</TableHead>
-              <TableHead className="w-28">Risk</TableHead>
-              <TableHead className="w-24 text-right">Devices</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {appsData?.rows.map((ext) => (
-              <TableRow
-                key={ext.chromeExtensionId}
-                className={
-                  ext.isFlagged
-                    ? "border-l-destructive bg-destructive/5 border-l-2"
-                    : ""
-                }
+      {/* Google Workspace section */}
+      {hasWorkspaceData && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Cloud className="text-muted-foreground h-4 w-4" />
+              <span className="text-sm font-medium">Google Workspace</span>
+              {appsData?.lastSyncedAt ? (
+                <span className="text-muted-foreground text-xs">
+                  - last synced {timeAgo(appsData.lastSyncedAt)}
+                </span>
+              ) : isSyncing ? (
+                <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                  <RefreshCw className="h-3 w-3 animate-spin" />
+                  Syncing…
+                </span>
+              ) : (
+                <span className="text-muted-foreground text-xs">
+                  - never synced
+                </span>
+              )}
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              disabled={isSyncing}
+              onClick={() => syncMutation.mutate()}
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`}
+              />
+              {isSyncing ? "Syncing…" : "Sync now"}
+            </Button>
+          </div>
+          <ExtensionsDataTable source="workspace" showInstallType />
+        </div>
+      )}
+
+      {/* Workspace setup nudge when only fleet data exists */}
+      {hasFleetData && !hasWorkspaceData && (
+        <Card className="border-dashed">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Cloud className="h-4 w-4" />
+              Connect Google Workspace
+            </CardTitle>
+            <CardDescription>
+              Sync managed Chrome browsers via the Chrome Management API for
+              install type info and per-device extension policies.
+            </CardDescription>
+            <CardAction>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={isSyncing}
+                onClick={() => syncMutation.mutate()}
               >
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    {ext.isFlagged && (
-                      <AlertTriangle className="text-destructive h-3.5 w-3.5 shrink-0" />
-                    )}
-                    <div className="min-w-0">
-                      <p
-                        className={`truncate text-sm font-medium ${ext.isFlagged ? "text-destructive" : ""}`}
-                      >
-                        {ext.displayName ?? ext.chromeExtensionId}
-                      </p>
-                      {ext.flaggedReason && (
-                        <p className="text-muted-foreground truncate text-xs">
-                          {ext.flaggedReason}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <InstallTypeChip type={ext.installType} />
-                </TableCell>
-                <TableCell>
-                  <RiskScore score={ext.riskScore ?? 0} />
-                </TableCell>
-                <TableCell className="text-right text-sm font-medium tabular-nums">
-                  {ext.browserDeviceCount}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
-
-      {appsData && appsData.total > appsData.limit && (
-        <p className="text-muted-foreground text-center text-xs">
-          Showing {appsData.rows.length} of {appsData.total} extensions
-        </p>
+                <RefreshCw
+                  className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`}
+                />
+                {isSyncing ? "Syncing…" : "Sync"}
+              </Button>
+            </CardAction>
+          </CardHeader>
+        </Card>
       )}
     </div>
   );
@@ -1007,20 +1565,6 @@ function ExtensionsTab() {
 
 // ─── Settings tab ────────────────────────────────────────────────────────────
 
-const ALL_EVENTS = [
-  {
-    id: "threat.detected",
-    label: "Threat detected",
-    description: "A device has a flagged extension installed",
-  },
-  {
-    id: "alert.created",
-    label: "Alert created",
-    description: "A new security alert was raised for an org member",
-  },
-] as const;
-
-type WebhookEventId = (typeof ALL_EVENTS)[number]["id"];
 
 function SettingsTab({ orgId: _orgId }: { orgId: string }) {
   const trpc = useTRPC();
@@ -1174,6 +1718,28 @@ function SettingsTab({ orgId: _orgId }: { orgId: string }) {
 
 // ─── Webhooks page ────────────────────────────────────────────────────────────
 
+const THREAT_PAYLOAD_EXAMPLE = JSON.stringify(
+  {
+    event: "threat.detected",
+    timestamp: 1714000000,
+    data: {
+      deviceId: "dev_abc123",
+      platform: "mac",
+      threats: [
+        {
+          extensionName: "Dark Reader",
+          chromeExtensionId: "eimadpbcbfnmbkopoojfekhnkhdbieeh",
+          riskScore: 87,
+          flaggedReason:
+            "Reads all browsing history and sends it to a remote server",
+        },
+      ],
+    },
+  },
+  null,
+  2,
+);
+
 function WebhooksPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -1196,9 +1762,6 @@ function WebhooksPage() {
   const [showForm, setShowForm] = useState(false);
   const [formUrl, setFormUrl] = useState("");
   const [formDesc, setFormDesc] = useState("");
-  const [formEvents, setFormEvents] = useState<WebhookEventId[]>([
-    "threat.detected",
-  ]);
   const [newSecret, setNewSecret] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [testedId, setTestedId] = useState<string | null>(null);
@@ -1210,17 +1773,10 @@ function WebhooksPage() {
         setShowForm(false);
         setFormUrl("");
         setFormDesc("");
-        setFormEvents(["threat.detected"]);
         invalidate();
       },
     }),
   );
-
-  function toggleEvent(id: WebhookEventId) {
-    setFormEvents((prev) =>
-      prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id],
-    );
-  }
 
   async function copySecret(secret: string) {
     await navigator.clipboard.writeText(secret);
@@ -1293,285 +1849,274 @@ function WebhooksPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Endpoints section */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="flex items-center gap-2 text-sm font-semibold">
-              <Webhook className="h-4 w-4" />
-              Endpoints
-            </h2>
-            <p className="text-muted-foreground mt-0.5 text-xs">
-              Receive signed POST notifications when events occur in your org.
-            </p>
-          </div>
-
-          {/* Add webhook Dialog */}
-          <Dialog
-            open={showForm}
-            onOpenChange={(open) => {
-              setShowForm(open);
-              if (!open) {
-                setFormUrl("");
-                setFormDesc("");
-                setFormEvents(["threat.detected"]);
-              }
-            }}
-          >
-            <DialogTrigger asChild>
-              <Button size="sm" variant="outline" className="gap-1.5">
-                <Plus className="h-3.5 w-3.5" />
-                Add webhook
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>New webhook</DialogTitle>
-                <DialogDescription>
-                  Add an HTTPS endpoint to receive signed event payloads.
-                </DialogDescription>
-              </DialogHeader>
-              <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor="wh-url">Endpoint URL</FieldLabel>
-                  <Input
-                    id="wh-url"
-                    placeholder="https://your-server.example.com/webhooks/aibp"
-                    value={formUrl}
-                    onChange={(e) => setFormUrl(e.target.value)}
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="wh-desc">
-                    Description{" "}
-                    <span className="text-muted-foreground font-normal">
-                      (optional)
-                    </span>
-                  </FieldLabel>
-                  <Input
-                    id="wh-desc"
-                    placeholder="e.g. Slack alerts"
-                    value={formDesc}
-                    onChange={(e) => setFormDesc(e.target.value)}
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel>Events to subscribe</FieldLabel>
-                  <div className="space-y-2">
-                    {ALL_EVENTS.map((ev) => (
-                      <label
-                        key={ev.id}
-                        className="has-checked:border-primary has-checked:bg-primary/5 dark:has-checked:bg-primary/10 flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors"
-                      >
-                        <input
-                          type="checkbox"
-                          className="accent-primary mt-0.5"
-                          checked={formEvents.includes(ev.id)}
-                          onChange={() => toggleEvent(ev.id)}
-                        />
-                        <div>
-                          <p className="text-sm font-medium">{ev.label}</p>
-                          <p className="text-muted-foreground text-xs">
-                            {ev.description}
-                          </p>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                </Field>
-              </FieldGroup>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button size="sm" variant="ghost">
-                    Cancel
-                  </Button>
-                </DialogClose>
-                <Button
-                  size="sm"
-                  disabled={
-                    !formUrl ||
-                    formEvents.length === 0 ||
-                    createMutation.isPending
-                  }
-                  onClick={() =>
-                    createMutation.mutate({
-                      url: formUrl,
-                      description: formDesc || undefined,
-                      events: formEvents,
-                    })
-                  }
-                >
-                  {createMutation.isPending ? (
-                    <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                  ) : null}
-                  Create webhook
+      {/* Endpoints Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Webhook className="h-4 w-4" />
+            Endpoints
+          </CardTitle>
+          <CardDescription>
+            Receive signed POST notifications when security events occur in your
+            org.
+          </CardDescription>
+          <CardAction>
+            <Dialog
+              open={showForm}
+              onOpenChange={(open) => {
+                setShowForm(open);
+                if (!open) {
+                  setFormUrl("");
+                  setFormDesc("");
+                }
+              }}
+            >
+              <DialogTrigger asChild>
+                <Button size="sm" variant="outline" className="gap-1.5">
+                  <Plus className="h-3.5 w-3.5" />
+                  Add webhook
                 </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        {/* Loading */}
-        {isPending && (
-          <div className="flex items-center justify-center py-12">
-            <RefreshCw className="h-5 w-5 animate-spin opacity-30" />
-          </div>
-        )}
-
-        {/* Empty state */}
-        {!isPending && (!webhooks || webhooks.length === 0) && (
-          <div className="text-muted-foreground flex flex-col items-center gap-2 py-12">
-            <Webhook className="h-8 w-8 opacity-20" />
-            <p className="text-sm">No webhooks configured yet.</p>
-            <p className="text-xs">
-              Add one to receive real-time event notifications on your server.
-            </p>
-          </div>
-        )}
-
-        {/* Webhook list */}
-        {webhooks && webhooks.length > 0 && (
-          <div className="space-y-3">
-            {webhooks.map((wh) => (
-              <Card key={wh.id} className={!wh.enabled ? "opacity-60" : ""}>
-                <CardHeader>
-                  <CardTitle className="flex flex-wrap items-center gap-2 font-mono text-sm">
-                    {wh.url}
-                    {!wh.enabled && <Badge variant="secondary">Disabled</Badge>}
-                  </CardTitle>
-                  <CardAction>
-                    <div className="flex gap-1">
-                      {/* Test */}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-8 gap-1.5 px-2 text-xs"
-                        disabled={testMutation.isPending || !wh.enabled}
-                        title="Send test event"
-                        onClick={() => {
-                          setTestedId(wh.id);
-                          testMutation.mutate(
-                            { webhookId: wh.id },
-                            {
-                              onSettled: () =>
-                                setTimeout(() => setTestedId(null), 2000),
-                            },
-                          );
-                        }}
-                      >
-                        {testedId === wh.id ? (
-                          <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
-                        ) : (
-                          <Zap className="h-3.5 w-3.5" />
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>New webhook</DialogTitle>
+                  <DialogDescription>
+                    Add an HTTPS endpoint to receive signed event payloads.
+                  </DialogDescription>
+                </DialogHeader>
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel htmlFor="wh-url">Endpoint URL</FieldLabel>
+                    <Input
+                      id="wh-url"
+                      placeholder="https://your-server.example.com/webhooks/aibp"
+                      value={formUrl}
+                      onChange={(e) => setFormUrl(e.target.value)}
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="wh-desc">
+                      Description{" "}
+                      <span className="text-muted-foreground font-normal">
+                        (optional)
+                      </span>
+                    </FieldLabel>
+                    <Input
+                      id="wh-desc"
+                      placeholder="e.g. Slack alerts"
+                      value={formDesc}
+                      onChange={(e) => setFormDesc(e.target.value)}
+                    />
+                  </Field>
+                </FieldGroup>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button size="sm" variant="ghost">
+                      Cancel
+                    </Button>
+                  </DialogClose>
+                  <Button
+                    size="sm"
+                    disabled={!formUrl || createMutation.isPending}
+                    onClick={() =>
+                      createMutation.mutate({
+                        url: formUrl,
+                        description: formDesc || undefined,
+                        events: ["threat.detected"],
+                      })
+                    }
+                  >
+                    {createMutation.isPending ? (
+                      <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                    ) : null}
+                    Create webhook
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </CardAction>
+        </CardHeader>
+        <CardContent>
+          {isPending && (
+            <div className="flex items-center justify-center py-10">
+              <RefreshCw className="h-5 w-5 animate-spin opacity-30" />
+            </div>
+          )}
+          {!isPending && (!webhooks || webhooks.length === 0) && (
+            <div className="text-muted-foreground flex flex-col items-center gap-2 py-10">
+              <Webhook className="h-8 w-8 opacity-20" />
+              <p className="text-sm">No webhooks configured yet.</p>
+              <p className="text-xs">
+                Add one to start receiving real-time event notifications.
+              </p>
+            </div>
+          )}
+          {webhooks && webhooks.length > 0 && (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Endpoint</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="w-[148px]" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {webhooks.map((wh) => (
+                  <TableRow
+                    key={wh.id}
+                    className={!wh.enabled ? "opacity-50" : ""}
+                  >
+                    <TableCell>
+                      <div className="space-y-0.5">
+                        <p className="font-mono text-xs">{wh.url}</p>
+                        {wh.description && (
+                          <p className="text-muted-foreground text-xs">
+                            {wh.description}
+                          </p>
                         )}
-                        Test
-                      </Button>
-                      {/* Toggle enable */}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-8 px-2 text-xs"
-                        disabled={toggleMutation.isPending}
-                        onClick={() =>
-                          toggleMutation.mutate({
-                            webhookId: wh.id,
-                            enabled: !wh.enabled,
-                          })
-                        }
-                      >
-                        {wh.enabled ? "Disable" : "Enable"}
-                      </Button>
-                      {/* Delete with confirmation */}
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-muted-foreground hover:text-destructive h-8 w-8 p-0"
-                            title="Delete webhook"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Delete webhook?</DialogTitle>
-                            <DialogDescription>
-                              This will permanently remove the endpoint{" "}
-                              <span className="text-foreground font-mono">
-                                {wh.url}
-                              </span>
-                              . Any deliveries in flight may still arrive.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <DialogFooter>
-                            <DialogClose asChild>
-                              <Button variant="outline">Cancel</Button>
-                            </DialogClose>
-                            <DialogClose asChild>
-                              <Button
-                                variant="destructive"
-                                disabled={deleteMutation.isPending}
-                                onClick={() =>
-                                  deleteMutation.mutate({ webhookId: wh.id })
-                                }
-                              >
-                                {deleteMutation.isPending ? (
-                                  <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                                ) : null}
-                                Delete
-                              </Button>
-                            </DialogClose>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  </CardAction>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {wh.description && (
-                    <p className="text-muted-foreground text-xs">
-                      {wh.description}
-                    </p>
-                  )}
-                  <div className="flex flex-wrap gap-1">
-                    {wh.events.map((ev) => (
-                      <Badge
-                        key={ev}
-                        variant="outline"
-                        className="font-mono text-[10px]"
-                      >
-                        {ev}
+                        <p className="text-muted-foreground font-mono text-[10px]">
+                          {wh.secretMasked}
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={wh.enabled ? "default" : "secondary"}>
+                        {wh.enabled ? "Active" : "Disabled"}
                       </Badge>
-                    ))}
-                  </div>
-                  <p className="text-muted-foreground font-mono text-[11px]">
-                    {wh.secretMasked}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </section>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-end gap-1">
+                        {/* Test */}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 gap-1 px-2 text-xs"
+                          disabled={testMutation.isPending || !wh.enabled}
+                          title="Send test event"
+                          onClick={() => {
+                            setTestedId(wh.id);
+                            testMutation.mutate(
+                              { webhookId: wh.id },
+                              {
+                                onSettled: () =>
+                                  setTimeout(() => setTestedId(null), 2000),
+                              },
+                            );
+                          }}
+                        >
+                          {testedId === wh.id ? (
+                            <CheckCircle className="h-3 w-3 text-emerald-500" />
+                          ) : (
+                            <Zap className="h-3 w-3" />
+                          )}
+                          Test
+                        </Button>
+                        {/* Toggle */}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-xs"
+                          disabled={toggleMutation.isPending}
+                          onClick={() =>
+                            toggleMutation.mutate({
+                              webhookId: wh.id,
+                              enabled: !wh.enabled,
+                            })
+                          }
+                        >
+                          {wh.enabled ? "Disable" : "Enable"}
+                        </Button>
+                        {/* Delete */}
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-muted-foreground hover:text-destructive h-7 w-7 p-0"
+                              title="Delete webhook"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Delete webhook?</DialogTitle>
+                              <DialogDescription>
+                                This will permanently remove{" "}
+                                <span className="text-foreground font-mono">
+                                  {wh.url}
+                                </span>
+                                . Any deliveries in flight may still arrive.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
+                              <DialogClose asChild>
+                                <Button variant="outline">Cancel</Button>
+                              </DialogClose>
+                              <DialogClose asChild>
+                                <Button
+                                  variant="destructive"
+                                  disabled={deleteMutation.isPending}
+                                  onClick={() =>
+                                    deleteMutation.mutate({ webhookId: wh.id })
+                                  }
+                                >
+                                  {deleteMutation.isPending ? (
+                                    <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                  ) : null}
+                                  Delete
+                                </Button>
+                              </DialogClose>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
-      {/* Signing guide */}
-      <section className="space-y-3">
-        <h2 className="flex items-center gap-2 text-sm font-semibold">
-          <Settings className="h-4 w-4" />
-          Verifying signatures
-        </h2>
-        <Card>
-          <CardContent className="space-y-3">
-            <p className="text-muted-foreground text-xs leading-relaxed">
-              Every delivery includes an{" "}
-              <code className="bg-muted rounded px-1 py-0.5">
-                X-AIBP-Signature
-              </code>{" "}
-              header. Verify it with HMAC-SHA256 to confirm the payload came
-              from us and wasn't tampered with.
-            </p>
-            <pre className="bg-muted text-foreground overflow-x-auto rounded p-3 text-[11px] leading-relaxed">{`// Node.js / Express example
+      {/* Event payloads Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Braces className="h-4 w-4" />
+            Event payloads
+          </CardTitle>
+          <CardDescription>
+            Your endpoint receives a POST with this JSON body whenever a flagged
+            extension is detected on a device in your org.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <pre className="bg-muted overflow-x-auto rounded p-3 font-mono text-[11px] leading-relaxed">
+            {THREAT_PAYLOAD_EXAMPLE}
+          </pre>
+        </CardContent>
+      </Card>
+
+      {/* Verifying signatures Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Verifying signatures
+          </CardTitle>
+          <CardDescription>
+            Every delivery includes an{" "}
+            <code className="bg-muted rounded px-1 py-0.5 text-xs">
+              X-AIBP-Signature
+            </code>{" "}
+            header. Verify it with HMAC-SHA256 to confirm the payload came from
+            us and wasn't tampered with.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <pre className="bg-muted overflow-x-auto rounded p-3 font-mono text-[11px] leading-relaxed">{`// Node.js / Express example
 import { createHmac, timingSafeEqual } from "crypto";
 
 function verifySignature(secret, rawBody, header) {
@@ -1588,9 +2133,8 @@ function verifySignature(secret, rawBody, header) {
     Buffer.from(expected),
   );
 }`}</pre>
-          </CardContent>
-        </Card>
-      </section>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { and, count, countDistinct, desc, eq, isNull, or } from "drizzle-orm";
+import { and, asc, count, countDistinct, desc, eq, gte, ilike, isNull, lt, or, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import type { db as DbType } from "@amibeingpwned/db/client";
@@ -336,10 +336,63 @@ export const fleetRouter = createTRPCRouter({
    * Paginated deduplicated extension list across all org devices.
    */
   extensions: managerProcedure
-    .input(PaginationSchema)
+    .input(
+      z.object({
+        page: z.number().int().min(1).default(1),
+        limit: z.number().int().min(1).max(100).default(25),
+        search: z.string().optional(),
+        sortBy: z.enum(["name", "riskScore", "deviceCount"]).default("deviceCount"),
+        sortDir: z.enum(["asc", "desc"]).default("desc"),
+        isFlagged: z.boolean().optional(),
+        riskLevel: z.enum(["low", "medium", "high"]).optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const orgId = ctx.org.id;
       const offset = (input.page - 1) * input.limit;
+
+      const whereClause = and(
+        eqi(Device.orgId, orgId),
+        isNull(Device.revokedAt),
+        isNull(UserExtension.removedAt),
+        input.search
+          ? or(
+              ilike(Extension.name, `%${input.search}%`),
+              ilike(UserExtension.chromeExtensionId, `%${input.search}%`),
+            )
+          : undefined,
+        input.isFlagged !== undefined
+          ? eq(Extension.isFlagged, input.isFlagged)
+          : undefined,
+        input.riskLevel === "low"
+          ? lt(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 40)
+          : input.riskLevel === "medium"
+            ? and(
+                gte(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 40),
+                lt(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 70),
+              )
+            : input.riskLevel === "high"
+              ? gte(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 70)
+              : undefined,
+      );
+
+      const orderByExpr = (() => {
+        const d = input.sortDir;
+        switch (input.sortBy) {
+          case "name":
+            return d === "asc"
+              ? sql`${Extension.name} ASC NULLS LAST`
+              : sql`${Extension.name} DESC NULLS LAST`;
+          case "riskScore":
+            return d === "asc"
+              ? sql`${Extension.riskScore} ASC NULLS LAST`
+              : sql`${Extension.riskScore} DESC NULLS LAST`;
+          default:
+            return d === "asc"
+              ? asc(countDistinct(UserExtension.deviceId))
+              : desc(countDistinct(UserExtension.deviceId));
+        }
+      })();
 
       const [rows, totalResult] = await Promise.all([
         ctx.db
@@ -349,24 +402,19 @@ export const fleetRouter = createTRPCRouter({
             riskScore: Extension.riskScore,
             isFlagged: Extension.isFlagged,
             deviceCount: countDistinct(UserExtension.deviceId),
+            enabledCount: sql<number>`CAST(COUNT(DISTINCT CASE WHEN ${UserExtension.enabled} THEN ${UserExtension.deviceId} END) AS int)`,
           })
           .from(UserExtension)
           .innerJoin(Device, eqi(UserExtension.deviceId, Device.id))
           .leftJoin(Extension, eq(UserExtension.chromeExtensionId, Extension.chromeExtensionId))
-          .where(
-            and(
-              eqi(Device.orgId, orgId),
-              isNull(Device.revokedAt),
-              isNull(UserExtension.removedAt),
-            ),
-          )
+          .where(whereClause)
           .groupBy(
             UserExtension.chromeExtensionId,
             Extension.name,
             Extension.riskScore,
             Extension.isFlagged,
           )
-          .orderBy(desc(countDistinct(UserExtension.deviceId)))
+          .orderBy(orderByExpr)
           .limit(input.limit)
           .offset(offset),
 
@@ -374,13 +422,8 @@ export const fleetRouter = createTRPCRouter({
           .select({ total: countDistinct(UserExtension.chromeExtensionId) })
           .from(UserExtension)
           .innerJoin(Device, eqi(UserExtension.deviceId, Device.id))
-          .where(
-            and(
-              eqi(Device.orgId, orgId),
-              isNull(Device.revokedAt),
-              isNull(UserExtension.removedAt),
-            ),
-          ),
+          .leftJoin(Extension, eq(UserExtension.chromeExtensionId, Extension.chromeExtensionId))
+          .where(whereClause),
       ]);
 
       return {

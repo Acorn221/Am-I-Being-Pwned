@@ -144,12 +144,13 @@ export default defineBackground(() => {
    * On failure: schedules a retry alarm (fires every 30 min).
    *   B2C failure is usually "user not logged in yet", harmless.
    */
-  async function tryRegisterDevice() {
+  async function tryRegisterDevice({ syncAfter = false } = {}) {
     try {
       const { deviceToken: token } = await registerDevice();
       await storeToken(token);
       await chrome.alarms.clear("registration-retry");
       console.log("[AIBP] Device registered");
+      if (syncAfter) await syncWithApi();
     } catch (err) {
       // For B2C, UNAUTHORIZED just means the user hasn't logged in yet.
       // Don't log it as an error - schedule a quiet retry.
@@ -300,7 +301,7 @@ export default defineBackground(() => {
 
     if (details.reason === "install") {
       void scanAllExtensions();
-      void tryRegisterDevice();
+      void tryRegisterDevice({ syncAfter: true });
     }
   });
 
@@ -411,6 +412,7 @@ export default defineBackground(() => {
             await storeInviteToken(request.token);
             const result = await registerDevice();
             await storeToken(result.deviceToken);
+            void syncWithApi();
             if (!result.webSessionToken) {
               sendResponse({
                 type: "ERROR",

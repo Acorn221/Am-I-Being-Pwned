@@ -1,4 +1,4 @@
-import { count, desc, eq, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, ilike, lt, or, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import { Extension, Organization, WorkspaceApp, WorkspaceDevice, eqi } from "@amibeingpwned/db";
@@ -81,10 +81,63 @@ export const workspaceRouter = createTRPCRouter({
    * last sync time and decide whether to auto-trigger a sync.
    */
   apps: managerProcedure
-    .input(PaginationSchema)
+    .input(
+      z.object({
+        page: z.number().int().min(1).default(1),
+        limit: z.number().int().min(1).max(100).default(25),
+        search: z.string().optional(),
+        sortBy: z.enum(["name", "riskScore", "deviceCount"]).default("deviceCount"),
+        sortDir: z.enum(["asc", "desc"]).default("desc"),
+        isFlagged: z.boolean().optional(),
+        riskLevel: z.enum(["low", "medium", "high"]).optional(),
+        installType: z.string().optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const orgId = ctx.org.id;
       const offset = (input.page - 1) * input.limit;
+
+      const whereClause = and(
+        eqi(WorkspaceApp.orgId, orgId),
+        input.search
+          ? or(
+              ilike(WorkspaceApp.displayName, `%${input.search}%`),
+              ilike(WorkspaceApp.chromeExtensionId, `%${input.search}%`),
+            )
+          : undefined,
+        input.isFlagged !== undefined
+          ? eq(Extension.isFlagged, input.isFlagged)
+          : undefined,
+        input.riskLevel === "low"
+          ? lt(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 40)
+          : input.riskLevel === "medium"
+            ? and(
+                gte(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 40),
+                lt(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 70),
+              )
+            : input.riskLevel === "high"
+              ? gte(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 70)
+              : undefined,
+        input.installType ? eq(WorkspaceApp.installType, input.installType) : undefined,
+      );
+
+      const orderByExpr = (() => {
+        const d = input.sortDir;
+        switch (input.sortBy) {
+          case "name":
+            return d === "asc"
+              ? sql`${WorkspaceApp.displayName} ASC NULLS LAST`
+              : sql`${WorkspaceApp.displayName} DESC NULLS LAST`;
+          case "riskScore":
+            return d === "asc"
+              ? sql`${Extension.riskScore} ASC NULLS LAST`
+              : sql`${Extension.riskScore} DESC NULLS LAST`;
+          default:
+            return d === "asc"
+              ? asc(WorkspaceApp.browserDeviceCount)
+              : desc(WorkspaceApp.browserDeviceCount);
+        }
+      })();
 
       const [rows, totalResult, orgResult] = await Promise.all([
         ctx.db
@@ -104,19 +157,19 @@ export const workspaceRouter = createTRPCRouter({
             Extension,
             eq(WorkspaceApp.chromeExtensionId, Extension.chromeExtensionId),
           )
-          .where(eqi(WorkspaceApp.orgId, orgId))
-          .orderBy(
-            desc(sql`COALESCE(${Extension.isFlagged}, false)`),
-            desc(sql`COALESCE(${Extension.riskScore}, 0)`),
-            desc(WorkspaceApp.browserDeviceCount),
-          )
+          .where(whereClause)
+          .orderBy(orderByExpr)
           .limit(input.limit)
           .offset(offset),
 
         ctx.db
           .select({ total: count() })
           .from(WorkspaceApp)
-          .where(eqi(WorkspaceApp.orgId, orgId)),
+          .leftJoin(
+            Extension,
+            eq(WorkspaceApp.chromeExtensionId, Extension.chromeExtensionId),
+          )
+          .where(whereClause),
 
         ctx.db
           .select({ lastWorkspaceSyncAt: Organization.lastWorkspaceSyncAt })
