@@ -1,4 +1,4 @@
-import { and, asc, count, countDistinct, desc, eq, gte, ilike, isNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, count, countDistinct, desc, eq, gte, ilike, isNull, or, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import type { db as DbType } from "@amibeingpwned/db/client";
@@ -286,19 +286,59 @@ export const fleetRouter = createTRPCRouter({
    * Paginated list of all devices belonging to the manager's org.
    */
   devices: managerProcedure
-    .input(PaginationSchema)
+    .input(
+      z.object({
+        page: z.number().int().min(1).default(1),
+        limit: z.number().int().min(1).max(100).default(25),
+        search: z.string().optional(),
+        sortBy: z.enum(["extensionCount", "flaggedCount", "lastSeenAt"]).default("lastSeenAt"),
+        sortDir: z.enum(["asc", "desc"]).default("desc"),
+        platform: z.enum(["chrome", "edge"]).optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const orgId = ctx.org.id;
       const offset = (input.page - 1) * input.limit;
+
+      const whereClause = and(
+        eqi(Device.orgId, orgId),
+        isNull(Device.revokedAt),
+        input.search
+          ? or(
+              ilike(Device.id, `%${input.search}%`),
+              ilike(Device.identityEmail, `%${input.search}%`),
+            )
+          : undefined,
+        input.platform ? eq(Device.platform, input.platform) : undefined,
+      );
+
+      const extCount = count(UserExtension.chromeExtensionId);
+      const flaggedCount = sql<number>`CAST(COUNT(DISTINCT CASE WHEN ${Extension.isFlagged} THEN ${UserExtension.chromeExtensionId} END) AS int)`;
+
+      const orderByExpr = (() => {
+        switch (input.sortBy) {
+          case "extensionCount":
+            return input.sortDir === "asc" ? asc(extCount) : desc(extCount);
+          case "flaggedCount":
+            return input.sortDir === "asc"
+              ? sql`CAST(COUNT(DISTINCT CASE WHEN ${Extension.isFlagged} THEN ${UserExtension.chromeExtensionId} END) AS int) ASC`
+              : sql`CAST(COUNT(DISTINCT CASE WHEN ${Extension.isFlagged} THEN ${UserExtension.chromeExtensionId} END) AS int) DESC`;
+          default:
+            return input.sortDir === "asc" ? asc(Device.lastSeenAt) : desc(Device.lastSeenAt);
+        }
+      })();
 
       const [rows, totalResult] = await Promise.all([
         ctx.db
           .select({
             id: Device.id,
             platform: Device.platform,
+            os: Device.os,
+            arch: Device.arch,
+            identityEmail: Device.identityEmail,
             lastSeenAt: Device.lastSeenAt,
-            extensionCount: count(UserExtension.chromeExtensionId),
-            flaggedExtensionCount: countDistinct(UserExtension.chromeExtensionId),
+            extensionCount: extCount,
+            flaggedExtensionCount: flaggedCount,
           })
           .from(Device)
           .leftJoin(
@@ -307,21 +347,18 @@ export const fleetRouter = createTRPCRouter({
           )
           .leftJoin(
             Extension,
-            and(
-              eq(UserExtension.chromeExtensionId, Extension.chromeExtensionId),
-              eq(Extension.isFlagged, true),
-            ),
+            eq(UserExtension.chromeExtensionId, Extension.chromeExtensionId),
           )
-          .where(and(eqi(Device.orgId, orgId), isNull(Device.revokedAt)))
+          .where(whereClause)
           .groupBy(Device.id)
-          .orderBy(desc(Device.lastSeenAt))
+          .orderBy(orderByExpr)
           .limit(input.limit)
           .offset(offset),
 
         ctx.db
           .select({ total: count() })
           .from(Device)
-          .where(and(eqi(Device.orgId, orgId), isNull(Device.revokedAt))),
+          .where(whereClause),
       ]);
 
       return {
@@ -365,12 +402,9 @@ export const fleetRouter = createTRPCRouter({
           ? eq(Extension.isFlagged, input.isFlagged)
           : undefined,
         input.riskLevel === "low"
-          ? lt(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 40)
+          ? gte(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 1)
           : input.riskLevel === "medium"
-            ? and(
-                gte(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 40),
-                lt(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 70),
-              )
+            ? gte(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 40)
             : input.riskLevel === "high"
               ? gte(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 70)
               : undefined,

@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, gte, ilike, lt, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, ilike, or, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import { Extension, Organization, WorkspaceApp, WorkspaceDevice, eqi } from "@amibeingpwned/db";
@@ -39,10 +39,40 @@ export const workspaceRouter = createTRPCRouter({
    * last workspace sync via findInstalledAppDevices.
    */
   devices: managerProcedure
-    .input(PaginationSchema)
+    .input(
+      z.object({
+        page: z.number().int().min(1).default(1),
+        limit: z.number().int().min(1).max(100).default(25),
+        search: z.string().optional(),
+        sortBy: z.enum(["machineName", "extensionCount", "lastSyncedAt"]).default("extensionCount"),
+        sortDir: z.enum(["asc", "desc"]).default("desc"),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const orgId = ctx.org.id;
       const offset = (input.page - 1) * input.limit;
+
+      const whereClause = and(
+        eqi(WorkspaceDevice.orgId, orgId),
+        input.search ? ilike(WorkspaceDevice.machineName, `%${input.search}%`) : undefined,
+      );
+
+      const orderByExpr = (() => {
+        switch (input.sortBy) {
+          case "machineName":
+            return input.sortDir === "asc"
+              ? sql`${WorkspaceDevice.machineName} ASC NULLS LAST`
+              : sql`${WorkspaceDevice.machineName} DESC NULLS LAST`;
+          case "lastSyncedAt":
+            return input.sortDir === "asc"
+              ? asc(WorkspaceDevice.lastSyncedAt)
+              : desc(WorkspaceDevice.lastSyncedAt);
+          default:
+            return input.sortDir === "asc"
+              ? asc(WorkspaceDevice.extensionCount)
+              : desc(WorkspaceDevice.extensionCount);
+        }
+      })();
 
       const [rows, totalResult] = await Promise.all([
         ctx.db
@@ -53,15 +83,15 @@ export const workspaceRouter = createTRPCRouter({
             lastSyncedAt: WorkspaceDevice.lastSyncedAt,
           })
           .from(WorkspaceDevice)
-          .where(eqi(WorkspaceDevice.orgId, orgId))
-          .orderBy(desc(WorkspaceDevice.extensionCount))
+          .where(whereClause)
+          .orderBy(orderByExpr)
           .limit(input.limit)
           .offset(offset),
 
         ctx.db
           .select({ total: count() })
           .from(WorkspaceDevice)
-          .where(eqi(WorkspaceDevice.orgId, orgId)),
+          .where(whereClause),
       ]);
 
       return {
@@ -109,12 +139,9 @@ export const workspaceRouter = createTRPCRouter({
           ? eq(Extension.isFlagged, input.isFlagged)
           : undefined,
         input.riskLevel === "low"
-          ? lt(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 40)
+          ? gte(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 1)
           : input.riskLevel === "medium"
-            ? and(
-                gte(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 40),
-                lt(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 70),
-              )
+            ? gte(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 40)
             : input.riskLevel === "high"
               ? gte(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 70)
               : undefined,

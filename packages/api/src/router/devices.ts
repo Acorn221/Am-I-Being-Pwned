@@ -81,6 +81,9 @@ const RegisterInputSchema = z.object({
   deviceFingerprint: z.string().min(1),
   extensionVersion: z.string(),
   platform: z.enum(["chrome", "edge"]).default("chrome"),
+  os: z.string().max(32).optional(),
+  arch: z.string().max(32).optional(),
+  identityEmail: z.string().email().max(320).optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -165,6 +168,9 @@ export const devicesRouter = createTRPCRouter({
             tokenExpiresAt: expiresAt,
             extensionVersion: input.extensionVersion,
             platform: input.platform,
+            os: input.os,
+            arch: input.arch,
+            identityEmail: input.identityEmail,
             lastSeenAt: new Date(),
           })
           .where(eq(Device.id, existing.id));
@@ -192,6 +198,9 @@ export const devicesRouter = createTRPCRouter({
         deviceFingerprint: input.deviceFingerprint,
         extensionVersion: input.extensionVersion,
         platform: input.platform,
+        os: input.os,
+        arch: input.arch,
+        identityEmail: input.identityEmail,
       });
 
       return { deviceToken: raw };
@@ -227,6 +236,9 @@ export const devicesRouter = createTRPCRouter({
             tokenExpiresAt: expiresAt,
             extensionVersion: input.extensionVersion,
             platform: input.platform,
+            os: input.os,
+            arch: input.arch,
+            identityEmail: input.identityEmail,
             lastSeenAt: new Date(),
           })
           .where(eq(Device.id, existing.id));
@@ -254,6 +266,9 @@ export const devicesRouter = createTRPCRouter({
         deviceFingerprint: input.deviceFingerprint,
         extensionVersion: input.extensionVersion,
         platform: input.platform,
+        os: input.os,
+        arch: input.arch,
+        identityEmail: input.identityEmail,
       });
 
       return { deviceToken: raw };
@@ -273,6 +288,9 @@ export const devicesRouter = createTRPCRouter({
         deviceFingerprint: z.string().min(1).max(256),
         extensionVersion: z.string().max(32),
         platform: z.enum(["chrome", "edge"]).default("chrome"),
+        os: z.string().max(32).optional(),
+        arch: z.string().max(32).optional(),
+        identityEmail: z.string().email().max(320).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -339,6 +357,9 @@ export const devicesRouter = createTRPCRouter({
             tokenExpiresAt: expiresAt,
             extensionVersion: input.extensionVersion,
             platform: input.platform,
+            os: input.os,
+            arch: input.arch,
+            identityEmail: input.identityEmail,
             lastSeenAt: new Date(),
           })
           .where(eq(Device.id, existing.id));
@@ -367,6 +388,9 @@ export const devicesRouter = createTRPCRouter({
             deviceFingerprint: input.deviceFingerprint,
             extensionVersion: input.extensionVersion,
             platform: input.platform,
+            os: input.os,
+            arch: input.arch,
+            identityEmail: input.identityEmail,
           })
           .returning({ id: Device.id });
 

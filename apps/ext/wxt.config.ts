@@ -11,7 +11,7 @@ export default defineConfig({
     action: {
       default_popup: "popup/index.html",
     },
-    permissions: ["alarms", "management", "notifications", "storage"],
+    permissions: ["alarms", "identity", "management", "notifications", "storage"],
     host_permissions: [
       "https://amibeingpwned.com/*",
       ...(mode === "development" ? ["http://localhost/*", "https://deathmail-mac.j4a.uk/*"] : []),

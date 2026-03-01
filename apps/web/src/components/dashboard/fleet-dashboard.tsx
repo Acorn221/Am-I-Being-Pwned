@@ -1,10 +1,17 @@
+import type {
+  Column,
+  ColumnDef,
+  Row,
+  SortingState,
+} from "@tanstack/react-table";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  type Column,
-  type ColumnDef,
-  type Row,
-  type SortingState,
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import {
   flexRender,
   getCoreRowModel,
   useReactTable,
@@ -42,13 +49,6 @@ import {
 import { Badge } from "@amibeingpwned/ui/badge";
 import { Button } from "@amibeingpwned/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from "@amibeingpwned/ui/dropdown-menu";
-import {
   Card,
   CardAction,
   CardContent,
@@ -66,6 +66,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@amibeingpwned/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@amibeingpwned/ui/dropdown-menu";
 import { Field, FieldGroup, FieldLabel } from "@amibeingpwned/ui/field";
 import { Input } from "@amibeingpwned/ui/input";
 import {
@@ -728,6 +735,644 @@ function WorkspaceSetupCard({
   );
 }
 
+// ─── Devices data tables ──────────────────────────────────────────────────────
+
+type FleetDeviceSortBy = "extensionCount" | "flaggedCount" | "lastSeenAt";
+type WorkspaceSortBy = "machineName" | "extensionCount" | "lastSyncedAt";
+
+interface DeviceRow {
+  id: string;
+  displayName: string | null;
+  platform: string | null;
+  os: string | null;
+  arch: string | null;
+  identityEmail: string | null;
+  extensionCount: number;
+  flaggedExtensionCount: number | null;
+  lastActivityAt: Date;
+}
+
+function DeviceSortableHeader({
+  column,
+  label,
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  column: Column<DeviceRow, any>;
+  label: string;
+}) {
+  const sorted = column.getIsSorted();
+  return (
+    <button
+      className="hover:text-foreground flex items-center gap-1 text-xs font-medium tracking-wide uppercase"
+      onClick={() => column.toggleSorting(sorted === "asc")}
+    >
+      {label}
+      {sorted === "asc" ? (
+        <ArrowUp className="h-3 w-3" />
+      ) : sorted === "desc" ? (
+        <ArrowDown className="h-3 w-3" />
+      ) : (
+        <ArrowUpDown className="h-3 w-3 opacity-40" />
+      )}
+    </button>
+  );
+}
+
+const FLEET_DEV_COL_SORT: Record<string, FleetDeviceSortBy> = {
+  extensionCount: "extensionCount",
+  flaggedExtensionCount: "flaggedCount",
+  lastActivityAt: "lastSeenAt",
+};
+
+const WS_DEV_COL_SORT: Record<string, WorkspaceSortBy> = {
+  displayName: "machineName",
+  extensionCount: "extensionCount",
+  lastActivityAt: "lastSyncedAt",
+};
+
+function FleetDevicesDataTable() {
+  const trpc = useTRPC();
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [sortBy, setSortBy] = useState<FleetDeviceSortBy>("lastSeenAt");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [platformFilter, setPlatformFilter] = useState("");
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [platformFilter]);
+
+  const { data, isFetching } = useQuery({
+    ...trpc.fleet.devices.queryOptions({
+      page,
+      limit: pageSize,
+      search: debouncedSearch || undefined,
+      sortBy,
+      sortDir,
+      platform: platformFilter
+        ? (platformFilter as "chrome" | "edge")
+        : undefined,
+    }),
+  });
+
+  const total = data?.total ?? 0;
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+
+  const rows = useMemo<DeviceRow[]>(
+    () =>
+      (data?.rows ?? []).map((d) => {
+        const displayName =
+          d.identityEmail ??
+          (d.os && d.arch ? `${d.os} ${d.arch}` : d.os ?? d.arch ?? null);
+        return {
+          id: d.id,
+          displayName,
+          platform: d.platform,
+          os: d.os ?? null,
+          arch: d.arch ?? null,
+          identityEmail: d.identityEmail ?? null,
+          extensionCount: d.extensionCount,
+          flaggedExtensionCount: d.flaggedExtensionCount,
+          lastActivityAt: d.lastSeenAt,
+        };
+      }),
+    [data],
+  );
+
+  const colId =
+    sortBy === "lastSeenAt"
+      ? "lastActivityAt"
+      : sortBy === "flaggedCount"
+        ? "flaggedExtensionCount"
+        : sortBy;
+  const sorting: SortingState = [{ id: colId, desc: sortDir === "desc" }];
+
+  const columns = useMemo<ColumnDef<DeviceRow>[]>(
+    () => [
+      {
+        accessorKey: "id",
+        header: "Device",
+        enableSorting: false,
+        cell: ({ row }) => {
+          const { displayName, id } = row.original;
+          return displayName ? (
+            <div className="flex flex-col gap-0.5">
+              <span className="text-sm font-medium">{displayName}</span>
+              <span className="text-muted-foreground font-mono text-xs">
+                {id.slice(0, 12)}…
+              </span>
+            </div>
+          ) : (
+            <span className="text-muted-foreground font-mono text-xs">
+              {id.slice(0, 20)}…
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: "platform",
+        header: "Platform",
+        enableSorting: false,
+        cell: ({ row }) => (
+          <Badge variant="outline" className="text-xs capitalize">
+            {row.original.platform}
+          </Badge>
+        ),
+      },
+      {
+        accessorKey: "extensionCount",
+        header: ({ column }) => (
+          <div className="text-right">
+            <DeviceSortableHeader column={column} label="Extensions" />
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div className="text-right text-sm tabular-nums">
+            {row.original.extensionCount}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "flaggedExtensionCount",
+        header: ({ column }) => (
+          <div className="text-right">
+            <DeviceSortableHeader column={column} label="Flagged" />
+          </div>
+        ),
+        cell: ({ row }) => {
+          const flagged = row.original.flaggedExtensionCount ?? 0;
+          return (
+            <div className="text-right text-sm tabular-nums">
+              {flagged > 0 ? (
+                <span className="text-destructive font-medium">{flagged}</span>
+              ) : (
+                <span className="text-muted-foreground">0</span>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "lastActivityAt",
+        header: ({ column }) => (
+          <div className="text-right">
+            <DeviceSortableHeader column={column} label="Last seen" />
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div className="text-muted-foreground text-right text-xs">
+            {timeAgo(row.original.lastActivityAt)}
+          </div>
+        ),
+      },
+    ],
+    [],
+  );
+
+  const table = useReactTable({
+    data: rows,
+    columns,
+    state: { sorting, pagination: { pageIndex: page - 1, pageSize } },
+    manualSorting: true,
+    manualPagination: true,
+    pageCount,
+    onSortingChange: (updater) => {
+      const next = typeof updater === "function" ? updater(sorting) : updater;
+      const first = next[0];
+      if (first) {
+        setSortBy(FLEET_DEV_COL_SORT[first.id] ?? "lastSeenAt");
+        setSortDir(first.desc ? "desc" : "asc");
+        setPage(1);
+      }
+    },
+    onPaginationChange: (updater) => {
+      const next =
+        typeof updater === "function"
+          ? updater({ pageIndex: page - 1, pageSize })
+          : updater;
+      setPage(next.pageIndex + 1);
+      setPageSize(next.pageSize);
+    },
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const end = Math.min(page * pageSize, total);
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search className="text-muted-foreground absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2" />
+          <Input
+            className="pl-8 focus-visible:ring-0"
+            placeholder="Search by device ID..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
+          {isFetching && (
+            <RefreshCw className="text-muted-foreground absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 animate-spin" />
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <select
+            value={platformFilter}
+            onChange={(e) => setPlatformFilter(e.target.value)}
+            className="border-input dark:bg-input/30 rounded-md border bg-transparent px-2 py-[7px] text-xs outline-none"
+          >
+            <option value="">All platforms</option>
+            <option value="chrome">Chrome</option>
+            <option value="edge">Edge</option>
+          </select>
+          {platformFilter && (
+            <button
+              onClick={() => setPlatformFilter("")}
+              className="border-input dark:bg-input/30 text-muted-foreground hover:text-foreground rounded-md border bg-transparent p-[7px] transition-colors"
+              title="Clear filters"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      <Card className="overflow-hidden py-0">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((hg) => (
+              <TableRow key={hg.id} className="hover:bg-transparent">
+                {hg.headers.map((header) => (
+                  <TableHead key={header.id} className="h-9 px-3">
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext(),
+                    )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="text-muted-foreground py-8 text-center text-sm"
+                >
+                  No devices found.
+                </TableCell>
+              </TableRow>
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  className={row.index % 2 === 1 ? "bg-muted/20" : ""}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} className="px-3">
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </Card>
+
+      {total > 0 && (
+        <div className="flex items-center justify-between pt-1">
+          <span className="text-muted-foreground text-xs">{`Showing ${start}-${end} of ${total}`}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground text-xs">Rows per page</span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1 px-2 text-xs"
+                >
+                  {pageSize} <ArrowDown className="h-3 w-3 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-16">
+                <DropdownMenuRadioGroup
+                  value={String(pageSize)}
+                  onValueChange={(v) => {
+                    setPageSize(Number(v));
+                    setPage(1);
+                  }}
+                >
+                  {[10, 25, 50].map((ps) => (
+                    <DropdownMenuRadioItem
+                      key={ps}
+                      value={String(ps)}
+                      className="text-xs"
+                    >
+                      {ps}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              className="h-7 w-7 p-0"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+            </Button>
+            <span className="text-muted-foreground text-xs tabular-nums">
+              {page} / {pageCount}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              className="h-7 w-7 p-0"
+            >
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function WorkspaceDevicesDataTable() {
+  const trpc = useTRPC();
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [sortBy, setSortBy] = useState<WorkspaceSortBy>("extensionCount");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  const { data, isFetching } = useQuery({
+    ...trpc.workspace.devices.queryOptions({
+      page,
+      limit: pageSize,
+      search: debouncedSearch || undefined,
+      sortBy,
+      sortDir,
+    }),
+  });
+
+  const total = data?.total ?? 0;
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+
+  const rows = useMemo<DeviceRow[]>(
+    () =>
+      (data?.rows ?? []).map((d) => ({
+        id: d.googleDeviceId,
+        displayName: d.machineName,
+        platform: null,
+        os: null,
+        arch: null,
+        identityEmail: null,
+        extensionCount: d.extensionCount,
+        flaggedExtensionCount: null,
+        lastActivityAt: d.lastSyncedAt,
+      })),
+    [data],
+  );
+
+  const wsColId =
+    sortBy === "machineName"
+      ? "displayName"
+      : sortBy === "lastSyncedAt"
+        ? "lastActivityAt"
+        : sortBy;
+  const sorting: SortingState = [{ id: wsColId, desc: sortDir === "desc" }];
+
+  const columns = useMemo<ColumnDef<DeviceRow>[]>(
+    () => [
+      {
+        accessorKey: "displayName",
+        header: ({ column }) => (
+          <DeviceSortableHeader column={column} label="Machine" />
+        ),
+        cell: ({ row }) =>
+          row.original.displayName ? (
+            <span className="text-sm font-medium">
+              {row.original.displayName}
+            </span>
+          ) : (
+            <span className="text-muted-foreground font-mono text-xs">
+              {row.original.id.slice(0, 20)}…
+            </span>
+          ),
+      },
+      {
+        accessorKey: "extensionCount",
+        header: ({ column }) => (
+          <div className="text-right">
+            <DeviceSortableHeader column={column} label="Extensions" />
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div className="text-right text-sm tabular-nums">
+            {row.original.extensionCount}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "lastActivityAt",
+        header: ({ column }) => (
+          <div className="text-right">
+            <DeviceSortableHeader column={column} label="Last synced" />
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div className="text-muted-foreground text-right text-xs">
+            {timeAgo(row.original.lastActivityAt)}
+          </div>
+        ),
+      },
+    ],
+    [],
+  );
+
+  const table = useReactTable({
+    data: rows,
+    columns,
+    state: { sorting, pagination: { pageIndex: page - 1, pageSize } },
+    manualSorting: true,
+    manualPagination: true,
+    pageCount,
+    onSortingChange: (updater) => {
+      const next = typeof updater === "function" ? updater(sorting) : updater;
+      const first = next[0];
+      if (first) {
+        setSortBy(WS_DEV_COL_SORT[first.id] ?? "extensionCount");
+        setSortDir(first.desc ? "desc" : "asc");
+        setPage(1);
+      }
+    },
+    onPaginationChange: (updater) => {
+      const next =
+        typeof updater === "function"
+          ? updater({ pageIndex: page - 1, pageSize })
+          : updater;
+      setPage(next.pageIndex + 1);
+      setPageSize(next.pageSize);
+    },
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const end = Math.min(page * pageSize, total);
+
+  return (
+    <div className="space-y-2">
+      <div className="relative">
+        <Search className="text-muted-foreground absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2" />
+        <Input
+          className="pl-8 focus-visible:ring-0"
+          placeholder="Search by machine name..."
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+        />
+        {isFetching && (
+          <RefreshCw className="text-muted-foreground absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 animate-spin" />
+        )}
+      </div>
+
+      <Card className="overflow-hidden py-0">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((hg) => (
+              <TableRow key={hg.id} className="hover:bg-transparent">
+                {hg.headers.map((header) => (
+                  <TableHead key={header.id} className="h-9 px-3">
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext(),
+                    )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="text-muted-foreground py-8 text-center text-sm"
+                >
+                  No devices found.
+                </TableCell>
+              </TableRow>
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  className={row.index % 2 === 1 ? "bg-muted/20" : ""}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} className="px-3">
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </Card>
+
+      {total > 0 && (
+        <div className="flex items-center justify-between pt-1">
+          <span className="text-muted-foreground text-xs">{`Showing ${start}-${end} of ${total}`}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground text-xs">Rows per page</span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1 px-2 text-xs"
+                >
+                  {pageSize} <ArrowDown className="h-3 w-3 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-16">
+                <DropdownMenuRadioGroup
+                  value={String(pageSize)}
+                  onValueChange={(v) => {
+                    setPageSize(Number(v));
+                    setPage(1);
+                  }}
+                >
+                  {[10, 25, 50].map((ps) => (
+                    <DropdownMenuRadioItem
+                      key={ps}
+                      value={String(ps)}
+                      className="text-xs"
+                    >
+                      {ps}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              className="h-7 w-7 p-0"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+            </Button>
+            <span className="text-muted-foreground text-xs tabular-nums">
+              {page} / {pageCount}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              className="h-7 w-7 p-0"
+            >
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Devices tab ──────────────────────────────────────────────────────────────
 
 function DevicesTab({ overview: _overview }: { overview: FleetOverview }) {
@@ -735,12 +1380,12 @@ function DevicesTab({ overview: _overview }: { overview: FleetOverview }) {
   const queryClient = useQueryClient();
   const [blockedReason, setBlockedReason] = useState<string | undefined>();
 
-  const { data: fleetDevices, isPending: fleetPending } = useQuery(
-    trpc.fleet.devices.queryOptions({ page: 1, limit: 100 }),
+  // Lightweight existence checks - the data tables own their own full queries
+  const { data: fleetCheck, isPending: fleetPending } = useQuery(
+    trpc.fleet.devices.queryOptions({ page: 1, limit: 1 }),
   );
-
-  const { data: workspaceDevices, isPending: workspacePending } = useQuery(
-    trpc.workspace.devices.queryOptions({ page: 1, limit: 100 }),
+  const { data: wsCheck, isPending: wsPending } = useQuery(
+    trpc.workspace.devices.queryOptions({ page: 1, limit: 1 }),
   );
 
   const syncMutation = useMutation(
@@ -777,7 +1422,7 @@ function DevicesTab({ overview: _overview }: { overview: FleetOverview }) {
     }),
   );
 
-  if (fleetPending || workspacePending) {
+  if (fleetPending || wsPending) {
     return (
       <div className="flex justify-center py-12">
         <RefreshCw className="h-5 w-5 animate-spin opacity-30" />
@@ -785,8 +1430,8 @@ function DevicesTab({ overview: _overview }: { overview: FleetOverview }) {
     );
   }
 
-  const hasFleetDevices = (fleetDevices?.rows.length ?? 0) > 0;
-  const hasWorkspaceDevices = (workspaceDevices?.rows.length ?? 0) > 0;
+  const hasFleetDevices = (fleetCheck?.total ?? 0) > 0;
+  const hasWorkspaceDevices = (wsCheck?.total ?? 0) > 0;
 
   if (!hasFleetDevices && !hasWorkspaceDevices) {
     return (
@@ -800,114 +1445,26 @@ function DevicesTab({ overview: _overview }: { overview: FleetOverview }) {
 
   return (
     <div className="space-y-6">
-      {/* Extension-registered devices */}
       {hasFleetDevices && (
         <div className="space-y-3">
           <div className="text-muted-foreground flex items-center gap-2 text-sm">
             <Monitor className="h-4 w-4" />
             <span>Devices registered via extension</span>
           </div>
-
-          <Card className="overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Device ID</TableHead>
-                  <TableHead className="w-28">Platform</TableHead>
-                  <TableHead className="w-32 text-right">Extensions</TableHead>
-                  <TableHead className="w-32 text-right">Flagged</TableHead>
-                  <TableHead className="w-36 text-right">Last seen</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {fleetDevices?.rows.map((device) => (
-                  <TableRow key={device.id}>
-                    <TableCell className="text-muted-foreground font-mono text-xs">
-                      {device.id.slice(0, 16)}…
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="text-xs capitalize">
-                        {device.platform}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {device.extensionCount}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {device.flaggedExtensionCount > 0 ? (
-                        <span className="text-destructive font-medium">
-                          {device.flaggedExtensionCount}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">0</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-right text-xs">
-                      {timeAgo(device.lastSeenAt)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Card>
-
-          {fleetDevices && fleetDevices.total > fleetDevices.limit && (
-            <p className="text-muted-foreground text-center text-xs">
-              Showing {fleetDevices.rows.length} of {fleetDevices.total} devices
-            </p>
-          )}
+          <FleetDevicesDataTable />
         </div>
       )}
 
-      {/* Google Workspace enrolled browsers */}
       {hasWorkspaceDevices && (
         <div className="space-y-3">
           <div className="text-muted-foreground flex items-center gap-2 text-sm">
             <Cloud className="h-4 w-4" />
             <span>Chrome browsers enrolled in Google Workspace</span>
           </div>
-
-          <Card className="overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Machine</TableHead>
-                  <TableHead className="w-32 text-right">Extensions</TableHead>
-                  <TableHead className="w-36 text-right">Last synced</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {workspaceDevices?.rows.map((device) => (
-                  <TableRow key={device.googleDeviceId}>
-                    <TableCell className="text-sm font-medium">
-                      {device.machineName ?? (
-                        <span className="text-muted-foreground font-mono text-xs">
-                          {device.googleDeviceId.slice(0, 16)}…
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {device.extensionCount}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-right text-xs">
-                      {timeAgo(device.lastSyncedAt)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Card>
-
-          {workspaceDevices && workspaceDevices.total > workspaceDevices.limit && (
-            <p className="text-muted-foreground text-center text-xs">
-              Showing {workspaceDevices.rows.length} of {workspaceDevices.total}{" "}
-              devices
-            </p>
-          )}
+          <WorkspaceDevicesDataTable />
         </div>
       )}
 
-      {/* Nudge to connect Workspace if only using extension devices */}
       {hasFleetDevices && !hasWorkspaceDevices && (
         <Card className="border-dashed">
           <CardHeader>
@@ -967,7 +1524,7 @@ function SortableHeader({
   const sorted = column.getIsSorted();
   return (
     <button
-      className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide hover:text-foreground"
+      className="hover:text-foreground flex items-center gap-1 text-xs font-medium tracking-wide uppercase"
       onClick={() => column.toggleSorting(sorted === "asc")}
     >
       {label}
@@ -1022,7 +1579,9 @@ function ExtensionsDataTable({
   }, [searchInput]);
 
   // Reset page when filters change
-  useEffect(() => { setPage(1); }, [showFlaggedOnly, riskFilter, installTypeFilter]);
+  useEffect(() => {
+    setPage(1);
+  }, [showFlaggedOnly, riskFilter, installTypeFilter]);
 
   const sharedParams = {
     page,
@@ -1082,7 +1641,9 @@ function ExtensionsDataTable({
     const cols: ColumnDef<ExtRow>[] = [
       {
         accessorKey: "displayName",
-        header: ({ column }) => <SortableHeader column={column} label="Extension" />,
+        header: ({ column }) => (
+          <SortableHeader column={column} label="Extension" />
+        ),
         cell: ({ row }) => {
           const r = row.original;
           return (
@@ -1140,24 +1701,18 @@ function ExtensionsDataTable({
         ? [
             {
               accessorKey: "enabledCount" as const,
-              header: () => <div className="text-right text-xs font-medium uppercase tracking-wide">Enabled</div>,
+              header: () => (
+                <div className="text-right text-xs font-medium tracking-wide uppercase">
+                  Enabled
+                </div>
+              ),
               enableSorting: false,
               cell: ({ row }: { row: Row<ExtRow> }) => {
                 const { enabledCount, deviceCount } = row.original;
                 if (enabledCount === undefined) return null;
-                const allEnabled = enabledCount === deviceCount;
-                const allDisabled = enabledCount === 0;
                 return (
                   <div className="text-right">
-                    <span
-                      className={`text-xs tabular-nums font-medium ${
-                        allEnabled
-                          ? "text-emerald-500"
-                          : allDisabled
-                            ? "text-muted-foreground"
-                            : "text-yellow-500"
-                      }`}
-                    >
+                    <span className="text-muted-foreground text-xs tabular-nums">
                       {enabledCount}/{deviceCount}
                     </span>
                   </div>
@@ -1170,7 +1725,12 @@ function ExtensionsDataTable({
     return cols;
   }, [source, showInstallType]);
 
-  const sorting: SortingState = [{ id: sortBy === "name" ? "displayName" : sortBy, desc: sortDir === "desc" }];
+  const sorting: SortingState = [
+    {
+      id: sortBy === "name" ? "displayName" : sortBy,
+      desc: sortDir === "desc",
+    },
+  ];
 
   const table = useReactTable({
     data: rows,
@@ -1192,16 +1752,18 @@ function ExtensionsDataTable({
       }
     },
     onPaginationChange: (updater) => {
-      const next = typeof updater === "function"
-        ? updater({ pageIndex: page - 1, pageSize })
-        : updater;
+      const next =
+        typeof updater === "function"
+          ? updater({ pageIndex: page - 1, pageSize })
+          : updater;
       setPage(next.pageIndex + 1);
       setPageSize(next.pageSize);
     },
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const hasActiveFilters = showFlaggedOnly || riskFilter !== "all" || installTypeFilter !== "";
+  const hasActiveFilters =
+    showFlaggedOnly || riskFilter !== "all" || installTypeFilter !== "";
   const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const end = Math.min(page * pageSize, total);
 
@@ -1210,7 +1772,7 @@ function ExtensionsDataTable({
       {/* Toolbar */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <Search className="text-muted-foreground absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2" />
+          <Search className="text-muted-foreground absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2" />
           <Input
             className="pl-8 focus-visible:ring-0"
             placeholder="Search by name or ID..."
@@ -1218,7 +1780,7 @@ function ExtensionsDataTable({
             onChange={(e) => setSearchInput(e.target.value)}
           />
           {isFetching && (
-            <RefreshCw className="text-muted-foreground absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 animate-spin" />
+            <RefreshCw className="text-muted-foreground absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 animate-spin" />
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -1239,9 +1801,9 @@ function ExtensionsDataTable({
             className="border-input dark:bg-input/30 rounded-md border bg-transparent px-2 py-[7px] text-xs outline-none"
           >
             <option value="all">All risks</option>
-            <option value="low">Low (0-39)</option>
-            <option value="medium">Medium (40-69)</option>
-            <option value="high">High (70+)</option>
+            <option value="low">Low+</option>
+            <option value="medium">Medium+</option>
+            <option value="high">High+</option>
           </select>
           {showInstallType && (
             <select
@@ -1281,7 +1843,10 @@ function ExtensionsDataTable({
               <TableRow key={hg.id} className="hover:bg-transparent">
                 {hg.headers.map((header) => (
                   <TableHead key={header.id} className="h-9 px-3">
-                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext(),
+                    )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -1311,7 +1876,10 @@ function ExtensionsDataTable({
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="px-3">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -1331,7 +1899,11 @@ function ExtensionsDataTable({
             <span className="text-muted-foreground text-xs">Rows per page</span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-7 gap-1 px-2 text-xs">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1 px-2 text-xs"
+                >
                   {pageSize}
                   <ArrowDown className="h-3 w-3 opacity-50" />
                 </Button>
@@ -1339,10 +1911,17 @@ function ExtensionsDataTable({
               <DropdownMenuContent align="end" className="min-w-[4rem]">
                 <DropdownMenuRadioGroup
                   value={String(pageSize)}
-                  onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}
+                  onValueChange={(v) => {
+                    setPageSize(Number(v));
+                    setPage(1);
+                  }}
                 >
                   {[10, 25, 50].map((ps) => (
-                    <DropdownMenuRadioItem key={ps} value={String(ps)} className="text-xs">
+                    <DropdownMenuRadioItem
+                      key={ps}
+                      value={String(ps)}
+                      className="text-xs"
+                    >
                       {ps}
                     </DropdownMenuRadioItem>
                   ))}
@@ -1564,7 +2143,6 @@ function ExtensionsTab() {
 }
 
 // ─── Settings tab ────────────────────────────────────────────────────────────
-
 
 function SettingsTab({ orgId: _orgId }: { orgId: string }) {
   const trpc = useTRPC();

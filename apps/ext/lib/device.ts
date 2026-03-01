@@ -133,12 +133,33 @@ export interface RegisterResult {
   webSessionToken?: string;
 }
 
+async function getPlatformMeta(): Promise<{ os: string; arch: string }> {
+  const info = await chrome.runtime.getPlatformInfo();
+  return { os: info.os, arch: info.arch };
+}
+
+async function getIdentityEmail(): Promise<string | undefined> {
+  try {
+    const info = await chrome.identity.getProfileUserInfo({ accountStatus: "ANY" });
+    return info.email || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function registerDevice(): Promise<RegisterResult> {
   const fingerprint = await getFingerprint();
+  const [{ os, arch }, identityEmail] = await Promise.all([
+    getPlatformMeta(),
+    getIdentityEmail(),
+  ]);
   const input = {
     deviceFingerprint: fingerprint,
     extensionVersion: chrome.runtime.getManifest().version,
     platform: "chrome" as const,
+    os,
+    arch,
+    identityEmail,
   };
 
   // Priority 1: Org API key from MDM managed storage (enterprise GPO/CBCM)
@@ -157,6 +178,9 @@ export async function registerDevice(): Promise<RegisterResult> {
         deviceFingerprint: fingerprint,
         extensionVersion: chrome.runtime.getManifest().version,
         platform: "chrome",
+        os,
+        arch,
+        identityEmail,
       });
     await clearInviteToken();
     await storeWebSessionToken(webSessionToken);

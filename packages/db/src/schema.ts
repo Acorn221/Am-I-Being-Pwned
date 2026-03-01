@@ -132,6 +132,12 @@ export const Device = createTable(
     deviceFingerprint: text().notNull(),
     extensionVersion: text().notNull(),
     platform: devicePlatformEnum().notNull().default("chrome"),
+    // OS reported by chrome.runtime.getPlatformInfo() - "mac", "win", "linux", "cros", etc.
+    os: text(),
+    // CPU architecture - "arm", "arm64", "x86-32", "x86-64", etc.
+    arch: text(),
+    // Signed-in Google account email from chrome.identity.getProfileUserInfo()
+    identityEmail: text("identity_email"),
     lastSeenAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
     lastSyncAt: timestamp({ withTimezone: true }),
     // Soft revoke, set this to kill a device's access instantly
