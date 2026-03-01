@@ -864,19 +864,22 @@ function FleetDevicesDataTable() {
         accessorKey: "id",
         header: "Device",
         enableSorting: false,
+        cell: ({ row }) => (
+          <span className="text-muted-foreground font-mono text-xs">
+            {row.original.id.slice(0, 20)}…
+          </span>
+        ),
+      },
+      {
+        accessorKey: "identityEmail",
+        header: "User",
+        enableSorting: false,
         cell: ({ row }) => {
-          const { displayName, id } = row.original;
-          return displayName ? (
-            <div className="flex flex-col gap-0.5">
-              <span className="text-sm font-medium">{displayName}</span>
-              <span className="text-muted-foreground font-mono text-xs">
-                {id.slice(0, 12)}…
-              </span>
-            </div>
+          const email = row.original.identityEmail;
+          return email ? (
+            <span className="text-sm">{email}</span>
           ) : (
-            <span className="text-muted-foreground font-mono text-xs">
-              {id.slice(0, 20)}…
-            </span>
+            <span className="text-muted-foreground text-xs">-</span>
           );
         },
       },
