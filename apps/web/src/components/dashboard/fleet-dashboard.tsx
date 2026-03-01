@@ -6,6 +6,17 @@ import type {
 } from "@tanstack/react-table";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
+  Bar,
+  BarChart,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import {
   keepPreviousData,
   useMutation,
   useQuery,
@@ -307,6 +318,21 @@ function OverviewTab({
   const alertList = alerts?.slice(0, 3) ?? [];
   const threatList = threatenedDevices?.slice(0, 3) ?? [];
 
+  const safeCount = overview.extensionCount - overview.flaggedCount;
+  const extensionPieData = [
+    { name: "Safe", value: safeCount, color: "#10b981" },
+    { name: "Flagged", value: overview.flaggedCount, color: "#ef4444" },
+  ].filter((d) => d.value > 0);
+
+  const alertSeverityData = alerts
+    ? (["critical", "warning", "info"] as const).map((s) => ({
+        name: s.charAt(0).toUpperCase() + s.slice(1),
+        count: alerts.filter((a) => a.severity === s).length,
+        color:
+          s === "critical" ? "#ef4444" : s === "warning" ? "#f97316" : "#6b7280",
+      }))
+    : [];
+
   return (
     <div className="space-y-5">
       {/* Stats strip - full width */}
@@ -327,6 +353,124 @@ function OverviewTab({
           value={overview.flaggedCount}
           danger={hasThreats}
         />
+      </div>
+
+      {/* Charts row */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {/* Extension health donut */}
+        <Card className="p-4">
+          <CardHeader className="p-0 pb-3">
+            <CardTitle className="text-sm font-semibold">Extension Health</CardTitle>
+            <CardDescription className="text-xs">
+              Safe vs flagged across all devices
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            {overview.extensionCount === 0 ? (
+              <div className="text-muted-foreground flex h-32 items-center justify-center text-sm">
+                No extensions detected yet
+              </div>
+            ) : (
+              <div className="flex items-center gap-4">
+                <ResponsiveContainer width="100%" height={130}>
+                  <PieChart>
+                    <Pie
+                      data={extensionPieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={38}
+                      outerRadius={58}
+                      paddingAngle={extensionPieData.length > 1 ? 3 : 0}
+                      dataKey="value"
+                      strokeWidth={0}
+                    >
+                      {extensionPieData.map((entry) => (
+                        <Cell key={entry.name} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        background: "var(--card)",
+                        border: "1px solid var(--border)",
+                        borderRadius: "6px",
+                        fontSize: "12px",
+                        color: "var(--foreground)",
+                      }}
+                      formatter={(value: number | undefined, name: string | undefined) => [value, name]}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="shrink-0 space-y-2 text-xs">
+                  {extensionPieData.map((d) => (
+                    <div key={d.name} className="flex items-center gap-2">
+                      <span
+                        className="h-2.5 w-2.5 shrink-0 rounded-full"
+                        style={{ background: d.color }}
+                      />
+                      <span className="text-muted-foreground">{d.name}</span>
+                      <span className="font-semibold tabular-nums">{d.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Alert severity breakdown */}
+        <Card className="p-4">
+          <CardHeader className="p-0 pb-3">
+            <CardTitle className="text-sm font-semibold">Active Alerts</CardTitle>
+            <CardDescription className="text-xs">
+              Unread alerts by severity
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            {!alerts || overview.unreadAlertCount === 0 ? (
+              <div className="text-muted-foreground flex h-32 items-center justify-center gap-2 text-sm">
+                <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                No active alerts
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={130}>
+                <BarChart
+                  data={alertSeverityData}
+                  margin={{ top: 4, right: 8, left: -24, bottom: 0 }}
+                  barSize={32}
+                >
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    allowDecimals={false}
+                    tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "var(--muted)", opacity: 0.3 }}
+                    contentStyle={{
+                      background: "var(--card)",
+                      border: "1px solid var(--border)",
+                      borderRadius: "6px",
+                      fontSize: "12px",
+                      color: "var(--foreground)",
+                    }}
+                    formatter={(value: number | undefined) => [value, "alerts"]}
+                  />
+                  <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                    {alertSeverityData.map((entry) => (
+                      <Cell key={entry.name} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Summary cards row */}
@@ -2002,6 +2146,11 @@ function ExtensionsTab() {
     trpc.fleet.extensions.queryOptions({ page: 1, limit: 1 }),
   );
 
+  // Check if there are any fleet devices registered (even with no extensions yet)
+  const { data: fleetDeviceCheck, isPending: fleetDeviceLoading } = useQuery(
+    trpc.fleet.devices.queryOptions({ page: 1, limit: 1 }),
+  );
+
   const syncMutation = useMutation(
     trpc.workspace.sync.mutationOptions({
       onSuccess: (data) => {
@@ -2037,10 +2186,11 @@ function ExtensionsTab() {
   );
 
   const isSyncing = syncMutation.isPending;
-  const isPending = appsLoading || fleetLoading;
+  const isPending = appsLoading || fleetLoading || fleetDeviceLoading;
 
   const hasWorkspaceData = (appsData?.rows.length ?? 0) > 0;
   const hasFleetData = (fleetExtData?.rows.length ?? 0) > 0;
+  const hasFleetDevices = (fleetDeviceCheck?.total ?? 0) > 0;
 
   if (isPending) {
     return (
@@ -2050,7 +2200,7 @@ function ExtensionsTab() {
     );
   }
 
-  if (!hasWorkspaceData && !hasFleetData) {
+  if (!hasWorkspaceData && !hasFleetData && !hasFleetDevices) {
     const syncedButEmpty = appsData?.lastSyncedAt !== null;
     return (
       <WorkspaceSetupCard
@@ -2065,6 +2215,15 @@ function ExtensionsTab() {
   return (
     <div className="space-y-8">
       {/* Extension agent section */}
+      {hasFleetDevices && !hasFleetData && (
+        <div className="rounded-lg border border-dashed px-6 py-8 text-center">
+          <Puzzle className="text-muted-foreground mx-auto mb-3 h-8 w-8" />
+          <p className="text-sm font-medium">Extension connected, no extensions detected yet</p>
+          <p className="text-muted-foreground mt-1 text-sm">
+            The browser extension is registered. Extension inventory will appear here after the next sync.
+          </p>
+        </div>
+      )}
       {hasFleetData && (
         <div className="space-y-4">
           <div className="flex items-center gap-2">

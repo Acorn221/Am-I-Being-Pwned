@@ -26,6 +26,7 @@
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "react-markdown": "^10.1.0",
+    "recharts": "^3.7.0",
     "remark-gfm": "^4.0.1",
     "superjson": "2.2.3",
     "three": "^0.182.0"

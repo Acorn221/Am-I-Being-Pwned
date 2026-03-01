@@ -2,9 +2,10 @@ import type { ExtRequest, ExtResponse } from "@amibeingpwned/types";
 import { ExtResponseSchema } from "@amibeingpwned/validators";
 
 export class ExtensionClient {
-  // Set VITE_EXTENSION_ID in .env to the production extension's Chrome Web Store ID.
-  // Falls back to content-script discovery when unset or wrong.
-  private static readonly KNOWN_ID = import.meta.env.VITE_EXTENSION_ID ?? "";
+  // Extension ID is stable - pinned by the manifest key in wxt.config.ts.
+  // VITE_EXTENSION_ID overrides (e.g. if publishing under a different ID).
+  private static readonly KNOWN_ID =
+    import.meta.env.VITE_EXTENSION_ID ?? "amibeingpndbmhcmnjdekhljpjcbjnpl";
 
   private extensionId: string | null = null;
 

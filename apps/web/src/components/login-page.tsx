@@ -1,26 +1,18 @@
 import { useState } from "react";
-import { Building2, Check, ExternalLink, Puzzle, X } from "lucide-react";
 
 import { authClient } from "~/lib/auth-client";
 import { navigate } from "~/router";
-
-const CHROME_STORE_URL =
-  "https://chromewebstore.google.com/detail/am-i-being-pwned/amibeingpndbmhcmnjdekhljpjcbjnpl";
 
 export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function signInWithGoogle() {
+  async function signIn() {
     setLoading(true);
     setError(null);
     const { error } = await authClient.signIn.social({
       provider: "google",
       callbackURL: "/dashboard",
-      scopes: [
-        "https://www.googleapis.com/auth/chrome.management.appdetails.readonly",
-        "https://www.googleapis.com/auth/chrome.management.reports.readonly",
-      ],
     });
     if (error) {
       setError(error.message ?? "Sign in failed. Please try again.");
@@ -31,171 +23,49 @@ export function LoginPage() {
 
   return (
     <div className="bg-background flex min-h-screen flex-col items-center justify-center px-4 py-12">
-      <div className="w-full max-w-3xl space-y-8">
-        {/* Logo + wordmark */}
+      <div className="w-full max-w-sm space-y-8">
         <div className="flex flex-col items-center gap-3">
           <img src="/logo.png" alt="Am I Being Pwned?" className="h-10 w-10 rounded-xl" />
           <div className="space-y-1 text-center">
             <h1 className="text-foreground text-xl font-semibold tracking-tight">
-              Get started
+              Welcome back
             </h1>
             <p className="text-muted-foreground text-sm">
-              Choose how you want to monitor your browser extensions.
+              Sign in to your account.
             </p>
           </div>
         </div>
 
-        {/* Two-path cards */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          {/* Google Workspace path */}
-          <div className="bg-card border-border flex flex-col rounded-xl border p-6 shadow-sm">
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <div className="bg-primary/10 rounded-lg p-2">
-                <Building2 className="text-primary h-5 w-5" />
-              </div>
-              <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs font-medium">
-                For IT admins
-              </span>
-            </div>
+        <div className="space-y-3">
+          <button
+            onClick={() => void signIn()}
+            disabled={loading}
+            className="border-border text-foreground hover:bg-muted flex w-full cursor-pointer items-center justify-center gap-3 rounded-lg border bg-transparent px-4 py-2.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? <Spinner /> : <GoogleIcon />}
+            {loading ? "Redirecting..." : "Continue with Google"}
+          </button>
 
-            <h2 className="text-foreground mb-1 text-sm font-semibold">
-              Google Workspace
-            </h2>
-            <p className="text-muted-foreground mb-4 text-xs leading-relaxed">
-              Connect your Google Workspace to pull extension data across your
-              entire fleet via the Chrome Management API - no per-device setup
-              required.
-            </p>
-
-            <ul className="mb-6 space-y-1.5 text-xs">
-              <li className="flex items-start gap-2">
-                <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                <span className="text-foreground/80">
-                  Instant fleet-wide visibility - all devices covered automatically
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                <span className="text-foreground/80">
-                  No software to install on each machine
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                <span className="text-foreground/80">
-                  Centralised dashboard with org-wide reporting
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <X className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-400" />
-                <span className="text-muted-foreground">
-                  Requires Google Workspace with Chrome management enabled
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <X className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-400" />
-                <span className="text-muted-foreground">
-                  Only covers managed Chrome devices enrolled in your org
-                </span>
-              </li>
-            </ul>
-
-            <div className="mt-auto space-y-3">
-              <button
-                onClick={() => void signInWithGoogle()}
-                disabled={loading}
-                className="border-border text-foreground hover:bg-muted flex w-full cursor-pointer items-center justify-center gap-3 rounded-lg border bg-transparent px-4 py-2.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {loading ? <Spinner /> : <GoogleIcon />}
-                {loading ? "Redirecting..." : "Continue with Google"}
-              </button>
-
-              {error && (
-                <p className="text-destructive text-center text-xs">{error}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Extension / invite path */}
-          <div className="bg-card border-border flex flex-col rounded-xl border p-6 shadow-sm">
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <div className="rounded-lg bg-violet-500/10 p-2">
-                <Puzzle className="h-5 w-5 text-violet-500" />
-              </div>
-              <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-xs font-medium text-violet-500">
-                For any team
-              </span>
-            </div>
-
-            <h2 className="text-foreground mb-1 text-sm font-semibold">
-              Chrome Extension
-            </h2>
-            <p className="text-muted-foreground mb-4 text-xs leading-relaxed">
-              Install our lightweight extension on each device. No Google
-              Workspace needed - works on any Chrome browser, personal or
-              managed.
-            </p>
-
-            <ul className="mb-6 space-y-1.5 text-xs">
-              <li className="flex items-start gap-2">
-                <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                <span className="text-foreground/80">
-                  Works on any Chrome browser - no Workspace subscription needed
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                <span className="text-foreground/80">
-                  Real-time data straight from each device
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                <span className="text-foreground/80">
-                  Covers BYOD and unmanaged machines Google can't see
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <X className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-400" />
-                <span className="text-muted-foreground">
-                  Must be installed individually on each device
-                </span>
-              </li>
-              <li className="flex items-start gap-2">
-                <X className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-400" />
-                <span className="text-muted-foreground">
-                  Enrollment requires an invite link generated by the admin
-                </span>
-              </li>
-            </ul>
-
-            <div className="mt-auto space-y-3">
-              <a
-                href={CHROME_STORE_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="border-border text-foreground hover:bg-muted flex w-full items-center justify-center gap-2 rounded-lg border bg-transparent px-4 py-2.5 text-sm font-medium transition-colors"
-              >
-                <ExternalLink className="h-4 w-4" />
-                View on Chrome Web Store
-              </a>
-              <p className="text-muted-foreground text-center text-xs">
-                Already have an invite link? Use that link directly - no login
-                needed.
-              </p>
-            </div>
-          </div>
+          {error && (
+            <p className="text-destructive text-center text-xs">{error}</p>
+          )}
         </div>
 
         <p className="text-muted-foreground text-center text-xs">
-          By signing in you agree to our{" "}
+          Don't have an account?{" "}
+          <button
+            className="cursor-pointer underline underline-offset-2 transition-colors hover:text-foreground"
+            onClick={() => navigate("/signup")}
+          >
+            Sign up
+          </button>
+          {" "}&middot;{" "}
           <button
             className="cursor-pointer underline underline-offset-2 transition-colors hover:text-foreground"
             onClick={() => navigate("/privacy")}
           >
             Privacy Policy
           </button>
-          .
         </p>
       </div>
     </div>

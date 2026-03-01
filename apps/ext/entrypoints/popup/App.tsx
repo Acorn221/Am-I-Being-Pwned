@@ -146,12 +146,20 @@ export default function App() {
 
       {notEnrolled ? (
         <div className="flex flex-col items-center gap-3 py-2 text-center">
-          <p className="text-sm text-foreground font-medium">
-            Not enrolled
-          </p>
+          <p className="text-sm text-foreground font-medium">Not connected</p>
           <p className="text-xs text-muted-foreground">
-            Visit your enrollment link to get started.
+            Open your enrollment link to connect this device to your organization.
           </p>
+          <Button
+            className="w-full"
+            size="sm"
+            onClick={() => {
+              void chrome.tabs.create({ url: API_BASE_URL });
+              window.close();
+            }}
+          >
+            Connect
+          </Button>
         </div>
       ) : (
         <>
