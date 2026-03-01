@@ -1,12 +1,10 @@
 import { and, asc, count, countDistinct, desc, eq, gte, ilike, isNull, or, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 
-import type { db as DbType } from "@amibeingpwned/db/client";
 import {
   Device,
   Extension,
   OrgMember,
-  Organization,
   UserAlert,
   UserExtension,
   WorkspaceApp,
@@ -16,37 +14,7 @@ import {
 
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, managerProcedure, protectedProcedure } from "../trpc";
-
-const PaginationSchema = z.object({
-  page: z.number().int().min(1).default(1),
-  limit: z.number().int().min(1).max(100).default(20),
-});
-
-// ---------------------------------------------------------------------------
-// Shared helper — look up the manager's org membership
-// ---------------------------------------------------------------------------
-
-async function getManagerMembership(db: typeof DbType, userId: string) {
-  const [membership] = await db
-    .select({
-      orgId: OrgMember.orgId,
-      orgRole: OrgMember.role,
-      orgName: Organization.name,
-      orgPlan: Organization.plan,
-      orgSuspendedAt: Organization.suspendedAt,
-      orgLastWorkspaceSyncAt: Organization.lastWorkspaceSyncAt,
-    })
-    .from(OrgMember)
-    .innerJoin(Organization, eqi(OrgMember.orgId, Organization.id))
-    .where(
-      and(
-        eq(OrgMember.userId, userId),
-        or(eq(OrgMember.role, "owner"), eq(OrgMember.role, "admin")),
-      ),
-    )
-    .limit(1);
-  return membership ?? null;
-}
+import { fetchManagerMembership } from "../lib/org-membership";
 
 export const fleetRouter = createTRPCRouter({
   /**
@@ -55,7 +23,7 @@ export const fleetRouter = createTRPCRouter({
    * console error for regular users on every dashboard load.
    */
   overview: protectedProcedure.query(async ({ ctx }) => {
-    const membership = await getManagerMembership(ctx.db, ctx.session.user.id);
+    const membership = await fetchManagerMembership(ctx.db, ctx.session.user.id);
     if (!membership) return null;
 
     const orgId = membership.orgId;
@@ -313,20 +281,14 @@ export const fleetRouter = createTRPCRouter({
       );
 
       const extCount = count(UserExtension.chromeExtensionId);
-      const flaggedCount = sql<number>`CAST(COUNT(DISTINCT CASE WHEN ${Extension.isFlagged} THEN ${UserExtension.chromeExtensionId} END) AS int)`;
+      const flaggedCount = sql<number>`count(DISTINCT ${UserExtension.chromeExtensionId}) FILTER (WHERE ${Extension.isFlagged})`;
 
-      const orderByExpr = (() => {
-        switch (input.sortBy) {
-          case "extensionCount":
-            return input.sortDir === "asc" ? asc(extCount) : desc(extCount);
-          case "flaggedCount":
-            return input.sortDir === "asc"
-              ? sql`CAST(COUNT(DISTINCT CASE WHEN ${Extension.isFlagged} THEN ${UserExtension.chromeExtensionId} END) AS int) ASC`
-              : sql`CAST(COUNT(DISTINCT CASE WHEN ${Extension.isFlagged} THEN ${UserExtension.chromeExtensionId} END) AS int) DESC`;
-          default:
-            return input.sortDir === "asc" ? asc(Device.lastSeenAt) : desc(Device.lastSeenAt);
-        }
-      })();
+      const orderByExpr =
+        input.sortBy === "extensionCount"
+          ? input.sortDir === "asc" ? asc(extCount) : desc(extCount)
+          : input.sortBy === "flaggedCount"
+            ? input.sortDir === "asc" ? asc(flaggedCount) : desc(flaggedCount)
+            : input.sortDir === "asc" ? asc(Device.lastSeenAt) : desc(Device.lastSeenAt);
 
       const [rows, totalResult] = await Promise.all([
         ctx.db
@@ -402,11 +364,11 @@ export const fleetRouter = createTRPCRouter({
           ? eq(Extension.isFlagged, input.isFlagged)
           : undefined,
         input.riskLevel === "low"
-          ? gte(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 1)
+          ? gte(Extension.riskScore, 1)
           : input.riskLevel === "medium"
-            ? gte(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 40)
+            ? gte(Extension.riskScore, 40)
             : input.riskLevel === "high"
-              ? gte(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 70)
+              ? gte(Extension.riskScore, 70)
               : undefined,
       );
 
@@ -415,12 +377,12 @@ export const fleetRouter = createTRPCRouter({
         switch (input.sortBy) {
           case "name":
             return d === "asc"
-              ? sql`${Extension.name} ASC NULLS LAST`
-              : sql`${Extension.name} DESC NULLS LAST`;
+              ? sql<unknown>`${Extension.name} ASC NULLS LAST`
+              : sql<unknown>`${Extension.name} DESC NULLS LAST`;
           case "riskScore":
             return d === "asc"
-              ? sql`${Extension.riskScore} ASC NULLS LAST`
-              : sql`${Extension.riskScore} DESC NULLS LAST`;
+              ? sql<unknown>`${Extension.riskScore} ASC NULLS LAST`
+              : sql<unknown>`${Extension.riskScore} DESC NULLS LAST`;
           default:
             return d === "asc"
               ? asc(countDistinct(UserExtension.deviceId))
@@ -436,7 +398,7 @@ export const fleetRouter = createTRPCRouter({
             riskScore: Extension.riskScore,
             isFlagged: Extension.isFlagged,
             deviceCount: countDistinct(UserExtension.deviceId),
-            enabledCount: sql<number>`CAST(COUNT(DISTINCT CASE WHEN ${UserExtension.enabled} THEN ${UserExtension.deviceId} END) AS int)`,
+            enabledCount: sql<number>`count(DISTINCT ${UserExtension.deviceId}) FILTER (WHERE ${UserExtension.enabled})`,
           })
           .from(UserExtension)
           .innerJoin(Device, eqi(UserExtension.deviceId, Device.id))

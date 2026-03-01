@@ -17,11 +17,11 @@ import {
 } from "../lib/device";
 import { getNotifiedRisk, setNotifiedRisk } from "../lib/storage";
 
+import { DEV_ORIGINS, PROD_ORIGINS } from "../lib/allowed-origins";
+
 const WEB_URL = API_BASE_URL;
 
-const ALLOWED_ORIGINS = import.meta.env.DEV
-  ? ["https://amibeingpwned.com", "http://localhost:3000", "http://127.0.0.1:3000", "https://deathmail-mac.j4a.uk"]
-  : ["https://amibeingpwned.com"];
+const ALLOWED_ORIGINS: readonly string[] = import.meta.env.DEV ? DEV_ORIGINS : PROD_ORIGINS;
 
 
 // ---------------------------------------------------------------------------

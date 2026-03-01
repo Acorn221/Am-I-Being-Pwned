@@ -2,10 +2,8 @@
  * Device registration and token management for the extension.
  *
  * Registration flows:
- *   B2B - IT admin pushes `orgApiKey` via MDM (chrome.storage.managed).
- *          No user session needed; device binds to the org.
- *   B2C - Requires an active amibeingpwned.com session cookie.
- *          Retried automatically until the user logs in.
+ *   B2B MDM  - IT admin pushes `orgApiKey` via GPO/CBCM managed storage.
+ *   B2B Invite - Employee clicks a /join/:token link from their org admin.
  *
  * The device token ("aibp_dev_...") is rotated on every sync - the server
  * returns `newToken` and we replace the stored one immediately.
@@ -120,13 +118,8 @@ export async function getOrgApiKey(): Promise<string | null> {
 /**
  * Attempts to register this device with the AIBP API.
  *
- * Tries B2B first (org API key in managed storage), then falls back to B2C
- * (session cookie). Returns the raw device token on success.
- *
- * Throws if:
- *   - B2B: the org API key is invalid/revoked
- *   - B2C: the user is not logged in (UNAUTHORIZED), caller should schedule
- *     a retry alarm rather than propagating this error
+ * Tries MDM API key first, then invite token. Throws UNAUTHORIZED if neither
+ * credential is available - caller should schedule a retry alarm.
  */
 export interface RegisterResult {
   deviceToken: string;
@@ -187,9 +180,7 @@ export async function registerDevice(): Promise<RegisterResult> {
     return { deviceToken, webSessionToken };
   }
 
-  // Priority 3: B2C - session cookie forwarded via credentials: "include"
-  const { deviceToken } = await publicClient.devices.registerB2C.mutate(input);
-  return { deviceToken };
+  throw new Error("No registration credential available (no org API key or invite token)");
 }
 
 // ---------------------------------------------------------------------------

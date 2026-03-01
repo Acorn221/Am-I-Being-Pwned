@@ -8,13 +8,13 @@
  */
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
-import { and, eq, or } from "drizzle-orm";
 import { z, ZodError } from "zod/v4";
 
 import type { Auth } from "@amibeingpwned/auth";
 import { db } from "@amibeingpwned/db/client";
-import { OrgMember, Organization, eqi } from "@amibeingpwned/db";
 import type { createEmailClient } from "@amibeingpwned/email";
+
+import { fetchManagerMembership } from "./lib/org-membership";
 
 /**
  * 1. CONTEXT
@@ -157,28 +157,14 @@ export const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
  */
 export const managerProcedure = protectedProcedure.use(
   async ({ ctx, next }) => {
-    const userId = ctx.session.user.id;
-
-    const [membership] = await ctx.db
-      .select({
-        orgId: OrgMember.orgId,
-        orgRole: OrgMember.role,
-        orgName: Organization.name,
-        orgPlan: Organization.plan,
-        orgSuspendedAt: Organization.suspendedAt,
-      })
-      .from(OrgMember)
-      .innerJoin(Organization, eqi(OrgMember.orgId, Organization.id))
-      .where(
-        and(
-          eq(OrgMember.userId, userId),
-          or(eq(OrgMember.role, "owner"), eq(OrgMember.role, "admin")),
-        ),
-      )
-      .limit(1);
+    const membership = await fetchManagerMembership(ctx.db, ctx.session.user.id);
 
     if (!membership) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
+    }
+
+    if (membership.orgSuspendedAt) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "Organization is suspended" });
     }
 
     return next({
@@ -188,6 +174,7 @@ export const managerProcedure = protectedProcedure.use(
           name: membership.orgName,
           plan: membership.orgPlan,
           suspendedAt: membership.orgSuspendedAt,
+          lastWorkspaceSyncAt: membership.orgLastWorkspaceSyncAt,
         },
         orgRole: membership.orgRole as "owner" | "admin",
       },

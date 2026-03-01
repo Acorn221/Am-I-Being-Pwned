@@ -16,8 +16,7 @@ export const adminDevicesRouter = createTRPCRouter({
     .input(
       PaginationSchema.extend({
         orgId: z.string().optional(),
-        // user.id is a plain text column — keep as string without UUID coercion
-        userId: z.string().optional(),
+        endUserId: z.string().optional(),
         platform: z.enum(["chrome", "edge"]).optional(),
         isRevoked: z.boolean().optional(),
         // ISO datetime string — devices not seen since this date
@@ -29,8 +28,7 @@ export const adminDevicesRouter = createTRPCRouter({
 
       const where = and(
         input.orgId !== undefined ? eqi(Device.orgId, input.orgId) : undefined,
-        // Device.userId is a plain text FK — use eq
-        input.userId !== undefined ? eq(Device.userId, input.userId) : undefined,
+        input.endUserId !== undefined ? eqi(Device.endUserId, input.endUserId) : undefined,
         input.platform !== undefined ? eq(Device.platform, input.platform) : undefined,
         input.isRevoked !== undefined
           ? input.isRevoked

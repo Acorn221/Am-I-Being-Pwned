@@ -29,6 +29,7 @@ import {
   ExtensionScan,
   ExtensionVersion,
   OrgApiKey,
+  OrgEndUser,
   OrgInvite,
   Organization,
   UserExtension,
@@ -38,7 +39,7 @@ import {
 
 import { generateDeviceToken, generateWebSessionToken, hashToken } from "../lib/tokens";
 import { deviceProcedure } from "../middleware/device-auth";
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
+import { createTRPCRouter, publicProcedure } from "../trpc";
 
 type Db = typeof dbInstance;
 
@@ -51,12 +52,6 @@ const TOKEN_GRACE_MS = 5 * 60 * 1000; // 5 minutes
 
 /** Hard cap on extensions per sync payload. A real device won't have more. */
 const MAX_EXTENSIONS_PER_SYNC = 500;
-
-/**
- * Per-user device limit (free tier).
- * Prevents DB exhaustion if a session token is leaked or abused.
- */
-const MAX_DEVICES_PER_USER = 10;
 
 /**
  * Per-org device limit.
@@ -132,80 +127,32 @@ async function resolveOrgApiKey(db: Db, headers: Headers): Promise<string> {
 }
 
 // ---------------------------------------------------------------------------
+// Helper: upsert an OrgEndUser from identityEmail and return its id.
+// Called from both B2B registration flows after the device row is resolved.
+// ---------------------------------------------------------------------------
+
+async function upsertEndUser(
+  db: Db,
+  orgId: string,
+  email: string,
+): Promise<string | null> {
+  await db
+    .insert(OrgEndUser)
+    .values({ orgId, email })
+    .onConflictDoNothing();
+  const [row] = await db
+    .select({ id: OrgEndUser.id })
+    .from(OrgEndUser)
+    .where(and(eqi(OrgEndUser.orgId, orgId), eq(OrgEndUser.email, email)))
+    .limit(1);
+  return row?.id ?? null;
+}
+
+// ---------------------------------------------------------------------------
 // Router
 // ---------------------------------------------------------------------------
 
 export const devicesRouter = createTRPCRouter({
-  /**
-   * B2C registration — requires an active user session.
-   * Creates (or re-uses) a Device row tied to the authenticated user and
-   * returns a fresh device token.
-   */
-  registerB2C: protectedProcedure
-    .input(RegisterInputSchema)
-    .mutation(async ({ ctx, input }) => {
-      const userId = ctx.session.user.id;
-      const { raw, hash, expiresAt } = await generateDeviceToken();
-
-      // Re-use existing device for this user+fingerprint to avoid duplicates
-      const [existing] = await ctx.db
-        .select({ id: Device.id })
-        .from(Device)
-        .where(
-          and(
-            eq(Device.userId, userId),
-            eq(Device.deviceFingerprint, input.deviceFingerprint),
-            isNull(Device.revokedAt),
-          ),
-        )
-        .limit(1);
-
-      if (existing) {
-        await ctx.db
-          .update(Device)
-          .set({
-            tokenHash: hash,
-            tokenExpiresAt: expiresAt,
-            extensionVersion: input.extensionVersion,
-            platform: input.platform,
-            os: input.os,
-            arch: input.arch,
-            identityEmail: input.identityEmail,
-            lastSeenAt: new Date(),
-          })
-          .where(eq(Device.id, existing.id));
-
-        return { deviceToken: raw };
-      }
-
-      // Enforce device cap before inserting a new row
-      const countResult = await ctx.db
-        .select({ deviceCount: count() })
-        .from(Device)
-        .where(and(eq(Device.userId, userId), isNull(Device.revokedAt)));
-
-      if ((countResult[0]?.deviceCount ?? 0) >= MAX_DEVICES_PER_USER) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: `Device limit reached (max ${MAX_DEVICES_PER_USER}). Revoke an existing device first.`,
-        });
-      }
-
-      await ctx.db.insert(Device).values({
-        userId,
-        tokenHash: hash,
-        tokenExpiresAt: expiresAt,
-        deviceFingerprint: input.deviceFingerprint,
-        extensionVersion: input.extensionVersion,
-        platform: input.platform,
-        os: input.os,
-        arch: input.arch,
-        identityEmail: input.identityEmail,
-      });
-
-      return { deviceToken: raw };
-    }),
-
   /**
    * B2B registration — enterprise extension sends its org API key.
    * No user session required; device binds to the org.
@@ -228,6 +175,8 @@ export const devicesRouter = createTRPCRouter({
         )
         .limit(1);
 
+      let deviceId: string;
+
       if (existing) {
         await ctx.db
           .update(Device)
@@ -243,33 +192,48 @@ export const devicesRouter = createTRPCRouter({
           })
           .where(eq(Device.id, existing.id));
 
-        return { deviceToken: raw };
+        deviceId = existing.id;
+      } else {
+        // Enforce device cap before inserting a new row
+        const orgCountResult = await ctx.db
+          .select({ deviceCount: count() })
+          .from(Device)
+          .where(and(eq(Device.orgId, orgId), isNull(Device.revokedAt)));
+
+        if ((orgCountResult[0]?.deviceCount ?? 0) >= MAX_DEVICES_PER_ORG) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: `Org device limit reached (max ${MAX_DEVICES_PER_ORG}). Contact support to raise the limit.`,
+          });
+        }
+
+        const [inserted] = await ctx.db
+          .insert(Device)
+          .values({
+            orgId,
+            tokenHash: hash,
+            tokenExpiresAt: expiresAt,
+            deviceFingerprint: input.deviceFingerprint,
+            extensionVersion: input.extensionVersion,
+            platform: input.platform,
+            os: input.os,
+            arch: input.arch,
+            identityEmail: input.identityEmail,
+          })
+          .returning({ id: Device.id });
+
+        if (!inserted) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create device." });
+        }
+        deviceId = inserted.id;
       }
 
-      // Enforce device cap before inserting a new row
-      const orgCountResult = await ctx.db
-        .select({ deviceCount: count() })
-        .from(Device)
-        .where(and(eq(Device.orgId, orgId), isNull(Device.revokedAt)));
-
-      if ((orgCountResult[0]?.deviceCount ?? 0) >= MAX_DEVICES_PER_ORG) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: `Org device limit reached (max ${MAX_DEVICES_PER_ORG}). Contact support to raise the limit.`,
-        });
+      if (input.identityEmail) {
+        const endUserId = await upsertEndUser(ctx.db, orgId, input.identityEmail);
+        if (endUserId) {
+          await ctx.db.update(Device).set({ endUserId }).where(eq(Device.id, deviceId));
+        }
       }
-
-      await ctx.db.insert(Device).values({
-        orgId,
-        tokenHash: hash,
-        tokenExpiresAt: expiresAt,
-        deviceFingerprint: input.deviceFingerprint,
-        extensionVersion: input.extensionVersion,
-        platform: input.platform,
-        os: input.os,
-        arch: input.arch,
-        identityEmail: input.identityEmail,
-      });
 
       return { deviceToken: raw };
     }),
@@ -398,6 +362,13 @@ export const devicesRouter = createTRPCRouter({
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create device." });
         }
         deviceId = inserted.id;
+      }
+
+      if (input.identityEmail) {
+        const endUserId = await upsertEndUser(ctx.db, orgId, input.identityEmail);
+        if (endUserId) {
+          await ctx.db.update(Device).set({ endUserId }).where(eq(Device.id, deviceId));
+        }
       }
 
       // Always issue a fresh web session on (re-)enrollment
@@ -650,7 +621,6 @@ export const devicesRouter = createTRPCRouter({
             .insert(UserExtension)
             .values({
               deviceId: device.id,
-              userId: device.userId ?? undefined,
               chromeExtensionId: ext.chromeExtensionId,
               versionAtLastSync: ext.version,
               enabled: ext.enabled,

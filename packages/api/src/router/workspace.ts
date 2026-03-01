@@ -1,7 +1,7 @@
 import { and, asc, count, desc, eq, gte, ilike, or, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 
-import { Extension, Organization, WorkspaceApp, WorkspaceDevice, eqi } from "@amibeingpwned/db";
+import { Extension, WorkspaceApp, WorkspaceDevice, eqi } from "@amibeingpwned/db";
 
 import { TRPCError } from "@trpc/server";
 
@@ -166,7 +166,7 @@ export const workspaceRouter = createTRPCRouter({
         }
       })();
 
-      const [rows, totalResult, orgResult] = await Promise.all([
+      const [rows, totalResult] = await Promise.all([
         ctx.db
           .select({
             chromeExtensionId: WorkspaceApp.chromeExtensionId,
@@ -197,12 +197,6 @@ export const workspaceRouter = createTRPCRouter({
             eq(WorkspaceApp.chromeExtensionId, Extension.chromeExtensionId),
           )
           .where(whereClause),
-
-        ctx.db
-          .select({ lastWorkspaceSyncAt: Organization.lastWorkspaceSyncAt })
-          .from(Organization)
-          .where(eqi(Organization.id, orgId))
-          .limit(1),
       ]);
 
       return {
@@ -210,7 +204,7 @@ export const workspaceRouter = createTRPCRouter({
         total: totalResult[0]?.total ?? 0,
         page: input.page,
         limit: input.limit,
-        lastSyncedAt: orgResult[0]?.lastWorkspaceSyncAt ?? null,
+        lastSyncedAt: ctx.org.lastWorkspaceSyncAt ?? null,
       };
     }),
 });

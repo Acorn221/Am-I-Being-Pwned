@@ -752,6 +752,7 @@ interface DeviceRow {
   lastActivityAt: Date;
 }
 
+
 function DeviceSortableHeader({
   column,
   label,

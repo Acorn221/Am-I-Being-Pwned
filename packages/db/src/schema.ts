@@ -108,17 +108,18 @@ export type OrgApiKey = typeof OrgApiKey.$inferSelect;
 // ---------------------------------------------------------------------------
 // Device
 // One row per installed extension instance (machine + browser profile).
-// B2B: orgId set, userId nullable (employee may not have an AIBP account).
-// B2C: orgId null, userId set.
+// Always belongs to an org (B2B). endUserId links to the employee who owns
+// the device (populated from identityEmail during registration, nullable
+// if the employee hasn't provided an email).
 // ---------------------------------------------------------------------------
 
 export const Device = createTable(
   "device",
   {
-    // B2B managed device - belongs to an org
+    // Org this device belongs to
     orgId: fk("org_id", () => Organization, { onDelete: "cascade" }),
-    // B2C personal device - belongs to a user directly
-    userId: text("user_id").references(() => user.id, { onDelete: "cascade" }),
+    // Employee identity - auto-upserted from identityEmail at registration
+    endUserId: fk("end_user_id", () => OrgEndUser, { onDelete: "set null" }),
     // SHA-256 hex of the raw rotating device token ("aibp_dev_...")
     tokenHash: text().notNull().unique(),
     tokenExpiresAt: timestamp({ withTimezone: true }).notNull(),
@@ -131,11 +132,11 @@ export const Device = createTable(
     // so we reuse the existing Device row rather than creating duplicates
     deviceFingerprint: text().notNull(),
     extensionVersion: text().notNull(),
-    platform: devicePlatformEnum().notNull().default("chrome"),
+    platform: devicePlatformEnum("platform").notNull().default("chrome"),
     // OS reported by chrome.runtime.getPlatformInfo() - "mac", "win", "linux", "cros", etc.
-    os: text(),
+    os: text("os"),
     // CPU architecture - "arm", "arm64", "x86-32", "x86-64", etc.
-    arch: text(),
+    arch: text("arch"),
     // Signed-in Google account email from chrome.identity.getProfileUserInfo()
     identityEmail: text("identity_email"),
     lastSeenAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
@@ -145,11 +146,9 @@ export const Device = createTable(
   },
   (t) => [
     index("device_org_id_idx").on(t.orgId),
-    index("device_user_id_idx").on(t.userId),
+    index("device_end_user_id_idx").on(t.endUserId),
     // Re-registration lookup: find existing device for this org+fingerprint
     index("device_fingerprint_org_idx").on(t.orgId, t.deviceFingerprint),
-    // B2C re-registration lookup
-    index("device_fingerprint_user_idx").on(t.userId, t.deviceFingerprint),
   ],
 );
 
@@ -200,6 +199,28 @@ export const OrgMember = createTable(
 );
 
 export type OrgMember = typeof OrgMember.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// Org End User
+// Lightweight identity record for an employee enrolled via B2B.
+// Not a dashboard user - just enough context for managers to know which
+// employee a device belongs to (sourced from chrome.identity email).
+// Auto-upserted from identityEmail during device registration.
+// ---------------------------------------------------------------------------
+
+export const OrgEndUser = createTable(
+  "org_end_user",
+  {
+    orgId: fk("org_id", () => Organization, { onDelete: "cascade" }).notNull(),
+    email: text().notNull(),
+  },
+  (t) => [
+    unique().on(t.orgId, t.email),
+    index("org_end_user_org_id_idx").on(t.orgId),
+  ],
+);
+
+export type OrgEndUser = typeof OrgEndUser.$inferSelect;
 
 // ---------------------------------------------------------------------------
 // Global extension registry
@@ -269,17 +290,12 @@ export type ExtensionScan = typeof ExtensionScan.$inferSelect;
 // ---------------------------------------------------------------------------
 // Per-device extension inventory
 // Updated on every sync. deviceId is the primary identity anchor.
-// userId is denormalized from device.userId for efficient user-centric queries.
 // ---------------------------------------------------------------------------
 
 export const UserExtension = createTable(
   "user_extension",
   {
     deviceId: fk("device_id", () => Device, { onDelete: "cascade" }).notNull(),
-    // Denormalized from device.userId, null for B2B without AIBP accounts
-    userId: text("user_id").references(() => user.id, {
-      onDelete: "set null",
-    }),
     chromeExtensionId: varchar({ length: 32 }).notNull(),
     versionAtLastSync: text(),
     enabled: boolean().notNull().default(true),
@@ -292,7 +308,6 @@ export const UserExtension = createTable(
     // Primary uniqueness: one row per (device, extension)
     unique().on(t.deviceId, t.chromeExtensionId),
     index("user_ext_device_id_idx").on(t.deviceId),
-    index("user_ext_user_id_idx").on(t.userId),
   ],
 );
 
@@ -611,25 +626,3 @@ export const CreateUserExtensionSchema = createInsertSchema(UserExtension).omit(
 
 export * from "./auth-schema";
 
-// ---------------------------------------------------------------------------
-// Placeholder, remove once extension routers replace the post router
-// ---------------------------------------------------------------------------
-
-export const Post = pgTable("post", (t) => ({
-  id: t.uuid().notNull().primaryKey().defaultRandom(),
-  title: t.varchar({ length: 256 }).notNull(),
-  content: t.text().notNull(),
-  createdAt: t.timestamp().defaultNow().notNull(),
-  updatedAt: t
-    .timestamp({ mode: "date", withTimezone: true })
-    .$onUpdateFn(() => sql`now()`),
-}));
-
-export const CreatePostSchema = createInsertSchema(Post, {
-  title: z.string().max(256),
-  content: z.string().max(256),
-}).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});

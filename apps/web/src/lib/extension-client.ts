@@ -2,7 +2,9 @@ import type { ExtRequest, ExtResponse } from "@amibeingpwned/types";
 import { ExtResponseSchema } from "@amibeingpwned/validators";
 
 export class ExtensionClient {
-  private static readonly KNOWN_ID = "amibeingpndbmhcmnjdekhljpjcbjnpl";
+  // Set VITE_EXTENSION_ID in .env to the production extension's Chrome Web Store ID.
+  // Falls back to content-script discovery when unset or wrong.
+  private static readonly KNOWN_ID = import.meta.env.VITE_EXTENSION_ID ?? "";
 
   private extensionId: string | null = null;
 

@@ -1,8 +1,8 @@
 import { TRPCError } from "@trpc/server";
-import { and, count, desc, eq, ilike, isNull, or } from "drizzle-orm";
+import { and, count, desc, eq, ilike, or } from "drizzle-orm";
 import { z } from "zod/v4";
 
-import { Device, UserAlert, UserSubscription, user } from "@amibeingpwned/db";
+import { UserAlert, UserSubscription, user } from "@amibeingpwned/db";
 
 import { adminProcedure, createTRPCRouter } from "../../trpc";
 
@@ -69,30 +69,18 @@ export const adminUsersRouter = createTRPCRouter({
         .where(eq(UserSubscription.userId, input.userId))
         .limit(1);
 
-      const [deviceCountResult, unreadAlertResult] = await Promise.all([
-        ctx.db
-          .select({ total: count() })
-          .from(Device)
-          .where(and(eq(Device.userId, input.userId), isNull(Device.revokedAt))),
-        ctx.db
-          .select({ total: count() })
-          .from(UserAlert)
-          .where(and(eq(UserAlert.userId, input.userId), eq(UserAlert.read, false))),
-      ]);
+      const [unreadAlertResult] = await ctx.db
+        .select({ total: count() })
+        .from(UserAlert)
+        .where(and(eq(UserAlert.userId, input.userId), eq(UserAlert.read, false)));
 
       return {
         user: userRow,
         subscription: subscription ?? null,
-        activeDeviceCount: deviceCountResult[0]?.total ?? 0,
-        unreadAlertCount: unreadAlertResult[0]?.total ?? 0,
+        unreadAlertCount: unreadAlertResult?.total ?? 0,
       };
     }),
 
-  /**
-   * Promote or demote a user's role.
-   * Immediately invalidates all active sessions so the change takes effect
-   * on the next request rather than waiting for session expiry.
-   */
   setRole: adminProcedure
     .input(
       z.object({
@@ -118,15 +106,4 @@ export const adminUsersRouter = createTRPCRouter({
       // very next request without needing to revoke existing session tokens.
     }),
 
-  revokeAllDevices: adminProcedure
-    .input(z.object({ userId: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      const revoked = await ctx.db
-        .update(Device)
-        .set({ revokedAt: new Date() })
-        .where(and(eq(Device.userId, input.userId), isNull(Device.revokedAt)))
-        .returning({ id: Device.id });
-
-      return { revokedCount: revoked.length };
-    }),
 });

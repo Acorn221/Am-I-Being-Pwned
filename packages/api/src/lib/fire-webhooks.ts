@@ -128,7 +128,7 @@ export async function fireWebhooks<E extends WebhookEventType>(
       const sig = await signPayload(wh.secret, timestamp, body);
       const deliveryId = crypto.randomUUID();
       try {
-        await fetch(wh.url, {
+        const res = await fetch(wh.url, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -140,8 +140,16 @@ export async function fireWebhooks<E extends WebhookEventType>(
           body,
           signal: AbortSignal.timeout(10_000),
         });
-      } catch {
-        console.error(`[webhooks] delivery to ${wh.url} failed (event: ${eventType})`);
+        if (!res.ok) {
+          console.error(
+            `[webhooks] delivery ${deliveryId} to ${wh.url} returned HTTP ${res.status} (event: ${eventType})`,
+          );
+        }
+      } catch (err) {
+        console.error(
+          `[webhooks] delivery ${deliveryId} to ${wh.url} failed (event: ${eventType}):`,
+          err instanceof Error ? err.message : String(err),
+        );
       }
     }),
   );
