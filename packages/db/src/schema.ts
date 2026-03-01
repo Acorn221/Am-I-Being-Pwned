@@ -1,11 +1,10 @@
-import { relations, sql } from "drizzle-orm";
+import { relations } from "drizzle-orm";
 import {
   boolean,
   index,
   integer,
   jsonb,
   pgEnum,
-  pgTable,
   text,
   timestamp,
   unique,
