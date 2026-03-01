@@ -16,6 +16,12 @@ const JoinPage = lazy(() => import("~/components/join-page").then(m => ({ defaul
 const LoginPage = lazy(() => import("~/components/login-page").then(m => ({ default: m.LoginPage })));
 const ReportPage = lazy(() => import("~/components/report-page").then(m => ({ default: m.ReportPage })));
 
+const OnboardingPage = lazy(() =>
+  import("~/components/onboarding-page").then((m) => ({
+    default: m.OnboardingPage,
+  })),
+);
+
 const WEB_SESSION_KEY = "aibp_web_session";
 
 // Module-level so it survives App unmounting
@@ -63,11 +69,12 @@ export function Router() {
   const joinToken = joinMatch?.[1];
   const isFaq = path === "/faq";
   const isLogin = path === "/login";
+  const isOnboarding = path === "/onboarding";
   const isDashboard = path === "/dashboard" || path.startsWith("/dashboard/");
   const isAdmin = path.startsWith("/admin");
   const isJoin = !!joinToken;
 
-  const isSubPage = !!extensionId || isFaq || isLogin || isDashboard || isAdmin || isJoin;
+  const isSubPage = !!extensionId || isFaq || isLogin || isOnboarding || isDashboard || isAdmin || isJoin;
 
   useLayoutEffect(() => {
     if (isSubPage) {
@@ -123,6 +130,8 @@ export function Router() {
       {isJoin && joinToken && <JoinPage token={joinToken} />}
 
       {isLogin && <LoginPage />}
+
+      {isOnboarding && <OnboardingPage />}
 
       {isDashboard && session && <DashboardPage />}
       {isDashboard && !session && deviceToken && <DeviceDashboard token={deviceToken} />}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { Button } from "@amibeingpwned/ui/button";
+import { ScoreArc } from "@amibeingpwned/ui/score-arc";
 
 import { API_BASE_URL } from "../../lib/api";
 import { getStoredWebSessionToken } from "../../lib/device";
@@ -57,67 +58,6 @@ function calcScore(buckets: Record<RiskBucket, number>, total: number): number {
   return Math.round(sum / total);
 }
 
-function arcColor(score: number): string {
-  if (score >= 80) return "#10b981";
-  if (score >= 60) return "#eab308";
-  if (score >= 40) return "#f97316";
-  return "#ef4444";
-}
-
-function ScoreArc({ score }: { score: number }) {
-  const r = 36;
-  const circumference = 2 * Math.PI * r;
-  const trackArc = circumference * 0.75;
-  const fillArc = trackArc * (score / 100);
-
-  return (
-    <svg viewBox="0 0 100 100" className="w-36 h-36">
-      <circle
-        cx="50"
-        cy="50"
-        r={r}
-        fill="none"
-        className="stroke-muted"
-        strokeWidth="7"
-        strokeDasharray={`${trackArc} ${circumference}`}
-        strokeLinecap="round"
-        transform="rotate(135 50 50)"
-      />
-      <circle
-        cx="50"
-        cy="50"
-        r={r}
-        fill="none"
-        stroke={arcColor(score)}
-        strokeWidth="7"
-        strokeDasharray={`${fillArc} ${circumference}`}
-        strokeLinecap="round"
-        transform="rotate(135 50 50)"
-      />
-      <text
-        x="50"
-        y="46"
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fontSize="22"
-        fontWeight="700"
-        className="fill-foreground"
-      >
-        {score}
-      </text>
-      <text
-        x="50"
-        y="63"
-        textAnchor="middle"
-        fontSize="8"
-        letterSpacing="0.08em"
-        className="fill-muted-foreground"
-      >
-        SCORE
-      </text>
-    </svg>
-  );
-}
 
 interface Issue {
   id: string;
@@ -221,7 +161,7 @@ export default function App() {
             ) : score === null ? (
               <div className="w-36 h-36 rounded-full bg-muted/20 animate-pulse" />
             ) : (
-              <ScoreArc score={score} />
+              <ScoreArc score={score} className="w-36 h-36" />
             )}
             {score !== null && !error && (
               <p className="text-xs text-muted-foreground">

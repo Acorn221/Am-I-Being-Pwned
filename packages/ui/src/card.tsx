@@ -1,17 +1,54 @@
-import type * as React from "react";
+import * as React from "react";
 
 import { cn } from "@amibeingpwned/ui";
+import { Button } from "./button";
 
-function Card({ className, ...props }: React.ComponentProps<"div">) {
+export interface FooterAction {
+  label: string;
+  onClick?: () => void;
+  disabled?: boolean;
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
+  size?: "default" | "sm" | "lg" | "icon";
+  icon?: React.ComponentType<{ className?: string }>;
+}
+
+interface CardProps extends React.ComponentProps<"div"> {
+  footerActions?: FooterAction[];
+}
+
+function Card({ className, footerActions, children, ...props }: CardProps) {
   return (
     <div
       data-slot="card"
       className={cn(
-        "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",
+        "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border pt-6 shadow-sm",
+        footerActions?.length ? "" : "pb-6",
         className,
       )}
       {...props}
-    />
+    >
+      {children}
+      {footerActions && footerActions.length > 0 && (
+        <div className="-mt-2 flex items-center justify-end gap-2 border-t px-6 py-3">
+          {footerActions.map((action, i) => {
+            const Icon = action.icon;
+            return (
+              <Button
+                key={i}
+                onClick={action.onClick}
+                variant={action.variant ?? "default"}
+                disabled={action.disabled}
+                size={action.size ?? "sm"}
+                className="gap-1.5"
+              >
+                {Icon && <Icon className="h-3.5 w-3.5" />}
+                {action.label}
+              </Button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 

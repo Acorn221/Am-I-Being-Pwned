@@ -2,6 +2,7 @@ import { useState, useSyncExternalStore } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
+  ArrowLeft,
   ArrowRight,
   Bell,
   Building2,
@@ -26,9 +27,26 @@ import {
 
 import { Badge } from "@amibeingpwned/ui/badge";
 import { Button } from "@amibeingpwned/ui/button";
-import { Card } from "@amibeingpwned/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@amibeingpwned/ui/card";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@amibeingpwned/ui/dialog";
+import { Field, FieldGroup, FieldLabel } from "@amibeingpwned/ui/field";
 import { Input } from "@amibeingpwned/ui/input";
-import { Label } from "@amibeingpwned/ui/label";
 import {
   Table,
   TableBody,
@@ -59,7 +77,13 @@ interface FleetOverview {
   unreadAlertCount: number;
 }
 
-type Tab = "overview" | "alerts" | "devices" | "extensions" | "settings";
+type Tab =
+  | "overview"
+  | "alerts"
+  | "devices"
+  | "extensions"
+  | "settings"
+  | "webhooks";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -106,7 +130,14 @@ function timeAgo(date: Date): string {
 
 // ─── Tab routing helpers ──────────────────────────────────────────────────────
 
-const VALID_TABS = new Set<Tab>(["overview", "alerts", "devices", "extensions", "settings"]);
+const VALID_TABS = new Set<Tab>([
+  "overview",
+  "alerts",
+  "devices",
+  "extensions",
+  "settings",
+  "webhooks",
+]);
 
 function getTab(): Tab {
   const segment = window.location.pathname.split("/")[2];
@@ -221,6 +252,7 @@ export function FleetDashboard({ overview }: { overview: FleetOverview }) {
         {tab === "devices" && <DevicesTab overview={overview} />}
         {tab === "extensions" && <ExtensionsTab />}
         {tab === "settings" && <SettingsTab orgId={overview.org.id} />}
+        {tab === "webhooks" && <WebhooksPage />}
       </div>
     </div>
   );
@@ -1007,11 +1039,6 @@ const ALL_EVENTS = [
     label: "Alert created",
     description: "A new security alert was raised for an org member",
   },
-  {
-    id: "device.enrolled",
-    label: "Device enrolled",
-    description: "A new device joins the organisation",
-  },
 ] as const;
 
 type WebhookEventId = (typeof ALL_EVENTS)[number]["id"];
@@ -1021,17 +1048,21 @@ function SettingsTab({ orgId: _orgId }: { orgId: string }) {
   const queryClient = useQueryClient();
 
   // ── Invite link state ──
-  const { data: inviteLinkData } = useQuery(trpc.org.hasInviteLink.queryOptions());
+  const { data: inviteLinkData } = useQuery(
+    trpc.org.hasInviteLink.queryOptions(),
+  );
   const [inviteToken, setInviteToken] = useState<string | null>(null);
   const [inviteCopied, setInviteCopied] = useState(false);
-  const [showRotateConfirm, setShowRotateConfirm] = useState(false);
+  const [showRotateDialog, setShowRotateDialog] = useState(false);
 
   const rotateMutation = useMutation(
     trpc.org.rotateInviteLink.mutationOptions({
       onSuccess: (data) => {
         setInviteToken(data.token);
-        setShowRotateConfirm(false);
-        void queryClient.invalidateQueries(trpc.org.hasInviteLink.queryFilter());
+        setShowRotateDialog(false);
+        void queryClient.invalidateQueries(
+          trpc.org.hasInviteLink.queryFilter(),
+        );
       },
     }),
   );
@@ -1046,6 +1077,127 @@ function SettingsTab({ orgId: _orgId }: { orgId: string }) {
     setInviteCopied(true);
     setTimeout(() => setInviteCopied(false), 2000);
   }
+
+  return (
+    <div className="space-y-4">
+      {/* Rotate confirmation dialog */}
+      <Dialog open={showRotateDialog} onOpenChange={setShowRotateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rotate invite link?</DialogTitle>
+            <DialogDescription>
+              The current link will be revoked immediately. Anyone with the old
+              link won't be able to use it.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button
+              variant="destructive"
+              disabled={rotateMutation.isPending}
+              onClick={() => rotateMutation.mutate()}
+            >
+              {rotateMutation.isPending ? (
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              ) : null}
+              Rotate link
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Team Enrollment ──────────────────────────────────────────────── */}
+      <Card
+        footerActions={
+          inviteToken && inviteUrl
+            ? [
+                {
+                  label: inviteCopied ? "Copied" : "Copy link",
+                  icon: inviteCopied ? CheckCircle : Copy,
+                  variant: "outline",
+                  onClick: () => void copyInviteLink(),
+                },
+                {
+                  label: "Rotate",
+                  icon: RotateCcw,
+                  variant: "outline",
+                  onClick: () => setShowRotateDialog(true),
+                },
+              ]
+            : inviteLinkData?.hasActiveLink
+              ? [
+                  {
+                    label: "Rotate link",
+                    icon: RotateCcw,
+                    variant: "outline",
+                    onClick: () => setShowRotateDialog(true),
+                  },
+                ]
+              : [
+                  {
+                    label: rotateMutation.isPending
+                      ? "Generating..."
+                      : "Generate invite link",
+                    icon: rotateMutation.isPending ? RefreshCw : Link2,
+                    disabled: rotateMutation.isPending,
+                    onClick: () => rotateMutation.mutate(),
+                  },
+                ]
+        }
+      >
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Link2 className="h-4 w-4" />
+            Team Enrollment
+          </CardTitle>
+          <CardDescription>
+            Share an invite link with your team. Anyone who clicks it and
+            installs the extension is automatically added to your fleet.
+          </CardDescription>
+        </CardHeader>
+
+        {inviteToken && inviteUrl && (
+          <CardContent>
+            <code className="bg-muted block overflow-x-auto rounded px-3 py-2 font-mono text-xs">
+              {inviteUrl}
+            </code>
+            <p className="text-muted-foreground mt-2 text-xs">
+              Shown once - save it somewhere safe.
+            </p>
+          </CardContent>
+        )}
+      </Card>
+
+      {/* ── Webhooks ─────────────────────────────────────────────────────── */}
+      <Card
+        className="hover:bg-accent/50 cursor-pointer transition-colors"
+        onClick={() => navigate("/dashboard/webhooks")}
+      >
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Webhook className="h-4 w-4" />
+            Webhooks
+          </CardTitle>
+          <CardDescription>
+            Send signed event payloads to your servers when threats are
+            detected.
+          </CardDescription>
+          <CardAction>
+            <ArrowRight className="text-muted-foreground h-4 w-4" />
+          </CardAction>
+        </CardHeader>
+      </Card>
+    </div>
+  );
+}
+
+// ─── Webhooks page ────────────────────────────────────────────────────────────
+
+function WebhooksPage() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
 
   const { data: webhooks, isPending } = useQuery(
     trpc.webhooks.list.queryOptions(),
@@ -1062,7 +1214,6 @@ function SettingsTab({ orgId: _orgId }: { orgId: string }) {
   );
   const testMutation = useMutation(trpc.webhooks.test.mutationOptions());
 
-  // ── Create form state ──
   const [showForm, setShowForm] = useState(false);
   const [formUrl, setFormUrl] = useState("");
   const [formDesc, setFormDesc] = useState("");
@@ -1100,294 +1251,196 @@ function SettingsTab({ orgId: _orgId }: { orgId: string }) {
 
   return (
     <div className="space-y-6">
-      {/* ── Team Enrollment ──────────────────────────────────────────────── */}
-      <section className="space-y-3">
-        <h2 className="flex items-center gap-2 text-sm font-semibold">
-          <Link2 className="h-4 w-4" />
-          Team Enrollment
-        </h2>
-        <p className="text-muted-foreground text-xs">
-          Share an invite link with your team. Any employee who clicks it and
-          installs the extension will be automatically added to your fleet, no
-          IT involvement required.
-        </p>
+      {/* Back nav */}
+      <div>
+        <button
+          onClick={() => navigate("/dashboard/settings")}
+          className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-sm transition-colors"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Settings
+        </button>
+        <h1 className="mt-3 flex items-center gap-2 text-lg font-semibold">
+          <Webhook className="h-5 w-5" />
+          Webhooks
+        </h1>
+      </div>
 
-        {/* No active link yet - show generate button */}
-        {!inviteLinkData?.hasActiveLink && !inviteToken && (
-          <Button
-            size="sm"
-            variant="outline"
-            className="gap-1.5"
-            disabled={rotateMutation.isPending}
-            onClick={() => rotateMutation.mutate()}
-          >
-            {rotateMutation.isPending ? (
-              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Link2 className="h-3.5 w-3.5" />
-            )}
-            Generate invite link
-          </Button>
-        )}
-
-        {/* Active link exists but token not in state (navigated away and back) */}
-        {inviteLinkData?.hasActiveLink && !inviteToken && (
-          <div className="space-y-2">
-            <p className="text-muted-foreground text-xs italic">
-              An invite link is active. Rotate it to get a new shareable URL.
-            </p>
-            {showRotateConfirm ? (
-              <div className="flex items-center gap-2">
-                <span className="text-xs">Revoke current link and generate a new one?</span>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  disabled={rotateMutation.isPending}
-                  onClick={() => rotateMutation.mutate()}
-                >
-                  {rotateMutation.isPending ? (
-                    <RefreshCw className="mr-1 h-3.5 w-3.5 animate-spin" />
-                  ) : null}
-                  Confirm rotate
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setShowRotateConfirm(false)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            ) : (
-              <Button
-                size="sm"
-                variant="outline"
-                className="gap-1.5"
-                onClick={() => setShowRotateConfirm(true)}
-              >
-                <RotateCcw className="h-3.5 w-3.5" />
-                Rotate link
-              </Button>
-            )}
-          </div>
-        )}
-
-        {/* Token in state - show copyable URL */}
-        {inviteToken && inviteUrl && (
-          <div className="space-y-2">
+      {/* New secret Dialog */}
+      <Dialog
+        open={!!newSecret}
+        onOpenChange={(open) => {
+          if (!open) setNewSecret(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-emerald-600">
+              <CheckCircle className="h-4 w-4" />
+              Webhook created - save your secret
+            </DialogTitle>
+            <DialogDescription>
+              This is the only time the full secret will be shown. Copy it now
+              and store it securely.
+            </DialogDescription>
+          </DialogHeader>
+          {newSecret && (
             <div className="flex items-center gap-2">
               <code className="bg-muted flex-1 overflow-x-auto rounded px-3 py-2 font-mono text-xs">
-                {inviteUrl}
+                {newSecret}
               </code>
               <Button
                 size="sm"
                 variant="outline"
                 className="shrink-0 gap-1.5"
-                onClick={() => void copyInviteLink()}
+                onClick={() => void copySecret(newSecret)}
               >
-                {inviteCopied ? (
+                {copied ? (
                   <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
                 ) : (
                   <Copy className="h-3.5 w-3.5" />
                 )}
-                {inviteCopied ? "Copied" : "Copy"}
+                {copied ? "Copied" : "Copy"}
               </Button>
-              {showRotateConfirm ? (
-                <div className="flex items-center gap-1">
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    disabled={rotateMutation.isPending}
-                    onClick={() => rotateMutation.mutate()}
-                  >
-                    {rotateMutation.isPending ? (
-                      <RefreshCw className="mr-1 h-3.5 w-3.5 animate-spin" />
-                    ) : null}
-                    Confirm
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setShowRotateConfirm(false)}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="shrink-0 gap-1.5"
-                  onClick={() => setShowRotateConfirm(true)}
-                >
-                  <RotateCcw className="h-3.5 w-3.5" />
-                  Rotate
-                </Button>
-              )}
             </div>
-            <p className="text-muted-foreground text-xs">
-              This link is shown once. Save it somewhere safe or copy it now.
+          )}
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline" onClick={() => setNewSecret(null)}>
+                I've saved it - dismiss
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Endpoints section */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="flex items-center gap-2 text-sm font-semibold">
+              <Webhook className="h-4 w-4" />
+              Endpoints
+            </h2>
+            <p className="text-muted-foreground mt-0.5 text-xs">
+              Receive signed POST notifications when events occur in your org.
             </p>
           </div>
-        )}
-      </section>
 
-      {/* ── New secret banner ────────────────────────────────────────────── */}
-      {newSecret && (
-        <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4">
-          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-emerald-600">
-            <CheckCircle className="h-4 w-4" />
-            Webhook created - copy your secret now
-          </div>
-          <p className="text-muted-foreground mb-3 text-xs">
-            This is the only time the full secret will be shown. Store it
-            securely.
-          </p>
-          <div className="flex items-center gap-2">
-            <code className="bg-muted flex-1 overflow-x-auto rounded px-3 py-2 font-mono text-xs">
-              {newSecret}
-            </code>
-            <Button
-              size="sm"
-              variant="outline"
-              className="shrink-0 gap-1.5"
-              onClick={() => void copySecret(newSecret)}
-            >
-              {copied ? (
-                <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
-              ) : (
-                <Copy className="h-3.5 w-3.5" />
-              )}
-              {copied ? "Copied" : "Copy"}
-            </Button>
-          </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="text-muted-foreground mt-2 text-xs"
-            onClick={() => setNewSecret(null)}
+          {/* Add webhook Dialog */}
+          <Dialog
+            open={showForm}
+            onOpenChange={(open) => {
+              setShowForm(open);
+              if (!open) {
+                setFormUrl("");
+                setFormDesc("");
+                setFormEvents(["threat.detected"]);
+              }
+            }}
           >
-            I've saved it - dismiss
-          </Button>
-        </div>
-      )}
-
-      {/* ── Webhooks section ─────────────────────────────────────────────── */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="flex items-center gap-2 text-sm font-semibold">
-            <Webhook className="h-4 w-4" />
-            Webhooks
-          </h2>
-          {!showForm && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1.5"
-              onClick={() => setShowForm(true)}
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Add webhook
-            </Button>
-          )}
-        </div>
-
-        {/* Create form */}
-        {showForm && (
-          <Card className="space-y-4 p-4">
-            <h3 className="text-sm font-semibold">New webhook</h3>
-
-            <div className="space-y-2">
-              <Label htmlFor="wh-url" className="text-xs">
-                Endpoint URL
-              </Label>
-              <Input
-                id="wh-url"
-                placeholder="https://your-server.example.com/webhooks/aibp"
-                value={formUrl}
-                onChange={(e) => setFormUrl(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="wh-desc" className="text-xs">
-                Description (optional)
-              </Label>
-              <Input
-                id="wh-desc"
-                placeholder="e.g. Slack alerts"
-                value={formDesc}
-                onChange={(e) => setFormDesc(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-foreground text-xs font-medium">
-                Events to subscribe
-              </p>
-              <div className="space-y-2">
-                {ALL_EVENTS.map((ev) => (
-                  <label
-                    key={ev.id}
-                    className="flex cursor-pointer items-start gap-3"
-                  >
-                    <input
-                      type="checkbox"
-                      className="mt-0.5"
-                      checked={formEvents.includes(ev.id)}
-                      onChange={() => toggleEvent(ev.id)}
-                    />
-                    <div>
-                      <p className="text-sm font-medium">{ev.label}</p>
-                      <p className="text-muted-foreground text-xs">
-                        {ev.description}
-                      </p>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                disabled={
-                  !formUrl ||
-                  formEvents.length === 0 ||
-                  createMutation.isPending
-                }
-                onClick={() =>
-                  createMutation.mutate({
-                    url: formUrl,
-                    description: formDesc || undefined,
-                    events: formEvents,
-                  })
-                }
-              >
-                {createMutation.isPending ? (
-                  <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                ) : null}
-                Create webhook
+            <DialogTrigger asChild>
+              <Button size="sm" variant="outline" className="gap-1.5">
+                <Plus className="h-3.5 w-3.5" />
+                Add webhook
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setShowForm(false)}
-              >
-                Cancel
-              </Button>
-            </div>
-          </Card>
-        )}
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>New webhook</DialogTitle>
+                <DialogDescription>
+                  Add an HTTPS endpoint to receive signed event payloads.
+                </DialogDescription>
+              </DialogHeader>
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="wh-url">Endpoint URL</FieldLabel>
+                  <Input
+                    id="wh-url"
+                    placeholder="https://your-server.example.com/webhooks/aibp"
+                    value={formUrl}
+                    onChange={(e) => setFormUrl(e.target.value)}
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="wh-desc">
+                    Description{" "}
+                    <span className="text-muted-foreground font-normal">
+                      (optional)
+                    </span>
+                  </FieldLabel>
+                  <Input
+                    id="wh-desc"
+                    placeholder="e.g. Slack alerts"
+                    value={formDesc}
+                    onChange={(e) => setFormDesc(e.target.value)}
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel>Events to subscribe</FieldLabel>
+                  <div className="space-y-2">
+                    {ALL_EVENTS.map((ev) => (
+                      <label
+                        key={ev.id}
+                        className="has-[:checked]:border-primary has-[:checked]:bg-primary/5 dark:has-[:checked]:bg-primary/10 flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          className="accent-primary mt-0.5"
+                          checked={formEvents.includes(ev.id)}
+                          onChange={() => toggleEvent(ev.id)}
+                        />
+                        <div>
+                          <p className="text-sm font-medium">{ev.label}</p>
+                          <p className="text-muted-foreground text-xs">
+                            {ev.description}
+                          </p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </Field>
+              </FieldGroup>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button size="sm" variant="ghost">
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <Button
+                  size="sm"
+                  disabled={
+                    !formUrl ||
+                    formEvents.length === 0 ||
+                    createMutation.isPending
+                  }
+                  onClick={() =>
+                    createMutation.mutate({
+                      url: formUrl,
+                      description: formDesc || undefined,
+                      events: formEvents,
+                    })
+                  }
+                >
+                  {createMutation.isPending ? (
+                    <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  ) : null}
+                  Create webhook
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
 
-        {/* List */}
+        {/* Loading */}
         {isPending && (
           <div className="flex items-center justify-center py-12">
             <RefreshCw className="h-5 w-5 animate-spin opacity-30" />
           </div>
         )}
 
-        {!isPending && (!webhooks || webhooks.length === 0) && !showForm && (
+        {/* Empty state */}
+        {!isPending && (!webhooks || webhooks.length === 0) && (
           <div className="text-muted-foreground flex flex-col items-center gap-2 py-12">
             <Webhook className="h-8 w-8 opacity-20" />
             <p className="text-sm">No webhooks configured yet.</p>
@@ -1397,123 +1450,149 @@ function SettingsTab({ orgId: _orgId }: { orgId: string }) {
           </div>
         )}
 
+        {/* Webhook list */}
         {webhooks && webhooks.length > 0 && (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {webhooks.map((wh) => (
-              <Card
-                key={wh.id}
-                className={`p-4 ${!wh.enabled ? "opacity-60" : ""}`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="truncate font-mono text-sm font-medium">
-                        {wh.url}
-                      </span>
-                      {!wh.enabled && (
-                        <Badge variant="secondary" className="text-xs">
-                          Disabled
-                        </Badge>
-                      )}
+              <Card key={wh.id} className={!wh.enabled ? "opacity-60" : ""}>
+                <CardHeader>
+                  <CardTitle className="flex flex-wrap items-center gap-2 font-mono text-sm">
+                    {wh.url}
+                    {!wh.enabled && <Badge variant="secondary">Disabled</Badge>}
+                  </CardTitle>
+                  <CardAction>
+                    <div className="flex gap-1">
+                      {/* Test */}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 gap-1.5 px-2 text-xs"
+                        disabled={testMutation.isPending || !wh.enabled}
+                        title="Send test event"
+                        onClick={() => {
+                          setTestedId(wh.id);
+                          testMutation.mutate(
+                            { webhookId: wh.id },
+                            {
+                              onSettled: () =>
+                                setTimeout(() => setTestedId(null), 2000),
+                            },
+                          );
+                        }}
+                      >
+                        {testedId === wh.id ? (
+                          <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                        ) : (
+                          <Zap className="h-3.5 w-3.5" />
+                        )}
+                        Test
+                      </Button>
+                      {/* Toggle enable */}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 px-2 text-xs"
+                        disabled={toggleMutation.isPending}
+                        onClick={() =>
+                          toggleMutation.mutate({
+                            webhookId: wh.id,
+                            enabled: !wh.enabled,
+                          })
+                        }
+                      >
+                        {wh.enabled ? "Disable" : "Enable"}
+                      </Button>
+                      {/* Delete with confirmation */}
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-muted-foreground hover:text-destructive h-8 w-8 p-0"
+                            title="Delete webhook"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Delete webhook?</DialogTitle>
+                            <DialogDescription>
+                              This will permanently remove the endpoint{" "}
+                              <span className="text-foreground font-mono">
+                                {wh.url}
+                              </span>
+                              . Any deliveries in flight may still arrive.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <DialogFooter>
+                            <DialogClose asChild>
+                              <Button variant="outline">Cancel</Button>
+                            </DialogClose>
+                            <DialogClose asChild>
+                              <Button
+                                variant="destructive"
+                                disabled={deleteMutation.isPending}
+                                onClick={() =>
+                                  deleteMutation.mutate({ webhookId: wh.id })
+                                }
+                              >
+                                {deleteMutation.isPending ? (
+                                  <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                ) : null}
+                                Delete
+                              </Button>
+                            </DialogClose>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
                     </div>
-                    {wh.description && (
-                      <p className="text-muted-foreground mt-0.5 text-xs">
-                        {wh.description}
-                      </p>
-                    )}
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {wh.events.map((ev) => (
-                        <span
-                          key={ev}
-                          className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 font-mono text-[10px]"
-                        >
-                          {ev}
-                        </span>
-                      ))}
-                    </div>
-                    <p className="text-muted-foreground mt-2 font-mono text-[11px]">
-                      {wh.secretMasked}
+                  </CardAction>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {wh.description && (
+                    <p className="text-muted-foreground text-xs">
+                      {wh.description}
                     </p>
+                  )}
+                  <div className="flex flex-wrap gap-1">
+                    {wh.events.map((ev) => (
+                      <Badge
+                        key={ev}
+                        variant="outline"
+                        className="font-mono text-[10px]"
+                      >
+                        {ev}
+                      </Badge>
+                    ))}
                   </div>
-
-                  <div className="flex shrink-0 gap-1">
-                    {/* Test */}
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 gap-1.5 px-2 text-xs"
-                      disabled={testMutation.isPending || !wh.enabled}
-                      title="Send test event"
-                      onClick={() => {
-                        setTestedId(wh.id);
-                        testMutation.mutate(
-                          { webhookId: wh.id },
-                          {
-                            onSettled: () =>
-                              setTimeout(() => setTestedId(null), 2000),
-                          },
-                        );
-                      }}
-                    >
-                      {testedId === wh.id ? (
-                        <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
-                      ) : (
-                        <Zap className="h-3.5 w-3.5" />
-                      )}
-                      Test
-                    </Button>
-                    {/* Toggle enable */}
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 px-2 text-xs"
-                      disabled={toggleMutation.isPending}
-                      onClick={() =>
-                        toggleMutation.mutate({
-                          webhookId: wh.id,
-                          enabled: !wh.enabled,
-                        })
-                      }
-                    >
-                      {wh.enabled ? "Disable" : "Enable"}
-                    </Button>
-                    {/* Delete */}
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-muted-foreground hover:text-destructive h-8 w-8 p-0"
-                      disabled={deleteMutation.isPending}
-                      onClick={() =>
-                        deleteMutation.mutate({ webhookId: wh.id })
-                      }
-                      title="Delete webhook"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
+                  <p className="text-muted-foreground font-mono text-[11px]">
+                    {wh.secretMasked}
+                  </p>
+                </CardContent>
               </Card>
             ))}
           </div>
         )}
       </section>
 
-      {/* ── Signing guide ─────────────────────────────────────────────────── */}
+      {/* Signing guide */}
       <section className="space-y-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold">
           <Settings className="h-4 w-4" />
           Verifying signatures
         </h2>
-        <Card className="p-4">
-          <p className="text-muted-foreground mb-3 text-xs leading-relaxed">
-            Every delivery includes an{" "}
-            <code className="bg-muted rounded px-1 py-0.5">
-              X-AIBP-Signature
-            </code>{" "}
-            header. Verify it with HMAC-SHA256 to confirm the payload came from
-            us and wasn't tampered with.
-          </p>
-          <pre className="bg-muted text-foreground overflow-x-auto rounded p-3 text-[11px] leading-relaxed">{`// Node.js / Express example
+        <Card>
+          <CardContent className="space-y-3">
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              Every delivery includes an{" "}
+              <code className="bg-muted rounded px-1 py-0.5">
+                X-AIBP-Signature
+              </code>{" "}
+              header. Verify it with HMAC-SHA256 to confirm the payload came
+              from us and wasn't tampered with.
+            </p>
+            <pre className="bg-muted text-foreground overflow-x-auto rounded p-3 text-[11px] leading-relaxed">{`// Node.js / Express example
 import { createHmac, timingSafeEqual } from "crypto";
 
 function verifySignature(secret, rawBody, header) {
@@ -1530,6 +1609,7 @@ function verifySignature(secret, rawBody, header) {
     Buffer.from(expected),
   );
 }`}</pre>
+          </CardContent>
         </Card>
       </section>
     </div>
