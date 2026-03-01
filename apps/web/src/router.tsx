@@ -101,7 +101,7 @@ export function Router() {
 
   return (
     <Suspense>
-      {!isSubPage && <App reports={reports} />}
+      {!isSubPage && <App />}
 
       {extensionId && (
         <div className="bg-background min-h-screen">

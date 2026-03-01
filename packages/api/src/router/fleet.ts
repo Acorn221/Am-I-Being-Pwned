@@ -344,6 +344,7 @@ export const fleetRouter = createTRPCRouter({
         sortDir: z.enum(["asc", "desc"]).default("desc"),
         isFlagged: z.boolean().optional(),
         riskLevel: z.enum(["low", "medium", "high"]).optional(),
+        onlyEnabled: z.boolean().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -354,6 +355,7 @@ export const fleetRouter = createTRPCRouter({
         eqi(Device.orgId, orgId),
         isNull(Device.revokedAt),
         isNull(UserExtension.removedAt),
+        input.onlyEnabled ? eq(UserExtension.enabled, true) : undefined,
         input.search
           ? or(
               ilike(Extension.name, `%${input.search}%`),

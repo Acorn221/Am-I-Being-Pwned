@@ -59,6 +59,7 @@ export function JoinPage({ token }: JoinPageProps) {
 
     // Token query failed - show error immediately, don't bother detecting
     if (tokenError) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- state machine transition, intentional
       setState({ phase: "invalid_token" });
       return;
     }

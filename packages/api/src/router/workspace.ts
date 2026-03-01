@@ -8,11 +8,6 @@ import { TRPCError } from "@trpc/server";
 import { syncWorkspaceApps } from "../services/workspace-sync";
 import { createTRPCRouter, managerProcedure } from "../trpc";
 
-const PaginationSchema = z.object({
-  page: z.number().int().min(1).default(1),
-  limit: z.number().int().min(1).max(100).default(50),
-});
-
 export const workspaceRouter = createTRPCRouter({
   /**
    * Trigger a Google Workspace extension sync for the manager's org.

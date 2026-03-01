@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-import type { ReportMap } from "~/hooks/use-extension-database";
 import { useExtensionProbe } from "~/hooks/use-extension-probe";
 import { HeroCycleProvider } from "~/components/hero-cycle-context";
 import { HeroSection } from "~/components/hero-section";
@@ -16,8 +15,7 @@ import { TestimonialsSection } from "~/components/testimonials-section";
 import { Footer } from "~/components/footer";
 import { Button } from "@amibeingpwned/ui";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function App({ reports }: { reports: ReportMap }) {
+function App() {
   const { detected, probing, checkedCount } = useExtensionProbe();
   const [modalDismissed, setModalDismissed] = useState(false);
 

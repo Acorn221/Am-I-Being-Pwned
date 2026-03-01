@@ -94,6 +94,7 @@ import {
   TableHeader,
   TableRow,
 } from "@amibeingpwned/ui/table";
+import { Skeleton } from "@amibeingpwned/ui/skeleton";
 import { toast } from "@amibeingpwned/ui/toast";
 
 import { authClient } from "~/lib/auth-client";
@@ -940,8 +941,8 @@ function FleetDevicesDataTable() {
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
-  const [sortBy, setSortBy] = useState<FleetDeviceSortBy>("lastSeenAt");
+  const [pageSize, setPageSize] = useState(10);
+  const [sortBy, setSortBy] = useState<FleetDeviceSortBy>("flaggedCount");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [platformFilter, setPlatformFilter] = useState("");
 
@@ -968,6 +969,7 @@ function FleetDevicesDataTable() {
         ? (platformFilter as "chrome" | "edge")
         : undefined,
     }),
+    placeholderData: keepPreviousData,
   });
 
   const total = data?.total ?? 0;
@@ -1171,7 +1173,17 @@ function FleetDevicesDataTable() {
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows.length === 0 ? (
+            {!data ? (
+              Array.from({ length: pageSize }).map((_, i) => (
+                <TableRow key={i} className="pointer-events-none">
+                  {columns.map((_, j) => (
+                    <TableCell key={j} className="px-3">
+                      <Skeleton className="h-4 w-full" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : table.getRowModel().rows.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
@@ -1181,21 +1193,37 @@ function FleetDevicesDataTable() {
                 </TableCell>
               </TableRow>
             ) : (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className={row.index % 2 === 1 ? "bg-muted/20" : ""}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-3">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              <>
+                {table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className={row.index % 2 === 1 ? "bg-muted/20" : ""}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="px-3">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+                {Array.from({
+                  length: Math.max(
+                    0,
+                    pageSize - table.getRowModel().rows.length,
+                  ),
+                }).map((_, i) => (
+                  <TableRow
+                    key={`filler-${i}`}
+                    aria-hidden
+                    className="pointer-events-none select-none opacity-0"
+                  >
+                    <TableCell colSpan={columns.length}>&nbsp;</TableCell>
+                  </TableRow>
+                ))}
+              </>
             )}
           </TableBody>
         </Table>
@@ -1269,7 +1297,7 @@ function WorkspaceDevicesDataTable() {
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
+  const [pageSize, setPageSize] = useState(10);
   const [sortBy, setSortBy] = useState<WorkspaceSortBy>("extensionCount");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
@@ -1289,6 +1317,7 @@ function WorkspaceDevicesDataTable() {
       sortBy,
       sortDir,
     }),
+    placeholderData: keepPreviousData,
   });
 
   const total = data?.total ?? 0;
@@ -1428,7 +1457,17 @@ function WorkspaceDevicesDataTable() {
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows.length === 0 ? (
+            {!data ? (
+              Array.from({ length: pageSize }).map((_, i) => (
+                <TableRow key={i} className="pointer-events-none">
+                  {columns.map((_, j) => (
+                    <TableCell key={j} className="px-3">
+                      <Skeleton className="h-4 w-full" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : table.getRowModel().rows.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
@@ -1438,21 +1477,37 @@ function WorkspaceDevicesDataTable() {
                 </TableCell>
               </TableRow>
             ) : (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className={row.index % 2 === 1 ? "bg-muted/20" : ""}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-3">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              <>
+                {table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className={row.index % 2 === 1 ? "bg-muted/20" : ""}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="px-3">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+                {Array.from({
+                  length: Math.max(
+                    0,
+                    pageSize - table.getRowModel().rows.length,
+                  ),
+                }).map((_, i) => (
+                  <TableRow
+                    key={`filler-${i}`}
+                    aria-hidden
+                    className="pointer-events-none select-none opacity-0"
+                  >
+                    <TableCell colSpan={columns.length}>&nbsp;</TableCell>
+                  </TableRow>
+                ))}
+              </>
             )}
           </TableBody>
         </Table>
@@ -1710,12 +1765,13 @@ function ExtensionsDataTable({
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
-  const [sortBy, setSortBy] = useState<SortBy>("deviceCount");
+  const [pageSize, setPageSize] = useState(10);
+  const [sortBy, setSortBy] = useState<SortBy>("riskScore");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [showFlaggedOnly, setShowFlaggedOnly] = useState(false);
   const [riskFilter, setRiskFilter] = useState<RiskLevel>("all");
   const [installTypeFilter, setInstallTypeFilter] = useState("");
+  const [onlyEnabled, setOnlyEnabled] = useState(false);
 
   // Debounce search - reset to page 1 when it fires
   useEffect(() => {
@@ -1729,7 +1785,7 @@ function ExtensionsDataTable({
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [showFlaggedOnly, riskFilter, installTypeFilter]);
+  }, [showFlaggedOnly, riskFilter, installTypeFilter, onlyEnabled]);
 
   const sharedParams = {
     page,
@@ -1742,7 +1798,10 @@ function ExtensionsDataTable({
   } as const;
 
   const fleetQuery = useQuery({
-    ...trpc.fleet.extensions.queryOptions(sharedParams),
+    ...trpc.fleet.extensions.queryOptions({
+      ...sharedParams,
+      onlyEnabled: onlyEnabled ? true : undefined,
+    }),
     enabled: source === "fleet",
     placeholderData: keepPreviousData,
   });
@@ -1911,7 +1970,7 @@ function ExtensionsDataTable({
   });
 
   const hasActiveFilters =
-    showFlaggedOnly || riskFilter !== "all" || installTypeFilter !== "";
+    showFlaggedOnly || riskFilter !== "all" || installTypeFilter !== "" || onlyEnabled;
   const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const end = Math.min(page * pageSize, total);
 
@@ -1943,6 +2002,19 @@ function ExtensionsDataTable({
             <AlertTriangle className="h-3.5 w-3.5" />
             Flagged
           </button>
+          {source === "fleet" && (
+            <button
+              onClick={() => setOnlyEnabled(!onlyEnabled)}
+              className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-[7px] text-xs font-medium transition-colors ${
+                onlyEnabled
+                  ? "border-green-500/50 bg-green-500/10 text-green-600 dark:text-green-400"
+                  : "border-input text-muted-foreground hover:text-foreground dark:bg-input/30 bg-transparent"
+              }`}
+            >
+              <CheckCircle className="h-3.5 w-3.5" />
+              Enabled
+            </button>
+          )}
           <select
             value={riskFilter}
             onChange={(e) => setRiskFilter(e.target.value as typeof riskFilter)}
@@ -1973,6 +2045,7 @@ function ExtensionsDataTable({
                 setShowFlaggedOnly(false);
                 setRiskFilter("all");
                 setInstallTypeFilter("");
+                setOnlyEnabled(false);
               }}
               className="border-input dark:bg-input/30 text-muted-foreground hover:text-foreground rounded-md border bg-transparent p-[7px] transition-colors"
               title="Clear filters"
@@ -2001,7 +2074,17 @@ function ExtensionsDataTable({
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows.length === 0 ? (
+            {!activeQuery.data ? (
+              Array.from({ length: pageSize }).map((_, i) => (
+                <TableRow key={i} className="pointer-events-none">
+                  {columns.map((_, j) => (
+                    <TableCell key={j} className="px-3">
+                      <Skeleton className="h-4 w-full" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : table.getRowModel().rows.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
@@ -2011,27 +2094,43 @@ function ExtensionsDataTable({
                 </TableCell>
               </TableRow>
             ) : (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className={
-                    row.original.isFlagged
-                      ? "border-l-destructive bg-destructive/5 border-l-2"
-                      : row.index % 2 === 1
-                        ? "bg-muted/20"
-                        : ""
-                  }
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-3">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              <>
+                {table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className={
+                      row.original.isFlagged
+                        ? "border-l-destructive bg-destructive/5 border-l-2"
+                        : row.index % 2 === 1
+                          ? "bg-muted/20"
+                          : ""
+                    }
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="px-3">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+                {Array.from({
+                  length: Math.max(
+                    0,
+                    pageSize - table.getRowModel().rows.length,
+                  ),
+                }).map((_, i) => (
+                  <TableRow
+                    key={`filler-${i}`}
+                    aria-hidden
+                    className="pointer-events-none select-none opacity-0"
+                  >
+                    <TableCell colSpan={columns.length}>&nbsp;</TableCell>
+                  </TableRow>
+                ))}
+              </>
             )}
           </TableBody>
         </Table>
