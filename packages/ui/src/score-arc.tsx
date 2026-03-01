@@ -26,7 +26,7 @@ export function ScoreArc({ score, className = "w-40 h-40" }: ScoreArcProps) {
 
   return (
     <div className={`relative ${className}`}>
-      <svg viewBox="0 0 100 100" className="w-full h-full">
+      <svg viewBox="0 0 100 100" className="h-full w-full">
         <defs>
           <filter id="score-glow" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="2" result="blur" />
@@ -67,10 +67,10 @@ export function ScoreArc({ score, className = "w-40 h-40" }: ScoreArcProps) {
 
       {/* Text overlay - HTML flexbox for reliable centering */}
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 pb-4">
-        <span className="text-2xl font-bold leading-none text-foreground tabular-nums">
+        <span className="text-foreground text-2xl leading-none font-bold tabular-nums">
           {score}
         </span>
-        <span className="text-[0.5rem] font-medium tracking-[0.15em] text-muted-foreground leading-none uppercase">
+        <span className="text-muted-foreground text-[0.5rem] leading-none font-medium tracking-[0.15em] uppercase">
           Score
         </span>
       </div>

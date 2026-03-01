@@ -12,6 +12,7 @@ import { OverviewTab } from "./fleet-overview-tab";
 import { AlertsTab } from "./fleet-alerts-tab";
 import { DevicesTab } from "./fleet-devices-tab";
 import { ExtensionsTab } from "./fleet-extensions-tab";
+import { PolicyTab } from "./fleet-policy-tab";
 import { SettingsTab } from "./fleet-settings-tab";
 import { WebhooksPage } from "./fleet-webhooks-page";
 
@@ -34,6 +35,7 @@ export function FleetDashboard({ overview }: { overview: FleetOverview }) {
     },
     { id: "devices", label: "Devices" },
     { id: "extensions", label: "Extensions" },
+    { id: "policy", label: "Policy" },
     { id: "settings", label: "Settings" },
   ];
 
@@ -108,6 +110,7 @@ export function FleetDashboard({ overview }: { overview: FleetOverview }) {
         {tab === "alerts" && <AlertsTab />}
         {tab === "devices" && <DevicesTab overview={overview} />}
         {tab === "extensions" && <ExtensionsTab />}
+        {tab === "policy" && <PolicyTab />}
         {tab === "settings" && <SettingsTab orgId={overview.org.id} />}
         {tab === "webhooks" && <WebhooksPage />}
       </div>

@@ -17,7 +17,8 @@
     "./table": "./src/table.tsx",
     "./toast": "./src/toast.tsx",
     "./score-arc": "./src/score-arc.tsx",
-    "./skeleton": "./src/skeleton.tsx"
+    "./skeleton": "./src/skeleton.tsx",
+    "./switch": "./src/switch.tsx"
   },
   "license": "MIT",
   "scripts": {

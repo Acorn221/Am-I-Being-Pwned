@@ -21,6 +21,7 @@ export type Tab =
   | "alerts"
   | "devices"
   | "extensions"
+  | "policy"
   | "settings"
   | "webhooks";
 
@@ -74,6 +75,7 @@ export const VALID_TABS = new Set<Tab>([
   "alerts",
   "devices",
   "extensions",
+  "policy",
   "settings",
   "webhooks",
 ]);

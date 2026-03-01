@@ -392,6 +392,81 @@ export const OrgInvite = createTable(
 
 export type OrgInvite = typeof OrgInvite.$inferSelect;
 
+// ---------------------------------------------------------------------------
+// Org Extension Policy
+// Per-org policy controlling which extensions are blocked or quarantined.
+// One row per org (created lazily on first save).
+// ---------------------------------------------------------------------------
+
+export const OrgExtensionPolicy = createTable(
+  "org_extension_policy",
+  {
+    orgId: fk("org_id", () => Organization, { onDelete: "cascade" })
+      .notNull()
+      .unique(),
+    // Extension IDs that must always be disabled on all devices in this org
+    blockedExtensionIds: jsonb("blocked_extension_ids")
+      .$type<string[]>()
+      .notNull()
+      .default([]),
+    // Extension IDs explicitly allowed - exempted from all automatic rules
+    // (risk score threshold, blockUnknown). Manual blocklist still overrides this.
+    allowedExtensionIds: jsonb("allowed_extension_ids")
+      .$type<string[]>()
+      .notNull()
+      .default([]),
+    // If set, auto-disable any extension with riskScore >= this value (0-100)
+    maxRiskScore: integer("max_risk_score"),
+    // Quarantine extensions not found in the AIBP database at all
+    blockUnknown: boolean("block_unknown").notNull().default(false),
+    updatedBy: text("updated_by").references(() => user.id, {
+      onDelete: "set null",
+    }),
+  },
+  (t) => [index("org_ext_policy_org_id_idx").on(t.orgId)],
+);
+
+export type OrgExtensionPolicy = typeof OrgExtensionPolicy.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// Org Extension Queue
+// Process queue for extensions flagged by policy. Extensions land here so
+// managers can review them (approve = re-enable, reject = keep disabled).
+// One row per (org, chromeExtensionId) - conflict on re-queue is ignored.
+// ---------------------------------------------------------------------------
+
+export const OrgExtensionQueue = createTable(
+  "org_extension_queue",
+  {
+    orgId: fk("org_id", () => Organization, { onDelete: "cascade" }).notNull(),
+    chromeExtensionId: varchar("chrome_extension_id", { length: 32 }).notNull(),
+    // Why this extension was queued
+    reason: text("reason", {
+      enum: ["unknown", "risk_threshold", "blocklisted"] as const,
+    }).notNull(),
+    // Review status
+    status: text("status", {
+      enum: ["pending", "approved", "blocked"] as const,
+    })
+      .notNull()
+      .default("pending"),
+    // Denormalized display name (extension may not be in global registry)
+    extensionName: text("extension_name"),
+    // Risk score snapshot at time of queueing
+    riskScore: integer("risk_score"),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    reviewedBy: text("reviewed_by").references(() => user.id, {
+      onDelete: "set null",
+    }),
+  },
+  (t) => [
+    unique().on(t.orgId, t.chromeExtensionId),
+    index("org_ext_queue_org_id_idx").on(t.orgId),
+  ],
+);
+
+export type OrgExtensionQueue = typeof OrgExtensionQueue.$inferSelect;
+
 export const OrgWebhook = createTable(
   "org_webhook",
   {
@@ -491,7 +566,7 @@ export type UserSubscription = typeof UserSubscription.$inferSelect;
 // Relations
 // ---------------------------------------------------------------------------
 
-export const OrganizationRelations = relations(Organization, ({ many }) => ({
+export const OrganizationRelations = relations(Organization, ({ one, many }) => ({
   apiKeys: many(OrgApiKey),
   devices: many(Device),
   invites: many(OrgInvite),
@@ -499,6 +574,11 @@ export const OrganizationRelations = relations(Organization, ({ many }) => ({
   webhooks: many(OrgWebhook),
   workspaceApps: many(WorkspaceApp),
   workspaceDevices: many(WorkspaceDevice),
+  extensionPolicy: one(OrgExtensionPolicy, {
+    fields: [Organization.id],
+    references: [OrgExtensionPolicy.orgId],
+  }),
+  extensionQueue: many(OrgExtensionQueue),
 }));
 
 export const WorkspaceAppRelations = relations(WorkspaceApp, ({ one }) => ({
@@ -589,6 +669,26 @@ export const UserExtensionEventRelations = relations(
   }),
 );
 
+export const OrgExtensionPolicyRelations = relations(
+  OrgExtensionPolicy,
+  ({ one }) => ({
+    organization: one(Organization, {
+      fields: [OrgExtensionPolicy.orgId],
+      references: [Organization.id],
+    }),
+  }),
+);
+
+export const OrgExtensionQueueRelations = relations(
+  OrgExtensionQueue,
+  ({ one }) => ({
+    organization: one(Organization, {
+      fields: [OrgExtensionQueue.orgId],
+      references: [Organization.id],
+    }),
+  }),
+);
+
 export const UserAlertRelations = relations(UserAlert, ({ one }) => ({
   extension: one(Extension, {
     fields: [UserAlert.extensionId],
@@ -604,7 +704,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 export const CreateExtensionSchema = createInsertSchema(Extension, {
-  chromeExtensionId: z.string().regex(/^[a-z]{32}$/, {
+  chromeExtensionId: z.string().regex(/^[a-p]{32}$/, {
     message: "Must be a valid 32-character Chrome extension ID",
   }),
 }).omit({ id: true, createdAt: true, updatedAt: true, lastUpdatedAt: true });

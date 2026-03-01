@@ -9,13 +9,19 @@
  * This story renders both themes side by side using the same UI components.
  */
 
-import type { CSSProperties } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
-import { ExternalLink, ShieldCheck, CheckCircle, Loader2 } from "lucide-react";
+import type { CSSProperties } from "react";
+import { CheckCircle, ExternalLink, Loader2, ShieldCheck } from "lucide-react";
 
 import { Badge } from "../badge";
 import { Button } from "../button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../card";
 import { Input } from "../input";
 
 // ---------------------------------------------------------------------------
@@ -23,24 +29,24 @@ import { Input } from "../input";
 // ---------------------------------------------------------------------------
 
 const CURRENT: Record<string, string> = {
-  "--background":          "oklch(0.07 0 0)",
-  "--foreground":          "oklch(0.93 0 0)",
-  "--card":                "oklch(0.17 0 0)",
-  "--card-foreground":     "oklch(0.93 0 0)",
-  "--primary":             "oklch(0.72 0.14 155)",
-  "--primary-foreground":  "oklch(0.98 0 0)",   // <-- white on medium-green = bad contrast
-  "--secondary":           "oklch(0.15 0 0)",
-  "--secondary-foreground":"oklch(0.93 0 0)",
-  "--muted":               "oklch(0.15 0 0)",
-  "--muted-foreground":    "oklch(0.55 0 0)",
-  "--accent":              "oklch(0.18 0 0)",
-  "--accent-foreground":   "oklch(0.93 0 0)",
-  "--destructive":         "oklch(0.65 0.20 25)",
+  "--background": "oklch(0.07 0 0)",
+  "--foreground": "oklch(0.93 0 0)",
+  "--card": "oklch(0.17 0 0)",
+  "--card-foreground": "oklch(0.93 0 0)",
+  "--primary": "oklch(0.72 0.14 155)",
+  "--primary-foreground": "oklch(0.98 0 0)", // <-- white on medium-green = bad contrast
+  "--secondary": "oklch(0.15 0 0)",
+  "--secondary-foreground": "oklch(0.93 0 0)",
+  "--muted": "oklch(0.15 0 0)",
+  "--muted-foreground": "oklch(0.55 0 0)",
+  "--accent": "oklch(0.18 0 0)",
+  "--accent-foreground": "oklch(0.93 0 0)",
+  "--destructive": "oklch(0.65 0.20 25)",
   "--destructive-foreground": "oklch(0.98 0 0)",
-  "--border":              "oklch(0.28 0 0)",
-  "--input":               "oklch(0.17 0 0)",
-  "--ring":                "oklch(0.72 0.14 155)",
-  "--radius":              "0.375rem",
+  "--border": "oklch(0.28 0 0)",
+  "--input": "oklch(0.17 0 0)",
+  "--ring": "oklch(0.72 0.14 155)",
+  "--radius": "0.375rem",
 };
 
 // ---------------------------------------------------------------------------
@@ -49,24 +55,24 @@ const CURRENT: Record<string, string> = {
 // ---------------------------------------------------------------------------
 
 const PROPOSED: Record<string, string> = {
-  "--background":          "oklch(0.16 0.014 160)",  // green-tinted dark (not neutral black)
-  "--foreground":          "oklch(0.85 0.037 166)",  // warm green-white text
-  "--card":                "oklch(0.19 0.018 155)",  // green-tinted card
-  "--card-foreground":     "oklch(0.85 0.037 166)",
-  "--primary":             "oklch(0.84 0.204 154)",  // bright Pip-Boy green
-  "--primary-foreground":  "oklch(0.16 0.014 160)",  // dark text on green = high contrast
-  "--secondary":           "oklch(0.22 0.022 158)",
-  "--secondary-foreground":"oklch(0.85 0.037 166)",
-  "--muted":               "oklch(0.22 0.022 158)",
-  "--muted-foreground":    "oklch(0.52 0.054 165)",  // green-tinted mid grey
-  "--accent":              "oklch(0.29 0.028 165)",
-  "--accent-foreground":   "oklch(0.84 0.204 154)",
-  "--destructive":         "oklch(0.84 0.164 84)",   // amber (Pip-Boy warning color)
+  "--background": "oklch(0.16 0.014 160)", // green-tinted dark (not neutral black)
+  "--foreground": "oklch(0.85 0.037 166)", // warm green-white text
+  "--card": "oklch(0.19 0.018 155)", // green-tinted card
+  "--card-foreground": "oklch(0.85 0.037 166)",
+  "--primary": "oklch(0.84 0.204 154)", // bright Pip-Boy green
+  "--primary-foreground": "oklch(0.16 0.014 160)", // dark text on green = high contrast
+  "--secondary": "oklch(0.22 0.022 158)",
+  "--secondary-foreground": "oklch(0.85 0.037 166)",
+  "--muted": "oklch(0.22 0.022 158)",
+  "--muted-foreground": "oklch(0.52 0.054 165)", // green-tinted mid grey
+  "--accent": "oklch(0.29 0.028 165)",
+  "--accent-foreground": "oklch(0.84 0.204 154)",
+  "--destructive": "oklch(0.84 0.164 84)", // amber (Pip-Boy warning color)
   "--destructive-foreground": "oklch(0.16 0.014 160)",
-  "--border":              "oklch(0.29 0.028 165)",  // green-tinted border
-  "--input":               "oklch(0.19 0.018 155)",
-  "--ring":                "oklch(0.84 0.204 154)",
-  "--radius":              "0.5rem",                 // slightly more rounded
+  "--border": "oklch(0.29 0.028 165)", // green-tinted border
+  "--input": "oklch(0.19 0.018 155)",
+  "--ring": "oklch(0.84 0.204 154)",
+  "--radius": "0.5rem", // slightly more rounded
 };
 
 // ---------------------------------------------------------------------------
@@ -77,15 +83,20 @@ function DemoUI({ label }: { label: string }) {
   return (
     <div
       className="dark flex min-h-screen flex-col gap-6 p-8"
-      style={{ backgroundColor: "var(--background)", color: "var(--foreground)" }}
+      style={{
+        backgroundColor: "var(--background)",
+        color: "var(--foreground)",
+      }}
     >
-      <div className="text-xs font-bold tracking-widest uppercase opacity-40">{label}</div>
+      <div className="text-xs font-bold tracking-widest uppercase opacity-40">
+        {label}
+      </div>
 
       {/* Join page mockup */}
       <section className="space-y-2">
-        <div className="text-xs opacity-50 mb-3">Join page</div>
+        <div className="mb-3 text-xs opacity-50">Join page</div>
         <div
-          className="w-72 rounded-xl border p-6 space-y-4 shadow-sm"
+          className="w-72 space-y-4 rounded-xl border p-6 shadow-sm"
           style={{ background: "var(--card)", borderColor: "var(--border)" }}
         >
           <div className="flex flex-col items-center gap-2 text-center">
@@ -93,9 +104,12 @@ function DemoUI({ label }: { label: string }) {
               className="rounded-xl p-2"
               style={{ background: "var(--accent)" }}
             >
-              <ShieldCheck className="h-8 w-8" style={{ color: "var(--primary)" }} />
+              <ShieldCheck
+                className="h-8 w-8"
+                style={{ color: "var(--primary)" }}
+              />
             </div>
-            <p className="font-semibold text-sm">Am I Being Pwned?</p>
+            <p className="text-sm font-semibold">Am I Being Pwned?</p>
             <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>
               Fleet device enrollment
             </p>
@@ -103,10 +117,15 @@ function DemoUI({ label }: { label: string }) {
           <div className="space-y-3">
             <div className="text-center">
               <p className="text-sm font-semibold">Install the extension</p>
-              <p className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>
+              <p
+                className="mt-1 text-xs"
+                style={{ color: "var(--muted-foreground)" }}
+              >
                 You&apos;ve been invited to{" "}
-                <span style={{ color: "var(--foreground)", fontWeight: 600 }}>James Arnott</span>.
-                Keep this tab open - enrollment is automatic.
+                <span style={{ color: "var(--foreground)", fontWeight: 600 }}>
+                  James Arnott
+                </span>
+                . Keep this tab open - enrollment is automatic.
               </p>
             </div>
             <Button className="w-full gap-2" size="sm">
@@ -119,7 +138,7 @@ function DemoUI({ label }: { label: string }) {
 
       {/* Button variants */}
       <section className="space-y-2">
-        <div className="text-xs opacity-50 mb-3">Button variants</div>
+        <div className="mb-3 text-xs opacity-50">Button variants</div>
         <div className="flex flex-wrap gap-2">
           <Button>Default</Button>
           <Button variant="secondary">Secondary</Button>
@@ -131,7 +150,7 @@ function DemoUI({ label }: { label: string }) {
 
       {/* Color palette */}
       <section className="space-y-2">
-        <div className="text-xs opacity-50 mb-3">Palette</div>
+        <div className="mb-3 text-xs opacity-50">Palette</div>
         <div className="flex gap-2">
           {[
             ["primary", "var(--primary)"],
@@ -154,15 +173,15 @@ function DemoUI({ label }: { label: string }) {
 
       {/* Badges + states */}
       <section className="space-y-2">
-        <div className="text-xs opacity-50 mb-3">Badges + cards</div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="mb-3 text-xs opacity-50">Badges + cards</div>
+        <div className="flex flex-wrap gap-2">
           <Badge>default</Badge>
           <Badge variant="outline">outline</Badge>
           <Badge variant="secondary">secondary</Badge>
           <Badge variant="destructive">destructive</Badge>
         </div>
         <div
-          className="mt-3 w-72 rounded-xl border p-4 space-y-3"
+          className="mt-3 w-72 space-y-3 rounded-xl border p-4"
           style={{ background: "var(--card)", borderColor: "var(--border)" }}
         >
           <CardTitle className="text-sm">Fleet Overview</CardTitle>
@@ -171,7 +190,10 @@ function DemoUI({ label }: { label: string }) {
             <span className="text-sm">12 devices enrolled</span>
           </div>
           <div className="flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" style={{ color: "var(--primary)" }} />
+            <Loader2
+              className="h-4 w-4 animate-spin"
+              style={{ color: "var(--primary)" }}
+            />
             <span className="text-sm">Syncing workspace...</span>
           </div>
           <Input placeholder="Search devices..." className="h-8 text-xs" />

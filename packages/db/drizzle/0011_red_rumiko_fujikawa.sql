@@ -1,0 +1,1 @@
+ALTER TABLE "org_extension_policy" ADD COLUMN "allowed_extension_ids" jsonb DEFAULT '[]'::jsonb NOT NULL;

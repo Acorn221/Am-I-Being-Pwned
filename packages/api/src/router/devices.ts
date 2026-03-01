@@ -27,6 +27,8 @@ import {
   Extension,
   ExtensionScan,
   ExtensionVersion,
+  OrgExtensionPolicy,
+  OrgExtensionQueue,
   OrgInvite,
   Organization,
   UserExtension,
@@ -404,6 +406,13 @@ export const devicesRouter = createTRPCRouter({
       // -----------------------------------------------------------------------
 
       let quarantineUnscannedUpdates = false;
+      let orgPolicy: {
+        blockedExtensionIds: string[];
+        allowedExtensionIds: string[];
+        maxRiskScore: number | null;
+        blockUnknown: boolean;
+      } | null = null;
+
       if (device.orgId) {
         const [org] = await ctx.db
           .select({ quarantineUnscannedUpdates: Organization.quarantineUnscannedUpdates })
@@ -411,6 +420,18 @@ export const devicesRouter = createTRPCRouter({
           .where(eqi(Organization.id, device.orgId))
           .limit(1);
         quarantineUnscannedUpdates = org?.quarantineUnscannedUpdates ?? false;
+
+        const [policy] = await ctx.db
+          .select({
+            blockedExtensionIds: OrgExtensionPolicy.blockedExtensionIds,
+            allowedExtensionIds: OrgExtensionPolicy.allowedExtensionIds,
+            maxRiskScore: OrgExtensionPolicy.maxRiskScore,
+            blockUnknown: OrgExtensionPolicy.blockUnknown,
+          })
+          .from(OrgExtensionPolicy)
+          .where(eq(OrgExtensionPolicy.orgId, device.orgId))
+          .limit(1);
+        orgPolicy = policy ?? null;
       }
 
       const quarantineList: string[] = [];
@@ -601,6 +622,120 @@ export const devicesRouter = createTRPCRouter({
               inArray(UserExtension.chromeExtensionId, disableList),
             ),
           );
+      }
+
+      // -----------------------------------------------------------------------
+      // 3b. Apply org-level extension policy (B2B only)
+      // -----------------------------------------------------------------------
+
+      if (orgPolicy && device.orgId) {
+        const orgId = device.orgId;
+        const reportedSet = new Set(reportedIds);
+
+        // Build a lookup of riskScore for each reported extension
+        let riskScoreMap: Map<string, number> = new Map();
+        if (orgPolicy.maxRiskScore !== null && reportedIds.length > 0) {
+          const riskRows = await ctx.db
+            .select({
+              chromeExtensionId: Extension.chromeExtensionId,
+              riskScore: Extension.riskScore,
+            })
+            .from(Extension)
+            .where(inArray(Extension.chromeExtensionId, reportedIds));
+          for (const row of riskRows) {
+            riskScoreMap.set(row.chromeExtensionId, row.riskScore);
+          }
+        }
+
+        // Build a set of extension IDs known to the AIBP database
+        let knownIds: Set<string> = new Set();
+        if (orgPolicy.blockUnknown && reportedIds.length > 0) {
+          const knownRows = await ctx.db
+            .select({ chromeExtensionId: Extension.chromeExtensionId })
+            .from(Extension)
+            .where(inArray(Extension.chromeExtensionId, reportedIds));
+          for (const row of knownRows) {
+            knownIds.add(row.chromeExtensionId);
+          }
+        }
+
+        const policyDisable: string[] = [];
+        const policyQuarantine: string[] = [];
+        const queueEntries: {
+          orgId: string;
+          chromeExtensionId: string;
+          reason: "blocklisted" | "risk_threshold" | "unknown";
+          riskScore?: number;
+        }[] = [];
+
+        const allowedSet = new Set(orgPolicy.allowedExtensionIds);
+
+        for (const extId of reportedIds) {
+          // Blocklist by ID - manual blocks always win over the override allowlist
+          if (orgPolicy.blockedExtensionIds.includes(extId)) {
+            if (!disableList.includes(extId)) policyDisable.push(extId);
+            queueEntries.push({ orgId, chromeExtensionId: extId, reason: "blocklisted" });
+            continue;
+          }
+
+          // Skip automatic rules for explicitly allowed (overridden) extensions
+          if (allowedSet.has(extId)) continue;
+
+          // Risk score threshold
+          if (orgPolicy.maxRiskScore !== null) {
+            const score = riskScoreMap.get(extId) ?? 0;
+            if (score >= orgPolicy.maxRiskScore) {
+              if (!disableList.includes(extId)) policyDisable.push(extId);
+              queueEntries.push({
+                orgId,
+                chromeExtensionId: extId,
+                reason: "risk_threshold",
+                riskScore: score,
+              });
+              continue;
+            }
+          }
+
+          // Unknown extension quarantine
+          if (orgPolicy.blockUnknown && !knownIds.has(extId)) {
+            if (!quarantineList.includes(extId)) policyQuarantine.push(extId);
+            queueEntries.push({ orgId, chromeExtensionId: extId, reason: "unknown" });
+          }
+        }
+
+        if (policyDisable.length > 0) {
+          disableList.push(...policyDisable);
+          await ctx.db
+            .update(UserExtension)
+            .set({
+              disabledByAibp: true,
+              disabledReason: "Blocked by organisation policy",
+              enabled: false,
+            })
+            .where(
+              and(
+                eq(UserExtension.deviceId, device.id),
+                inArray(UserExtension.chromeExtensionId, policyDisable),
+              ),
+            );
+        }
+
+        if (policyQuarantine.length > 0) {
+          quarantineList.push(...policyQuarantine);
+        }
+
+        // Queue new entries (skip if already queued - any status)
+        for (const entry of queueEntries) {
+          await ctx.db
+            .insert(OrgExtensionQueue)
+            .values({
+              orgId: entry.orgId,
+              chromeExtensionId: entry.chromeExtensionId,
+              reason: entry.reason,
+              riskScore: entry.riskScore ?? null,
+            })
+            .onConflictDoNothing();
+        }
       }
 
       // -----------------------------------------------------------------------

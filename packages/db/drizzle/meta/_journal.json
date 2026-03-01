@@ -71,6 +71,20 @@
       "when": 1772379189208,
       "tag": "0009_many_morg",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1772386999420,
+      "tag": "0010_absent_tempest",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1772388221540,
+      "tag": "0011_red_rumiko_fujikawa",
+      "breakpoints": true
     }
   ]
 }

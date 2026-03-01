@@ -1,13 +1,20 @@
 import type * as React from "react";
 
 import { cn } from "@amibeingpwned/ui";
+
 import { Button } from "./button";
 
 export interface FooterAction {
   label: string;
   onClick?: () => void;
   disabled?: boolean;
-  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
+  variant?:
+    | "default"
+    | "destructive"
+    | "outline"
+    | "secondary"
+    | "ghost"
+    | "link";
   size?: "default" | "sm" | "lg" | "icon";
   icon?: React.ComponentType<{ className?: string }>;
 }
