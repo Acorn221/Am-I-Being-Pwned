@@ -1,16 +1,12 @@
 // ---------------------------------------------------------------------------
 // Alarm names
 // ---------------------------------------------------------------------------
-export const ALARM_DAILY_SCAN = "daily-scan";
 export const ALARM_POLICY_SYNC = "policy-sync";
 export const ALARM_REGISTRATION_RETRY = "registration-retry";
 
 // ---------------------------------------------------------------------------
 // Alarm intervals (minutes)
 // ---------------------------------------------------------------------------
-
-/** Full extension DB refresh + local scan. */
-export const INTERVAL_DAILY_SCAN_MINUTES = 24 * 60;
 
 /** Lightweight server sync to pick up org policy changes. */
 export const INTERVAL_POLICY_SYNC_MINUTES = 4 * 60;

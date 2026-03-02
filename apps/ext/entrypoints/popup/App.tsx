@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { Button } from "@amibeingpwned/ui/button";
 import { ScoreArc } from "@amibeingpwned/ui/score-arc";
 
+import { DEMO_TOKEN_EXTENSION } from "@amibeingpwned/types";
+
 import { API_BASE_URL } from "../../lib/api";
 import { getStoredWebSessionToken } from "../../lib/device";
 import { publicClient } from "../../lib/trpc";
@@ -152,6 +154,17 @@ export default function App() {
           <Button
             className="w-full"
             size="sm"
+            onClick={() => {
+              void chrome.tabs.create({ url: `${API_BASE_URL}/demo/${DEMO_TOKEN_EXTENSION}` });
+              window.close();
+            }}
+          >
+            Scan my extensions
+          </Button>
+          <Button
+            className="w-full"
+            size="sm"
+            variant="outline"
             onClick={() => {
               void chrome.tabs.create({ url: API_BASE_URL });
               window.close();

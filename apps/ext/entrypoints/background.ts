@@ -1,8 +1,8 @@
-import type { ExtResponse, InstalledExtensionInfo, RiskLevel } from "@amibeingpwned/types";
+import type { ExtResponse, InstalledExtensionInfo } from "@amibeingpwned/types";
 import { TRPCClientError } from "@trpc/client";
 import { ExtRequestSchema } from "@amibeingpwned/validators";
 
-import { API_BASE_URL, lookupExtension, fetchExtensionDatabase } from "../lib/api";
+import { API_BASE_URL } from "../lib/api";
 import {
   clearToken,
   getDisableList,
@@ -17,14 +17,11 @@ import {
   storeToken,
   syncExtensions,
 } from "../lib/device";
-import { getNotifiedRisk, setNotifiedRisk } from "../lib/storage";
 
 import { DEV_ORIGINS, PROD_ORIGINS } from "../lib/allowed-origins";
 import {
-  ALARM_DAILY_SCAN,
   ALARM_POLICY_SYNC,
   ALARM_REGISTRATION_RETRY,
-  INTERVAL_DAILY_SCAN_MINUTES,
   INTERVAL_POLICY_SYNC_MINUTES,
   INTERVAL_REGISTRATION_RETRY_MINUTES,
   LAST_SYNC_KEY,
@@ -59,71 +56,9 @@ function isRateLimited(origin: string): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// Risk severity - higher number = worse. Only notify at NOTIFY_THRESHOLD+.
-// ---------------------------------------------------------------------------
-const RISK_SEVERITY: Record<RiskLevel, number> = {
-  clean: 0,
-  low: 1,
-  "medium-low": 2,
-  medium: 3,
-  "medium-high": 4,
-  high: 5,
-  critical: 6,
-  unavailable: -1,
-};
-const NOTIFY_THRESHOLD = RISK_SEVERITY.medium; // medium and above
-
-// ---------------------------------------------------------------------------
 // Background service worker
 // ---------------------------------------------------------------------------
 export default defineBackground(() => {
-  // -------------------------------------------------------------------------
-  // Local database scan + notifications
-  // -------------------------------------------------------------------------
-
-  async function checkAndNotify(extensionId: string, extensionName: string) {
-    try {
-      const report = await lookupExtension(extensionId);
-      if (!report) return;
-
-      const risk = report.risk.toLowerCase() as RiskLevel;
-      const severity = RISK_SEVERITY[risk];
-      if (severity < NOTIFY_THRESHOLD) return;
-
-      // Skip if we already notified at this risk level or higher
-      const lastNotified = await getNotifiedRisk(extensionId);
-      if (lastNotified && RISK_SEVERITY[lastNotified] >= severity) return;
-
-      const notifId = `aibp-alert-${extensionId}`;
-      void chrome.notifications.create(notifId, {
-        type: "basic",
-        iconUrl: chrome.runtime.getURL("icon/128.png"),
-        title: `${risk === "critical" ? "CRITICAL" : "Warning"}: ${extensionName}`,
-        message: report.summary || `This extension has a ${risk} risk level.`,
-        priority: risk === "critical" ? 2 : 1,
-      });
-
-      await setNotifiedRisk(extensionId, risk);
-    } catch {
-      // Network errors shouldn't break the extension - fail silently
-    }
-  }
-
-  // Scan all installed extensions against the local/remote database
-  async function scanAllExtensions() {
-    try {
-      await fetchExtensionDatabase();
-    } catch {
-      return; // Can't reach the server - skip scan
-    }
-
-    const installed = await chrome.management.getAll();
-    for (const ext of installed) {
-      if (ext.type !== "extension" || ext.id === chrome.runtime.id) continue;
-      await checkAndNotify(ext.id, ext.name);
-    }
-  }
-
   // -------------------------------------------------------------------------
   // Offline-safe disable enforcement
   //
@@ -303,8 +238,7 @@ export default defineBackground(() => {
 
     const orgPolicy = await getOrgPolicy();
     if (!orgPolicy) {
-      // B2C device - just notify on risk, no blocking
-      void checkAndNotify(ext.id, ext.name);
+      // B2C device - server sync handles risk assessment
       return;
     }
 
@@ -327,61 +261,21 @@ export default defineBackground(() => {
       return;
     }
 
-    // Check local DB - network may be needed if cache is cold.
-    // If the lookup throws (offline, fetch failed), re-enable the extension
-    // and fall back to a standard risk notification rather than leaving the
-    // user permanently blocked until the next sync.
-    let report;
-    try {
-      report = await lookupExtension(ext.id);
-    } catch {
-      try {
-        await chrome.management.setEnabled(ext.id, true);
-      } catch { /* uninstalled during check */ }
-      void checkAndNotify(ext.id, ext.name);
-      return;
+    // Add to local quarantine so the next server sync can clear or permanently
+    // flag it. syncWithApi re-enables anything that drops off the server's
+    // quarantine list.
+    const quarantine = await getQuarantineList();
+    if (!quarantine.includes(ext.id)) {
+      await setQuarantineList([...quarantine, ext.id]);
     }
 
-    if (!report) {
-      // Not in DB - needs scanning, stay blocked and notify user
-      void chrome.notifications.create(`aibp-unknown-${ext.id}`, {
-        type: "basic",
-        iconUrl: chrome.runtime.getURL("icon/128.png"),
-        title: "Extension blocked - pending scan",
-        message: `${ext.name} hasn't been scanned yet. Contact your IT admin to get it approved.`,
-        priority: 1,
-      });
-      return;
-    }
-
-    // In DB - check risk score against policy threshold
-    const risk = report.risk.toLowerCase() as RiskLevel;
-    const severity = RISK_SEVERITY[risk];
-    const maxSeverity = orgPolicy.maxRiskLevel !== null ? (RISK_SEVERITY[orgPolicy.maxRiskLevel as RiskLevel] ?? -1) : null;
-    if (maxSeverity !== null && severity >= maxSeverity) {
-      void chrome.notifications.create(`aibp-policy-risk-${ext.id}`, {
-        type: "basic",
-        iconUrl: chrome.runtime.getURL("icon/128.png"),
-        title: "Extension blocked - risk too high",
-        message: `${ext.name} has a ${risk} risk level and has been blocked by your organisation's policy.`,
-        priority: 2,
-      });
-      return;
-    }
-
-    // Passes all policy checks - re-enable only if not on the persistent
-    // disable list (e.g. reinstall of a previously AIBP-flagged extension).
-    const disableList = await getDisableList();
-    if (disableList.includes(ext.id)) {
-      return;
-    }
-
-    try {
-      await chrome.management.setEnabled(ext.id, true);
-    } catch {
-      // Uninstalled during check - ignore
-    }
-    void checkAndNotify(ext.id, ext.name);
+    void chrome.notifications.create(`aibp-unknown-${ext.id}`, {
+      type: "basic",
+      iconUrl: chrome.runtime.getURL("icon/128.png"),
+      title: "Extension blocked - pending scan",
+      message: `${ext.name} hasn't been scanned yet. Contact your IT admin to get it approved.`,
+      priority: 1,
+    });
   }
 
   // -------------------------------------------------------------------------
@@ -406,16 +300,12 @@ export default defineBackground(() => {
   // On first install: scan everything, open web app, register device
   // On update: ensure alarms still exist
   chrome.runtime.onInstalled.addListener((details) => {
-    void chrome.alarms.create(ALARM_DAILY_SCAN, {
-      periodInMinutes: INTERVAL_DAILY_SCAN_MINUTES,
-    });
     void chrome.alarms.create(ALARM_POLICY_SYNC, {
       periodInMinutes: INTERVAL_POLICY_SYNC_MINUTES,
       delayInMinutes: INTERVAL_POLICY_SYNC_MINUTES,
     });
 
     if (details.reason === "install") {
-      void scanAllExtensions();
       void tryRegisterDevice({ syncAfter: true });
     }
   });
@@ -431,10 +321,7 @@ export default defineBackground(() => {
   // On each policy-sync wake, check if the last successful sync is stale
   // (e.g. SW was killed mid-sync, or a previous alarm misfired) and recover.
   chrome.alarms.onAlarm.addListener((alarm) => {
-    if (alarm.name === ALARM_DAILY_SCAN) {
-      void scanAllExtensions();
-      void enqueueSyncWithApi(syncWithApi);
-    } else if (alarm.name === ALARM_POLICY_SYNC) {
+    if (alarm.name === ALARM_POLICY_SYNC) {
       // Always sync on this alarm - it exists to pick up policy changes promptly.
       // Also check for a stale lastSyncAt: if the previous cycle was missed
       // (SW killed mid-sync before the timestamp was written), the enqueue
@@ -445,13 +332,9 @@ export default defineBackground(() => {
     }
   });
 
-  // Open report page when a notification is clicked
+  // Open web app when a notification is clicked
   chrome.notifications.onClicked.addListener((notifId) => {
-    if (notifId.startsWith("aibp-alert-")) {
-      const extensionId = notifId.replace("aibp-alert-", "");
-      void chrome.tabs.create({ url: `${WEB_URL}/report/${extensionId}` });
-      void chrome.notifications.clear(notifId);
-    } else if (notifId.startsWith("aibp-disabled-")) {
+    if (notifId.startsWith("aibp-disabled-")) {
       void chrome.tabs.create({ url: WEB_URL });
       void chrome.notifications.clear(notifId);
     }

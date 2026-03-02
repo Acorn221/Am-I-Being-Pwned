@@ -1,3 +1,5 @@
+import { DEMO_TOKEN_HOMEPAGE } from "@amibeingpwned/types";
+
 import { Button } from "@amibeingpwned/ui";
 import { ExtensionPreviewCards } from "~/components/extension-preview-cards";
 import { TypingTitle } from "~/components/typing-title";
@@ -18,6 +20,11 @@ export function HeroSection() {
           </p>
           <div className="flex flex-wrap gap-3">
             <Button size="lg" asChild>
+              <a href={`/demo/${DEMO_TOKEN_HOMEPAGE}`}>
+                Scan my extensions
+              </a>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
               <a
                 href="https://calendar.app.google/ErKTbbbDDHzjAEESA"
                 target="_blank"
@@ -25,9 +32,6 @@ export function HeroSection() {
               >
                 Book a Demo
               </a>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <a href="#how-it-works">How it works</a>
             </Button>
           </div>
         </div>

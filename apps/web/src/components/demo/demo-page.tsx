@@ -11,6 +11,7 @@ import {
   ScanSearch,
   ShieldAlert,
   ShieldCheck,
+  ShieldQuestion,
   X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -24,6 +25,7 @@ import {
 } from "@amibeingpwned/ui/dialog";
 
 import { Navbar } from "~/components/navbar";
+import { TurnstileWidget } from "~/components/turnstile-widget";
 import { useTRPC } from "~/lib/trpc";
 
 // ---------------------------------------------------------------------------
@@ -31,6 +33,7 @@ import { useTRPC } from "~/lib/trpc";
 // ---------------------------------------------------------------------------
 
 const BOOK_A_CALL_URL = "https://calendar.app.google/ErKTbbbDDHzjAEESA";
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_PUBLIC_TURNSTILE_SITE_KEY as string;
 const EXT_ID_RE = /\b[a-p]{32}\b/g;
 
 // ---------------------------------------------------------------------------
@@ -282,6 +285,8 @@ export function DemoPage({ token }: { token: string }) {
   const [step, setStep] = useState<Step>({ kind: "loading" });
   const [pasteText, setPasteText] = useState("");
   const [showHelp, setShowHelp] = useState(false);
+  const [showVerify, setShowVerify] = useState(false);
+  const [scanAttempt, setScanAttempt] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const validateMutation = useMutation(trpc.demo.validateToken.mutationOptions());
@@ -302,19 +307,21 @@ export function DemoPage({ token }: { token: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  function handleScan() {
+  function handleVerified(turnstileToken: string) {
     const ids = parseExtensionIds(pasteText);
     if (ids.length === 0) return;
     const label = step.kind === "paste" ? step.label : "";
+    setShowVerify(false);
     setStep({ kind: "scanning" });
     scanMutation.mutate(
-      { token, extensionIds: ids },
+      { token, extensionIds: ids, turnstileToken },
       {
         onSuccess(data) {
           setStep({ kind: "results", label, data: data as ScanResult });
         },
         onError() {
           setStep({ kind: "paste", label });
+          setScanAttempt((n) => n + 1);
         },
       },
     );
@@ -513,6 +520,32 @@ export function DemoPage({ token }: { token: string }) {
   return (
     <div className="bg-background min-h-screen">
       <HelpModal open={showHelp} onClose={() => setShowHelp(false)} />
+
+      {/* Human verification dialog - only shows interactive challenge if CF requires it */}
+      <Dialog open={showVerify} onOpenChange={(v) => { if (!v) setShowVerify(false); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldQuestion className="text-primary h-4 w-4" />
+              Quick security check
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-muted-foreground text-sm">
+            Just confirming you're human before we scan.
+          </p>
+          {showVerify && (
+            <TurnstileWidget
+              key={scanAttempt}
+              siteKey={TURNSTILE_SITE_KEY}
+              deferred
+              onVerify={handleVerified}
+              onExpire={() => setShowVerify(false)}
+              className="flex justify-center py-2"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
       <Navbar />
 
       {/* Hero */}
@@ -592,7 +625,7 @@ export function DemoPage({ token }: { token: string }) {
                       : "No extension IDs found - paste the full expanded section"}
                 </span>
                 <Button
-                  onClick={() => handleScan()}
+                  onClick={() => setShowVerify(true)}
                   disabled={!canScan || scanMutation.isPending}
                   size="sm"
                 >

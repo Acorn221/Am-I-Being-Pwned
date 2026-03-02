@@ -34,6 +34,7 @@ export const createTRPCContext = async (opts: {
   auth: Auth;
   email: ReturnType<typeof createEmailClient> | null;
   appUrl: string;
+  turnstileSecretKey: string;
 }) => {
   const session = await opts.auth.api.getSession({
     headers: opts.headers,
@@ -44,6 +45,7 @@ export const createTRPCContext = async (opts: {
     email: opts.email,
     appUrl: opts.appUrl,
     headers: opts.headers,
+    turnstileSecretKey: opts.turnstileSecretKey,
   };
 };
 /**

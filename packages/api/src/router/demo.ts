@@ -81,9 +81,26 @@ export const demoRouter = createTRPCRouter({
           .array(z.string().regex(/^[a-p]{32}$/))
           .min(1)
           .max(500),
+        turnstileToken: z.string().min(1),
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const tsBody = new URLSearchParams({
+        secret: ctx.turnstileSecretKey,
+        response: input.turnstileToken,
+      });
+      const tsRes = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+        method: "POST",
+        body: tsBody,
+      });
+      if (!tsRes.ok) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Human check unavailable" });
+      }
+      const tsData = await tsRes.json() as { success: boolean };
+      if (!tsData.success) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Bot check failed" });
+      }
+
       const link = await findActiveLink(ctx.db, input.token);
 
       if (!link) {

@@ -112,3 +112,13 @@ export type ExtResponse =
   | { type: "EXTENSIONS_RESULT"; version: 1; extensions: InstalledExtensionInfo[] }
   | { type: "INVITE_REGISTERED"; version: 1; webSessionToken: string }
   | { type: "ERROR"; version: 1; code: string; message: string };
+
+// ---------------------------------------------------------------------------
+// Public demo
+// ---------------------------------------------------------------------------
+
+/** Token for the demo scan page linked from the homepage hero. */
+export const DEMO_TOKEN_HOMEPAGE = "homepage";
+
+/** Token for the demo scan page linked from the extension popup. */
+export const DEMO_TOKEN_EXTENSION = "extension";

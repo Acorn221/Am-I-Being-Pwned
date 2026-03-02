@@ -2,7 +2,6 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
 import { appRouter, createTRPCContext } from "@amibeingpwned/api";
 import { initAuth } from "@amibeingpwned/auth";
-import { initDb } from "@amibeingpwned/db/client";
 import { createEmailClient } from "@amibeingpwned/email";
 
 export interface Env {
@@ -16,6 +15,7 @@ export interface Env {
   // attacker can spoof, poisoning the auth singleton for an entire isolate).
   APP_URL: string;
   RESEND_API_KEY: string;
+  TURNSTILE_SECRET_KEY: string;
   // TODO: add RATE_LIMIT_KV: KVNamespace when rate limiting is implemented
 }
 
@@ -107,7 +107,7 @@ function getAuth(env: Env) {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    initDb(env.POSTGRES_URL);
+    process.env.POSTGRES_URL = env.POSTGRES_URL;
     const { pathname } = new URL(request.url);
     const currentAuth = getAuth(env);
 
@@ -130,6 +130,7 @@ export default {
             auth: currentAuth,
             email: env.RESEND_API_KEY ? createEmailClient(env.RESEND_API_KEY) : null,
             appUrl: env.APP_URL,
+            turnstileSecretKey: env.TURNSTILE_SECRET_KEY,
           }),
       });
     }
