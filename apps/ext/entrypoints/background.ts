@@ -6,10 +6,12 @@ import { API_BASE_URL, lookupExtension, fetchExtensionDatabase } from "../lib/ap
 import {
   clearToken,
   getDisableList,
+  getOrgPolicy,
   getQuarantineList,
   getStoredToken,
   registerDevice,
   setDisableList,
+  setOrgPolicy,
   setQuarantineList,
   storeInviteToken,
   storeToken,
@@ -273,10 +275,10 @@ export default defineBackground(() => {
         }
       }
 
-      // All enforcement complete - only now mark the sync as successful so
-      // that a SW killed between token rotation and enforcement is correctly
-      // treated as stale by the next alarm wake.
+      // All enforcement complete - mark sync as successful and cache org policy
+      // for immediate offline enforcement on the next new install event.
       await chrome.storage.local.set({ [LAST_SYNC_KEY]: Date.now() });
+      await setOrgPolicy(result.orgPolicy);
     } catch (err) {
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -292,6 +294,96 @@ export default defineBackground(() => {
   }
 
   // -------------------------------------------------------------------------
+  // New extension install handler (org devices: block-first, verify, re-enable)
+  // -------------------------------------------------------------------------
+
+  async function handleNewExtension(ext: chrome.management.ExtensionInfo) {
+    // Always re-enforce the static disable list first
+    await enforceDisableList();
+
+    const orgPolicy = await getOrgPolicy();
+    if (!orgPolicy) {
+      // B2C device - just notify on risk, no blocking
+      void checkAndNotify(ext.id, ext.name);
+      return;
+    }
+
+    // Org device: block immediately, then verify against local DB
+    try {
+      await chrome.management.setEnabled(ext.id, false);
+    } catch {
+      return; // Already uninstalled
+    }
+
+    // Static blocklist - policy says this ID is always blocked
+    if (orgPolicy.blockedExtensionIds.includes(ext.id)) {
+      void chrome.notifications.create(`aibp-policy-${ext.id}`, {
+        type: "basic",
+        iconUrl: chrome.runtime.getURL("icon/128.png"),
+        title: "Extension blocked by policy",
+        message: `${ext.name} is blocked by your organisation's policy.`,
+        priority: 1,
+      });
+      return;
+    }
+
+    // Check local DB - network may be needed if cache is cold.
+    // If the lookup throws (offline, fetch failed), re-enable the extension
+    // and fall back to a standard risk notification rather than leaving the
+    // user permanently blocked until the next sync.
+    let report;
+    try {
+      report = await lookupExtension(ext.id);
+    } catch {
+      try {
+        await chrome.management.setEnabled(ext.id, true);
+      } catch { /* uninstalled during check */ }
+      void checkAndNotify(ext.id, ext.name);
+      return;
+    }
+
+    if (!report) {
+      // Not in DB - needs scanning, stay blocked and notify user
+      void chrome.notifications.create(`aibp-unknown-${ext.id}`, {
+        type: "basic",
+        iconUrl: chrome.runtime.getURL("icon/128.png"),
+        title: "Extension blocked - pending scan",
+        message: `${ext.name} hasn't been scanned yet. Contact your IT admin to get it approved.`,
+        priority: 1,
+      });
+      return;
+    }
+
+    // In DB - check risk score against policy threshold
+    const risk = report.risk.toLowerCase() as RiskLevel;
+    const severity = RISK_SEVERITY[risk];
+    if (orgPolicy.maxRiskScore !== null && severity >= orgPolicy.maxRiskScore) {
+      void chrome.notifications.create(`aibp-policy-risk-${ext.id}`, {
+        type: "basic",
+        iconUrl: chrome.runtime.getURL("icon/128.png"),
+        title: "Extension blocked - risk too high",
+        message: `${ext.name} has a ${risk} risk level and has been blocked by your organisation's policy.`,
+        priority: 2,
+      });
+      return;
+    }
+
+    // Passes all policy checks - re-enable only if not on the persistent
+    // disable list (e.g. reinstall of a previously AIBP-flagged extension).
+    const disableList = await getDisableList();
+    if (disableList.includes(ext.id)) {
+      return;
+    }
+
+    try {
+      await chrome.management.setEnabled(ext.id, true);
+    } catch {
+      // Uninstalled during check - ignore
+    }
+    void checkAndNotify(ext.id, ext.name);
+  }
+
+  // -------------------------------------------------------------------------
   // Event listeners
   // -------------------------------------------------------------------------
 
@@ -300,8 +392,7 @@ export default defineBackground(() => {
   // then check and sync with API.
   chrome.management.onInstalled.addListener((ext) => {
     if (ext.type !== "extension" || ext.id === chrome.runtime.id) return;
-    void enforceDisableList();
-    void checkAndNotify(ext.id, ext.name);
+    void handleNewExtension(ext);
     void enqueueSyncWithApi(syncWithApi);
   });
 

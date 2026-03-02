@@ -1,9 +1,12 @@
-import { Building2, LogOut } from "lucide-react";
+import { Building2, ChevronDown, LogOut, Shield } from "lucide-react";
 
 import { Badge } from "@amibeingpwned/ui/badge";
 import { Button } from "@amibeingpwned/ui/button";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
 import { authClient } from "~/lib/auth-client";
+import { getImpersonateOrgId, setImpersonateOrgId, useTRPC } from "~/lib/trpc";
 import { navigate } from "~/router";
 
 import { useTab } from "./fleet-types";
@@ -16,10 +19,67 @@ import { PolicyTab } from "./fleet-policy-tab";
 import { SettingsTab } from "./fleet-settings-tab";
 import { WebhooksPage } from "./fleet-webhooks-page";
 
+// ---------------------------------------------------------------------------
+// Admin org switcher - only shown when session role is "admin"
+// ---------------------------------------------------------------------------
+
+function AdminOrgSwitcher({ currentOrgName }: { currentOrgName: string }) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+
+  const { data } = useQuery(
+    trpc.admin.orgs.list.queryOptions({ limit: 100 }),
+  );
+
+  function switchOrg(id: string) {
+    setImpersonateOrgId(id);
+    setOpen(false);
+    void queryClient.invalidateQueries();
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="border-border bg-muted/50 hover:bg-muted flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors"
+      >
+        <Shield className="text-primary h-3.5 w-3.5" />
+        <span className="text-foreground">{currentOrgName}</span>
+        <ChevronDown className="text-muted-foreground h-3 w-3" />
+      </button>
+      {open && (
+        <div className="border-border bg-popover absolute right-0 top-full z-50 mt-1 max-h-64 w-56 overflow-y-auto rounded-md border shadow-md">
+          {data?.rows.map((org) => (
+            <button
+              key={org.id}
+              onClick={() => switchOrg(org.id)}
+              className={`flex w-full items-center justify-between px-3 py-2 text-left text-xs transition-colors ${
+                getImpersonateOrgId() === org.id
+                  ? "bg-primary/10 text-primary font-medium"
+                  : "text-foreground hover:bg-muted"
+              }`}
+            >
+              <span className="truncate">{org.name}</span>
+              {getImpersonateOrgId() === org.id && (
+                <span className="text-primary ml-2 shrink-0">&#10003;</span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Root component
+// ---------------------------------------------------------------------------
 
 export function FleetDashboard({ overview }: { overview: FleetOverview }) {
   const [tab, setTab] = useTab();
+  const { data: session } = authClient.useSession();
+  const isAdmin = session?.user.role === "admin";
 
   async function handleSignOut() {
     await authClient.signOut();
@@ -50,13 +110,28 @@ export function FleetDashboard({ overview }: { overview: FleetOverview }) {
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
-            <Building2 className="h-4 w-4" />
-            <span>{overview.org.name}</span>
-            <Badge variant="outline" className="ml-1 text-xs capitalize">
-              {overview.org.plan}
-            </Badge>
-          </div>
+          {isAdmin ? (
+            <AdminOrgSwitcher currentOrgName={overview.org.name} />
+          ) : (
+            <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
+              <Building2 className="h-4 w-4" />
+              <span>{overview.org.name}</span>
+              <Badge variant="outline" className="ml-1 text-xs capitalize">
+                {overview.org.plan}
+              </Badge>
+            </div>
+          )}
+          {isAdmin && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() => navigate("/admin")}
+            >
+              <Shield className="h-3.5 w-3.5" />
+              Admin
+            </Button>
+          )}
           <Button
             size="sm"
             variant="ghost"

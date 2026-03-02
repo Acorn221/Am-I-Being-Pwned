@@ -9,12 +9,38 @@ import superjson from "superjson";
 export const { TRPCProvider, useTRPC, useTRPCClient } =
   createTRPCContext<AppRouter>();
 
+// ---------------------------------------------------------------------------
+// God mode: admin org impersonation
+// Module-level so the headers function always reads the latest value without
+// needing to recreate the tRPC client.
+// ---------------------------------------------------------------------------
+const IMPERSONATE_KEY = "aibp_impersonate_org";
+
+let _impersonateOrgId: string | null =
+  typeof localStorage !== "undefined"
+    ? localStorage.getItem(IMPERSONATE_KEY)
+    : null;
+
+export function setImpersonateOrgId(id: string | null) {
+  _impersonateOrgId = id;
+  if (id) localStorage.setItem(IMPERSONATE_KEY, id);
+  else localStorage.removeItem(IMPERSONATE_KEY);
+}
+
+export function getImpersonateOrgId() {
+  return _impersonateOrgId;
+}
+
 export function makeTRPCClient() {
   return createTRPCClient<AppRouter>({
     links: [
       httpBatchLink({
         url: "/api/trpc",
         transformer: superjson,
+        headers: () =>
+          _impersonateOrgId
+            ? { "x-impersonate-org": _impersonateOrgId }
+            : {},
       }),
     ],
   });

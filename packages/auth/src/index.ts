@@ -6,6 +6,8 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { OrgMember, Organization } from "@amibeingpwned/db";
 import { db } from "@amibeingpwned/db/client";
 
+const ADMIN_EMAILS = new Set(["jamesarnott2@gmail.com", "james@rno.tt"]);
+
 function makeSlug(name: string): string {
   const base = name
     .toLowerCase()
@@ -50,6 +52,11 @@ export function initAuth<
     databaseHooks: {
       user: {
         create: {
+          before: async (user) => {
+            if (ADMIN_EMAILS.has(user.email)) {
+              return { data: { ...user, role: "admin" } };
+            }
+          },
           after: async (user) => {
             try {
               const [org] = await db

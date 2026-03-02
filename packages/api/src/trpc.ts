@@ -14,7 +14,7 @@ import type { Auth } from "@amibeingpwned/auth";
 import { db } from "@amibeingpwned/db/client";
 import type { createEmailClient } from "@amibeingpwned/email";
 
-import { fetchManagerMembership } from "./lib/org-membership";
+import { fetchManagerMembership, resolveOrgContext } from "./lib/org-membership";
 
 /**
  * 1. CONTEXT
@@ -157,7 +157,12 @@ export const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
  */
 export const managerProcedure = protectedProcedure.use(
   async ({ ctx, next }) => {
-    const membership = await fetchManagerMembership(ctx.db, ctx.session.user.id);
+    const membership = await resolveOrgContext(
+      ctx.db,
+      ctx.session.user.id,
+      ctx.session.user.role ?? "user",
+      ctx.headers,
+    );
 
     if (!membership) {
       throw new TRPCError({ code: "UNAUTHORIZED" });

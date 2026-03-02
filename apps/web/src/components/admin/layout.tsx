@@ -2,6 +2,7 @@ import { Button } from "@amibeingpwned/ui/button";
 import {
   Building2,
   ChevronRight,
+  ExternalLink,
   LayoutDashboard,
   LogOut,
   Monitor,
@@ -43,6 +44,12 @@ const NAV_ITEMS: NavItem[] = [
     icon: <Puzzle className="h-4 w-4" />,
     href: "/admin/extensions",
     match: (p) => p.startsWith("/admin/extensions"),
+  },
+  {
+    label: "Demo Links",
+    icon: <ExternalLink className="h-4 w-4" />,
+    href: "/admin/demo",
+    match: (p) => p === "/admin/demo",
   },
 ];
 

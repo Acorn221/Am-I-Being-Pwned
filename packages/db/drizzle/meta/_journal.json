@@ -85,6 +85,20 @@
       "when": 1772388221540,
       "tag": "0011_red_rumiko_fujikawa",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1772410806308,
+      "tag": "0012_acoustic_giant_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1772412234246,
+      "tag": "0013_furry_arclight",
+      "breakpoints": true
     }
   ]
 }

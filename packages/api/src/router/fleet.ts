@@ -14,7 +14,7 @@ import {
 
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, managerProcedure, protectedProcedure } from "../trpc";
-import { fetchManagerMembership } from "../lib/org-membership";
+import { resolveOrgContext } from "../lib/org-membership";
 
 export const fleetRouter = createTRPCRouter({
   /**
@@ -23,7 +23,12 @@ export const fleetRouter = createTRPCRouter({
    * console error for regular users on every dashboard load.
    */
   overview: protectedProcedure.query(async ({ ctx }) => {
-    const membership = await fetchManagerMembership(ctx.db, ctx.session.user.id);
+    const membership = await resolveOrgContext(
+      ctx.db,
+      ctx.session.user.id,
+      ctx.session.user.role ?? "user",
+      ctx.headers,
+    );
     if (!membership) return null;
 
     const orgId = membership.orgId;

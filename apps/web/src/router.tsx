@@ -7,9 +7,11 @@ import { authClient } from "~/lib/auth-client";
 
 const App = lazy(() => import("~/App"));
 const AdminLayout = lazy(() => import("~/components/admin/layout").then(m => ({ default: m.AdminLayout })));
+const DemoLinksPage = lazy(() => import("~/components/admin/demo-links-page").then(m => ({ default: m.DemoLinksPage })));
 const OrgDetailPage = lazy(() => import("~/components/admin/org-detail-page").then(m => ({ default: m.OrgDetailPage })));
 const OrgsPage = lazy(() => import("~/components/admin/orgs-page").then(m => ({ default: m.OrgsPage })));
 const DashboardPage = lazy(() => import("~/components/dashboard/dashboard-page").then(m => ({ default: m.DashboardPage })));
+const DemoPage = lazy(() => import("~/components/demo/demo-page").then(m => ({ default: m.DemoPage })));
 const DeviceDashboard = lazy(() => import("~/components/device-dashboard").then(m => ({ default: m.DeviceDashboard })));
 const FaqPage = lazy(() => import("~/components/faq-page").then(m => ({ default: m.FaqPage })));
 const JoinPage = lazy(() => import("~/components/join-page").then(m => ({ default: m.JoinPage })));
@@ -25,6 +27,7 @@ let savedHomeScroll = 0;
 const REPORT_RE = /^\/report\/([a-p]{32})$/;
 const ADMIN_ORG_RE = /^\/admin\/orgs\/([^/]+)$/;
 const JOIN_RE = /^\/join\/([^/]+)$/;
+const DEMO_RE = /^\/demo\/([^/]+)$/;
 
 function getPath() {
   return window.location.pathname;
@@ -59,17 +62,20 @@ export function Router() {
   const reportMatch = REPORT_RE.exec(path);
   const adminOrgMatch = ADMIN_ORG_RE.exec(path);
   const joinMatch = JOIN_RE.exec(path);
+  const demoMatch = DEMO_RE.exec(path);
 
   const extensionId = reportMatch?.[1];
   const joinToken = joinMatch?.[1];
+  const demoToken = demoMatch?.[1];
   const isFaq = path === "/faq";
   const isLogin = path === "/login";
   const isSignup = path === "/signup";
   const isDashboard = path === "/dashboard" || path.startsWith("/dashboard/");
   const isAdmin = path.startsWith("/admin");
   const isJoin = !!joinToken;
+  const isDemo = !!demoToken;
 
-  const isSubPage = !!extensionId || isFaq || isLogin || isSignup || isDashboard || isAdmin || isJoin;
+  const isSubPage = !!extensionId || isFaq || isLogin || isSignup || isDashboard || isAdmin || isJoin || isDemo;
 
   useLayoutEffect(() => {
     if (isSubPage) {
@@ -124,6 +130,8 @@ export function Router() {
 
       {isJoin && joinToken && <JoinPage token={joinToken} />}
 
+      {isDemo && demoToken && <DemoPage token={demoToken} />}
+
       {isLogin && <LoginPage />}
 
       {isSignup && <SignupPage />}
@@ -135,6 +143,8 @@ export function Router() {
         <AdminLayout path={path}>
           {adminOrgMatch ? (
             <OrgDetailPage orgId={adminOrgMatch[1] ?? ""} />
+          ) : path === "/admin/demo" ? (
+            <DemoLinksPage />
           ) : (
             <OrgsPage />
           )}

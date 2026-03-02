@@ -563,6 +563,54 @@ export const UserSubscription = createTable("user_subscription", {
 export type UserSubscription = typeof UserSubscription.$inferSelect;
 
 // ---------------------------------------------------------------------------
+// Demo Links
+// Shareable sales/demo links that guide prospects through a chrome://system
+// extension paste, show a threat report, and prompt them to book a call.
+// Raw token is "aibp_demo_<base64url>", only the SHA-256 hash is stored.
+// ---------------------------------------------------------------------------
+
+export const DemoLink = createTable(
+  "demo_link",
+  {
+    // URL-safe slug derived from the label, e.g. "techcorp-outreach"
+    slug: text().notNull().unique(),
+    label: text().notNull(), // e.g. "TechCorp outreach May 2025"
+    createdBy: text("created_by").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    revokedAt: timestamp({ withTimezone: true }),
+    clickCount: integer().notNull().default(0),
+    scanCount: integer().notNull().default(0),
+  },
+  (t) => [index("demo_link_slug_idx").on(t.slug)],
+);
+
+export type DemoLink = typeof DemoLink.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// Demo Scan
+// Records each extension paste submission for follow-up analytics.
+// ---------------------------------------------------------------------------
+
+export const DemoScan = createTable(
+  "demo_scan",
+  {
+    demoLinkId: fk("demo_link_id", () => DemoLink, {
+      onDelete: "cascade",
+    }).notNull(),
+    extensionCount: integer().notNull(),
+    // e.g. { clean: 5, low: 2, medium: 1, high: 0, critical: 0, unscanned: 3 }
+    riskCounts: jsonb()
+      .$type<Record<string, number>>()
+      .notNull()
+      .default({}),
+  },
+  (t) => [index("demo_scan_demo_link_id_idx").on(t.demoLinkId)],
+);
+
+export type DemoScan = typeof DemoScan.$inferSelect;
+
+// ---------------------------------------------------------------------------
 // Relations
 // ---------------------------------------------------------------------------
 
@@ -693,6 +741,17 @@ export const UserAlertRelations = relations(UserAlert, ({ one }) => ({
   extension: one(Extension, {
     fields: [UserAlert.extensionId],
     references: [Extension.id],
+  }),
+}));
+
+export const DemoLinkRelations = relations(DemoLink, ({ many }) => ({
+  scans: many(DemoScan),
+}));
+
+export const DemoScanRelations = relations(DemoScan, ({ one }) => ({
+  demoLink: one(DemoLink, {
+    fields: [DemoScan.demoLinkId],
+    references: [DemoLink.id],
   }),
 }));
 

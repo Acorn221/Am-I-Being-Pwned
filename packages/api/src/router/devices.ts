@@ -765,6 +765,15 @@ export const devicesRouter = createTRPCRouter({
         disableList,
         quarantineList,
         newToken: newRaw,
+        // Cached by the extension for immediate offline policy enforcement on
+        // new installs (block-first, verify against local DB, re-enable if safe).
+        orgPolicy: orgPolicy
+          ? {
+              maxRiskScore: orgPolicy.maxRiskScore,
+              blockUnknown: orgPolicy.blockUnknown,
+              blockedExtensionIds: orgPolicy.blockedExtensionIds,
+            }
+          : null,
       };
     }),
 });

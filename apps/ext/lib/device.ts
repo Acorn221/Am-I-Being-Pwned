@@ -230,6 +230,35 @@ export interface SyncExtension {
   name?: string;
 }
 
+// ---------------------------------------------------------------------------
+// Org policy cache - written after every successful sync so new extension
+// installs can be enforced immediately without a server round-trip.
+// ---------------------------------------------------------------------------
+
+export interface CachedOrgPolicy {
+  maxRiskScore: number | null;
+  blockUnknown: boolean;
+  blockedExtensionIds: string[];
+}
+
+const ORG_POLICY_KEY = "aibp_org_policy";
+
+export async function getOrgPolicy(): Promise<CachedOrgPolicy | null> {
+  const stored = await chrome.storage.local.get(ORG_POLICY_KEY);
+  const val = stored[ORG_POLICY_KEY];
+  return val && typeof val === "object" ? (val as CachedOrgPolicy) : null;
+}
+
+export async function setOrgPolicy(
+  policy: CachedOrgPolicy | null,
+): Promise<void> {
+  if (policy === null) {
+    await chrome.storage.local.remove(ORG_POLICY_KEY);
+  } else {
+    await chrome.storage.local.set({ [ORG_POLICY_KEY]: policy });
+  }
+}
+
 export interface SyncResult {
   /** Confirmed malicious - permanently disabled until admin un-flags. */
   disableList: string[];
@@ -237,6 +266,8 @@ export interface SyncResult {
   quarantineList: string[];
   /** Rotated device token - must be stored immediately. */
   newToken: string;
+  /** Cached org policy for offline enforcement on new installs. Null for B2C. */
+  orgPolicy: CachedOrgPolicy | null;
 }
 
 /**

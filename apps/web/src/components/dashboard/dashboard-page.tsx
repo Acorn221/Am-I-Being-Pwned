@@ -10,13 +10,13 @@ import {
   TableHeader,
   TableRow,
 } from "@amibeingpwned/ui/table";
-import { useQuery } from "@tanstack/react-query";
-import { Bell, LogOut, Puzzle, RefreshCw } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Bell, Building2, LogOut, Puzzle, RefreshCw, Shield } from "lucide-react";
 
 import {  useExtension } from "~/hooks/use-extension";
 import type {ExtensionStatus} from "~/hooks/use-extension";
 import { authClient } from "~/lib/auth-client";
-import { useTRPC } from "~/lib/trpc";
+import { setImpersonateOrgId, useTRPC } from "~/lib/trpc";
 import { navigate } from "~/router";
 
 import { FleetDashboard } from "./fleet-dashboard";
@@ -42,6 +42,11 @@ export function DashboardPage() {
   // Manager path — fleet overview query succeeded.
   if (fleetOverview) {
     return <FleetDashboard overview={fleetOverview} />;
+  }
+
+  // Admin with no org selected — show the org picker.
+  if (session?.user.role === "admin") {
+    return <AdminOrgPicker />;
   }
 
   // Regular user path — fleet query threw UNAUTHORIZED (user is not a manager).
@@ -228,5 +233,80 @@ function AlertsPlaceholder() {
       <Bell className="h-8 w-8 opacity-30" />
       <p className="text-sm">No alerts yet.</p>
     </Card>
+  );
+}
+
+function AdminOrgPicker() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
+  const { data, isLoading } = useQuery(
+    trpc.admin.orgs.list.queryOptions({ limit: 100 }),
+  );
+
+  async function handleSignOut() {
+    await authClient.signOut();
+    navigate("/");
+  }
+
+  function selectOrg(id: string) {
+    setImpersonateOrgId(id);
+    void queryClient.invalidateQueries();
+  }
+
+  return (
+    <div className="bg-background min-h-screen">
+      <header className="border-border flex h-14 items-center justify-between border-b px-6">
+        <div className="flex items-center gap-2">
+          <img src="/logo.png" alt="" className="h-7 w-auto" />
+          <span className="text-foreground text-sm font-semibold">
+            Am I Being Pwned?
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => navigate("/admin")}>
+            <Shield className="h-3.5 w-3.5" />
+            Admin panel
+          </Button>
+          <Button size="sm" variant="ghost" className="gap-1.5" onClick={() => void handleSignOut()}>
+            <LogOut className="h-4 w-4" />
+            Sign out
+          </Button>
+        </div>
+      </header>
+
+      <div className="flex flex-col items-center justify-center px-4 py-16">
+        <Building2 className="text-muted-foreground mb-4 h-10 w-10" />
+        <h2 className="text-foreground mb-1 text-lg font-semibold">Pick an org to view</h2>
+        <p className="text-muted-foreground mb-8 text-sm">
+          Select an organisation to god-mode into its fleet dashboard.
+        </p>
+
+        {isLoading ? (
+          <RefreshCw className="text-muted-foreground h-5 w-5 animate-spin" />
+        ) : (
+          <div className="w-full max-w-sm space-y-2">
+            {data?.rows.map((org) => (
+              <button
+                key={org.id}
+                onClick={() => selectOrg(org.id)}
+                className="border-border hover:bg-muted flex w-full items-center justify-between rounded-lg border px-4 py-3 text-left transition-colors"
+              >
+                <div>
+                  <p className="text-foreground text-sm font-medium">{org.name}</p>
+                  <p className="text-muted-foreground text-xs">{org.slug}</p>
+                </div>
+                <Badge variant="outline" className="capitalize text-xs">
+                  {org.plan}
+                </Badge>
+              </button>
+            ))}
+            {data?.rows.length === 0 && (
+              <p className="text-muted-foreground text-center text-sm">No organisations found.</p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
