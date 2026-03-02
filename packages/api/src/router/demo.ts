@@ -39,13 +39,6 @@ async function findActiveLink(db: Db, slug: string) {
   return row ?? null;
 }
 
-function scoreToRisk(score: number): string {
-  if (score === 0) return "clean";
-  if (score < 25) return "low";
-  if (score < 50) return "medium";
-  if (score < 75) return "high";
-  return "critical";
-}
 
 // ---------------------------------------------------------------------------
 // Router
@@ -101,7 +94,7 @@ export const demoRouter = createTRPCRouter({
         .select({
           chromeExtensionId: Extension.chromeExtensionId,
           name: Extension.name,
-          riskScore: Extension.riskScore,
+          riskLevel: Extension.riskLevel,
           isFlagged: Extension.isFlagged,
         })
         .from(Extension)
@@ -120,7 +113,7 @@ export const demoRouter = createTRPCRouter({
           return {
             id,
             name: null as string | null,
-            riskScore: null as number | null,
+            riskLevel: null as string | null,
             risk: "unscanned" as string,
             isFlagged: false,
           };
@@ -128,8 +121,8 @@ export const demoRouter = createTRPCRouter({
         return {
           id,
           name: ext.name,
-          riskScore: ext.riskScore,
-          risk: scoreToRisk(ext.riskScore),
+          riskLevel: ext.riskLevel,
+          risk: ext.riskLevel === "unknown" ? "unscanned" : ext.riskLevel,
           isFlagged: ext.isFlagged,
         };
       });

@@ -58,7 +58,7 @@ const THREAT_PAYLOAD_EXAMPLE = JSON.stringify(
         {
           extensionName: "Dark Reader",
           chromeExtensionId: "eimadpbcbfnmbkopoojfekhnkhdbieeh",
-          riskScore: 87,
+          riskLevel: "critical",
           flaggedReason:
             "Reads all browsing history and sends it to a remote server",
         },

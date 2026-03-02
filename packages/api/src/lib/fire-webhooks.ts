@@ -35,7 +35,7 @@ export interface WebhookPayloadMap {
     threats: {
       extensionName: string | null;
       chromeExtensionId: string;
-      riskScore: number;
+      riskLevel: string;
       flaggedReason: string | null;
     }[];
   };

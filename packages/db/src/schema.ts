@@ -5,6 +5,8 @@ import {
   integer,
   jsonb,
   pgEnum,
+  real,
+  smallint,
   text,
   timestamp,
   unique,
@@ -25,11 +27,13 @@ export const scanStatusEnum = pgEnum("scan_status", [
   "failed",
 ]);
 
-export const verdictEnum = pgEnum("verdict", [
-  "safe",
-  "suspicious",
-  "malicious",
+export const riskLevelEnum = pgEnum("risk_level", [
   "unknown",
+  "clean",
+  "low",
+  "medium",
+  "high",
+  "critical",
 ]);
 
 export const extensionEventTypeEnum = pgEnum("extension_event_type", [
@@ -52,28 +56,19 @@ export const severityEnum = pgEnum("severity", ["info", "warning", "critical"]);
 
 export const planEnum = pgEnum("plan", ["free", "pro"]);
 
-// orgRoleEnum removed, OrgMember.role uses a plain text column with enum values
-// (matches the style of user.role in auth-schema.ts)
-
 export const devicePlatformEnum = pgEnum("device_platform", ["chrome", "edge"]);
 
 // ---------------------------------------------------------------------------
 // Multi-tenancy: Organization
-// Every enterprise client gets one. B2C personal users don't need one.
 // ---------------------------------------------------------------------------
 
 export const Organization = createTable("organization", {
   name: text().notNull(),
-  // URL-safe slug used in dashboard routes, e.g. "acme-corp"
   slug: text().notNull().unique(),
   plan: planEnum().notNull().default("free"),
-  // Soft-suspend, set to kill all B2B device auth for this org instantly
   suspendedAt: timestamp({ withTimezone: true }),
   suspendedReason: text(),
-  // Zero-trust policy: disable any extension whose new version hasn't been
-  // scanned yet. Auto-re-enabled once the scan comes back clean.
   quarantineUnscannedUpdates: boolean().notNull().default(false),
-  // Timestamp of the last successful Google Workspace extension sync
   lastWorkspaceSyncAt: timestamp({ withTimezone: true }),
 });
 
@@ -81,16 +76,13 @@ export type Organization = typeof Organization.$inferSelect;
 
 // ---------------------------------------------------------------------------
 // Org API Key
-// Provisioning credential - IT admin creates one, bakes it into CDM policy.
-// NEVER store the raw key. Only the SHA-256 hex hash lives here.
 // ---------------------------------------------------------------------------
 
 export const OrgApiKey = createTable(
   "org_api_key",
   {
     orgId: fk("org_id", () => Organization, { onDelete: "cascade" }).notNull(),
-    name: text().notNull(), // human label, e.g. "Production fleet key"
-    // SHA-256 hex of the raw "aibp_org_..." token, plaintext never persisted
+    name: text().notNull(),
     keyHash: text().notNull().unique(),
     createdBy: text("created_by").references(() => user.id, {
       onDelete: "set null",
@@ -106,47 +98,30 @@ export type OrgApiKey = typeof OrgApiKey.$inferSelect;
 
 // ---------------------------------------------------------------------------
 // Device
-// One row per installed extension instance (machine + browser profile).
-// Always belongs to an org (B2B). endUserId links to the employee who owns
-// the device (populated from identityEmail during registration, nullable
-// if the employee hasn't provided an email).
 // ---------------------------------------------------------------------------
 
 export const Device = createTable(
   "device",
   {
-    // Org this device belongs to
     orgId: fk("org_id", () => Organization, { onDelete: "cascade" }),
-    // Employee identity - auto-upserted from identityEmail at registration
     endUserId: fk("end_user_id", () => OrgEndUser, { onDelete: "set null" }),
-    // SHA-256 hex of the raw rotating device token ("aibp_dev_...")
     tokenHash: text().notNull().unique(),
     tokenExpiresAt: timestamp({ withTimezone: true }).notNull(),
-    // Previous token kept valid for a short grace period (5 min) after rotation
-    // so the extension doesn't get locked out if it receives the new token but
-    // crashes before persisting it.
     previousTokenHash: text().unique(),
     previousTokenExpiresAt: timestamp({ withTimezone: true }),
-    // Hash of stable machine identifiers, used to detect re-registration
-    // so we reuse the existing Device row rather than creating duplicates
     deviceFingerprint: text().notNull(),
     extensionVersion: text().notNull(),
     platform: devicePlatformEnum("platform").notNull().default("chrome"),
-    // OS reported by chrome.runtime.getPlatformInfo() - "mac", "win", "linux", "cros", etc.
     os: text("os"),
-    // CPU architecture - "arm", "arm64", "x86-32", "x86-64", etc.
     arch: text("arch"),
-    // Signed-in Google account email from chrome.identity.getProfileUserInfo()
     identityEmail: text("identity_email"),
     lastSeenAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
     lastSyncAt: timestamp({ withTimezone: true }),
-    // Soft revoke, set this to kill a device's access instantly
     revokedAt: timestamp({ withTimezone: true }),
   },
   (t) => [
     index("device_org_id_idx").on(t.orgId),
     index("device_end_user_id_idx").on(t.endUserId),
-    // Re-registration lookup: find existing device for this org+fingerprint
     index("device_fingerprint_org_idx").on(t.orgId, t.deviceFingerprint),
   ],
 );
@@ -155,17 +130,12 @@ export type Device = typeof Device.$inferSelect;
 
 // ---------------------------------------------------------------------------
 // Device Web Session
-// Short-lived token issued at invite enrollment so the device owner can
-// access their personal dashboard without a full AIBP account.
-// Generated alongside the device token in registerWithInvite.
-// Revoked automatically when the parent Device is revoked.
 // ---------------------------------------------------------------------------
 
 export const DeviceWebSession = createTable(
   "device_web_session",
   {
     deviceId: fk("device_id", () => Device, { onDelete: "cascade" }).notNull(),
-    // SHA-256 hex of raw "aibp_ws_..." token, plaintext never persisted
     tokenHash: text().notNull().unique(),
     expiresAt: timestamp({ withTimezone: true }).notNull(),
     revokedAt: timestamp({ withTimezone: true }),
@@ -177,7 +147,6 @@ export type DeviceWebSession = typeof DeviceWebSession.$inferSelect;
 
 // ---------------------------------------------------------------------------
 // Org Member
-// Links AIBP user accounts to organizations with a role.
 // ---------------------------------------------------------------------------
 
 export const OrgMember = createTable(
@@ -201,10 +170,6 @@ export type OrgMember = typeof OrgMember.$inferSelect;
 
 // ---------------------------------------------------------------------------
 // Org End User
-// Lightweight identity record for an employee enrolled via B2B.
-// Not a dashboard user - just enough context for managers to know which
-// employee a device belongs to (sourced from chrome.identity email).
-// Auto-upserted from identityEmail during device registration.
 // ---------------------------------------------------------------------------
 
 export const OrgEndUser = createTable(
@@ -224,15 +189,14 @@ export type OrgEndUser = typeof OrgEndUser.$inferSelect;
 // ---------------------------------------------------------------------------
 // Global extension registry
 // One row per Chrome extension (not per version).
+// riskLevel is the aggregate verdict derived from the latest analyzed version.
 // ---------------------------------------------------------------------------
 
 export const Extension = createTable("extension", {
-  // Chrome Web Store IDs are always 32-char lowercase alphanumeric
   chromeExtensionId: varchar({ length: 32 }).notNull().unique(),
   name: text(),
   publisher: text(),
-  // 0-100 aggregate risk score derived from latest analyzed version
-  riskScore: integer().notNull().default(0),
+  riskLevel: riskLevelEnum().notNull().default("unknown"),
   isFlagged: boolean().notNull().default(false),
   flaggedReason: text(),
   lastUpdatedAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
@@ -256,8 +220,11 @@ export const ExtensionVersion = createTable(
     hostPermissions: jsonb().$type<string[]>(),
     contentScripts: jsonb().$type<Record<string, unknown>[]>(),
     permissionsDiff: jsonb().$type<{ added: string[]; removed: string[] }>(),
-    riskScore: integer().notNull().default(0),
-    verdict: verdictEnum().notNull().default("unknown"),
+    riskLevel: riskLevelEnum().notNull().default("unknown"),
+    // Short verdict summary populated after LLM analysis
+    summary: text(),
+    // e.g. ["data_exfiltration", "remote_config", "keylogging"]
+    flagCategories: text("flag_categories").array().notNull().default([]),
     analyzedAt: timestamp({ withTimezone: true }),
     detectedAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
   },
@@ -270,7 +237,7 @@ export const ExtensionVersion = createTable(
 export type ExtensionVersion = typeof ExtensionVersion.$inferSelect;
 
 // ---------------------------------------------------------------------------
-// Scan job / result, shared across all users
+// Scan job - tracks async scan pipeline state per version
 // ---------------------------------------------------------------------------
 
 export const ExtensionScan = createTable("extension_scan", {
@@ -278,7 +245,6 @@ export const ExtensionScan = createTable("extension_scan", {
     onDelete: "cascade",
   }).notNull(),
   status: scanStatusEnum().notNull().default("pending"),
-  findings: jsonb().$type<Record<string, unknown>>(),
   scanner: text(),
   startedAt: timestamp({ withTimezone: true }),
   completedAt: timestamp({ withTimezone: true }),
@@ -287,8 +253,122 @@ export const ExtensionScan = createTable("extension_scan", {
 export type ExtensionScan = typeof ExtensionScan.$inferSelect;
 
 // ---------------------------------------------------------------------------
+// LLM analysis report
+// One row per (extensionVersion, reportType). Primary type is "llm_analysis".
+// ---------------------------------------------------------------------------
+
+export const ExtensionAnalysisReport = createTable(
+  "extension_analysis_report",
+  {
+    extensionVersionId: fk("extension_version_id", () => ExtensionVersion, {
+      onDelete: "cascade",
+    }).notNull(),
+    reportType: text("report_type", {
+      enum: ["llm_analysis", "vuln_report"] as const,
+    })
+      .notNull()
+      .default("llm_analysis"),
+    // Full markdown report content
+    content: text().notNull(),
+    // 1-2 sentence verdict
+    summary: text(),
+    riskLevel: riskLevelEnum().notNull().default("unknown"),
+    flagCategories: text("flag_categories").array().notNull().default([]),
+    vulnCountLow: smallint("vuln_count_low").notNull().default(0),
+    vulnCountMedium: smallint("vuln_count_medium").notNull().default(0),
+    vulnCountHigh: smallint("vuln_count_high").notNull().default(0),
+    vulnCountCritical: smallint("vuln_count_critical").notNull().default(0),
+    // External domains the extension contacts
+    endpoints: text("endpoints").array().notNull().default([]),
+    // Whether this report can be shown publicly on the website
+    canPublish: boolean("can_publish").notNull().default(true),
+    analyzedAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    unique().on(t.extensionVersionId, t.reportType),
+    index("analysis_report_version_id_idx").on(t.extensionVersionId),
+  ],
+);
+
+export type ExtensionAnalysisReport =
+  typeof ExtensionAnalysisReport.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// Static/AST analysis result (Babel analyzer output)
+// One row per (extensionVersion, analyzerVersion).
+// ---------------------------------------------------------------------------
+
+export const ExtensionStaticAnalysis = createTable(
+  "extension_static_analysis",
+  {
+    extensionVersionId: fk("extension_version_id", () => ExtensionVersion, {
+      onDelete: "cascade",
+    }).notNull(),
+    analyzerVersion: text("analyzer_version").notNull(),
+    // 0-100 raw score from the analyzer (distinct from the normalized riskLevel enum)
+    riskScore: integer("risk_score").notNull(),
+    criticalCount: integer("critical_count").notNull().default(0),
+    highCount: integer("high_count").notNull().default(0),
+    mediumCount: integer("medium_count").notNull().default(0),
+    lowCount: integer("low_count").notNull().default(0),
+    // Data flows from sensitive source to network sink
+    exfilFlows: integer("exfil_flows").notNull().default(0),
+    // Flows reaching eval / Function / executeScript
+    codeExecFlows: integer("code_exec_flows").notNull().default(0),
+    totalFlowPaths: integer("total_flow_paths").notNull().default(0),
+    openMessageHandlers: integer("open_message_handlers").notNull().default(0),
+    hasWasm: boolean("has_wasm").notNull().default(false),
+    hasObfuscation: boolean("has_obfuscation").notNull().default(false),
+    filesAnalyzed: integer("files_analyzed").notNull().default(0),
+    analysisTimeMs: integer("analysis_time_ms"),
+    // Full structured output from the analyzer
+    rawReport: jsonb("raw_report").$type<Record<string, unknown>>(),
+    analyzedAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    unique().on(t.extensionVersionId, t.analyzerVersion),
+    index("static_analysis_version_id_idx").on(t.extensionVersionId),
+  ],
+);
+
+export type ExtensionStaticAnalysis =
+  typeof ExtensionStaticAnalysis.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// VirusTotal scan result
+// One row per (extensionVersion, sha256) - a version's zip may be re-submitted.
+// ---------------------------------------------------------------------------
+
+export const ExtensionVtResult = createTable(
+  "extension_vt_result",
+  {
+    extensionVersionId: fk("extension_version_id", () => ExtensionVersion, {
+      onDelete: "cascade",
+    }).notNull(),
+    sha256: varchar({ length: 64 }).notNull(),
+    malicious: integer().notNull().default(0),
+    suspicious: integer().notNull().default(0),
+    undetected: integer().notNull().default(0),
+    harmless: integer().notNull().default(0),
+    totalEngines: integer("total_engines").notNull().default(0),
+    // malicious / totalEngines
+    detectionRatio: real("detection_ratio").notNull().default(0),
+    status: text({ enum: ["found", "not_found", "unknown"] as const })
+      .notNull()
+      .default("unknown"),
+    rawResponse: jsonb("raw_response").$type<Record<string, unknown>>(),
+    scannedAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    unique().on(t.extensionVersionId, t.sha256),
+    index("vt_result_version_id_idx").on(t.extensionVersionId),
+  ],
+);
+
+export type ExtensionVtResult = typeof ExtensionVtResult.$inferSelect;
+
+// ---------------------------------------------------------------------------
 // Per-device extension inventory
-// Updated on every sync. deviceId is the primary identity anchor.
 // ---------------------------------------------------------------------------
 
 export const UserExtension = createTable(
@@ -304,7 +384,6 @@ export const UserExtension = createTable(
     removedAt: timestamp({ withTimezone: true }),
   },
   (t) => [
-    // Primary uniqueness: one row per (device, extension)
     unique().on(t.deviceId, t.chromeExtensionId),
     index("user_ext_device_id_idx").on(t.deviceId),
   ],
@@ -359,32 +438,18 @@ export const UserAlert = createTable(
 export type UserAlert = typeof UserAlert.$inferSelect;
 
 // ---------------------------------------------------------------------------
-// Org Webhooks
-// One row per configured endpoint. Events is a text[] of subscribed event types.
-// Secret is an HMAC-SHA256 signing key (format: "whsec_<64 hex chars>").
-// Treat the secret like a password - it's stored plaintext here but should
-// only be shown to the user once (on creation). Revoke by deleting + recreating.
-// ---------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------
 // Org Invite
-// One shareable invite link per org - employees click it to self-enroll their
-// browser extension without requiring IT/MDM involvement.
-// Raw token is "aibp_inv_<base64url>", only the SHA-256 hash is stored.
 // ---------------------------------------------------------------------------
 
 export const OrgInvite = createTable(
   "org_invite",
   {
     orgId: fk("org_id", () => Organization, { onDelete: "cascade" }).notNull(),
-    // SHA-256 hex of the raw "aibp_inv_..." token, plaintext never persisted
     tokenHash: text().notNull().unique(),
     createdBy: text("created_by").references(() => user.id, {
       onDelete: "set null",
     }),
-    // How many devices have enrolled using this link (informational only)
     usedCount: integer().notNull().default(0),
-    // Set when the link is rotated or revoked
     revokedAt: timestamp({ withTimezone: true }),
   },
   (t) => [index("org_invite_org_id_idx").on(t.orgId)],
@@ -394,8 +459,6 @@ export type OrgInvite = typeof OrgInvite.$inferSelect;
 
 // ---------------------------------------------------------------------------
 // Org Extension Policy
-// Per-org policy controlling which extensions are blocked or quarantined.
-// One row per org (created lazily on first save).
 // ---------------------------------------------------------------------------
 
 export const OrgExtensionPolicy = createTable(
@@ -404,20 +467,16 @@ export const OrgExtensionPolicy = createTable(
     orgId: fk("org_id", () => Organization, { onDelete: "cascade" })
       .notNull()
       .unique(),
-    // Extension IDs that must always be disabled on all devices in this org
     blockedExtensionIds: jsonb("blocked_extension_ids")
       .$type<string[]>()
       .notNull()
       .default([]),
-    // Extension IDs explicitly allowed - exempted from all automatic rules
-    // (risk score threshold, blockUnknown). Manual blocklist still overrides this.
     allowedExtensionIds: jsonb("allowed_extension_ids")
       .$type<string[]>()
       .notNull()
       .default([]),
-    // If set, auto-disable any extension with riskScore >= this value (0-100)
-    maxRiskScore: integer("max_risk_score"),
-    // Quarantine extensions not found in the AIBP database at all
+    // Auto-disable any extension at or above this risk level (null = disabled)
+    maxRiskLevel: riskLevelEnum("max_risk_level"),
     blockUnknown: boolean("block_unknown").notNull().default(false),
     updatedBy: text("updated_by").references(() => user.id, {
       onDelete: "set null",
@@ -430,9 +489,6 @@ export type OrgExtensionPolicy = typeof OrgExtensionPolicy.$inferSelect;
 
 // ---------------------------------------------------------------------------
 // Org Extension Queue
-// Process queue for extensions flagged by policy. Extensions land here so
-// managers can review them (approve = re-enable, reject = keep disabled).
-// One row per (org, chromeExtensionId) - conflict on re-queue is ignored.
 // ---------------------------------------------------------------------------
 
 export const OrgExtensionQueue = createTable(
@@ -440,20 +496,17 @@ export const OrgExtensionQueue = createTable(
   {
     orgId: fk("org_id", () => Organization, { onDelete: "cascade" }).notNull(),
     chromeExtensionId: varchar("chrome_extension_id", { length: 32 }).notNull(),
-    // Why this extension was queued
     reason: text("reason", {
       enum: ["unknown", "risk_threshold", "blocklisted"] as const,
     }).notNull(),
-    // Review status
     status: text("status", {
       enum: ["pending", "approved", "blocked"] as const,
     })
       .notNull()
       .default("pending"),
-    // Denormalized display name (extension may not be in global registry)
     extensionName: text("extension_name"),
-    // Risk score snapshot at time of queueing
-    riskScore: integer("risk_score"),
+    // Risk level snapshot at time of queueing
+    riskLevel: riskLevelEnum("risk_level"),
     reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
     reviewedBy: text("reviewed_by").references(() => user.id, {
       onDelete: "set null",
@@ -467,13 +520,17 @@ export const OrgExtensionQueue = createTable(
 
 export type OrgExtensionQueue = typeof OrgExtensionQueue.$inferSelect;
 
+// ---------------------------------------------------------------------------
+// Org Webhook
+// ---------------------------------------------------------------------------
+
 export const OrgWebhook = createTable(
   "org_webhook",
   {
     orgId: fk("org_id", () => Organization, { onDelete: "cascade" }).notNull(),
-    description: text(), // human label e.g. "Slack alerts"
+    description: text(),
     url: text().notNull(),
-    secret: text().notNull(), // whsec_<hex>, HMAC signing key
+    secret: text().notNull(),
     events: text("events").array().notNull().default([]),
     enabled: boolean().notNull().default(true),
   },
@@ -483,10 +540,7 @@ export const OrgWebhook = createTable(
 export type OrgWebhook = typeof OrgWebhook.$inferSelect;
 
 // ---------------------------------------------------------------------------
-// Workspace extension inventory
-// Org-level aggregate of extensions seen across all Chrome-managed devices,
-// sourced from the Google Chrome Management API (not the AIBP browser extension).
-// One row per (org, chromeExtensionId), updated on every workspace sync.
+// Workspace extension inventory (Google Chrome Management API)
 // ---------------------------------------------------------------------------
 
 export const WorkspaceApp = createTable(
@@ -498,14 +552,11 @@ export const WorkspaceApp = createTable(
     description: text(),
     homepageUrl: text(),
     iconUrl: text(),
-    // As reported by the Chrome Management API
     permissions: jsonb().$type<string[]>(),
     siteAccess: jsonb().$type<string[]>(),
-    // FORCED | NORMAL | ADMIN | DEVELOPMENT | SIDELOAD | OTHER
     installType: text(),
     browserDeviceCount: integer().notNull().default(0),
     osUserCount: integer().notNull().default(0),
-    // Where this record came from: 'oauth' = Google Workspace API, 'ext' = AIBP browser extension
     source: text({ enum: ["oauth", "ext"] as const }).notNull().default("oauth"),
     lastSyncedAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
   },
@@ -518,21 +569,15 @@ export const WorkspaceApp = createTable(
 export type WorkspaceApp = typeof WorkspaceApp.$inferSelect;
 
 // ---------------------------------------------------------------------------
-// Workspace device inventory
-// Individual Chrome Browser / ChromeOS devices enrolled in the org's Google
-// Workspace, discovered via findInstalledAppDevices during workspace sync.
-// One row per (org, googleDeviceId).
+// Workspace device inventory (Google Chrome Management API)
 // ---------------------------------------------------------------------------
 
 export const WorkspaceDevice = createTable(
   "workspace_device",
   {
     orgId: fk("org_id", () => Organization, { onDelete: "cascade" }).notNull(),
-    // Stable device ID from the Chrome Management API
     googleDeviceId: text().notNull(),
-    // Local network machine name (best-effort, may be null)
     machineName: text(),
-    // Number of tracked extensions seen on this device in the last sync
     extensionCount: integer().notNull().default(0),
     lastSyncedAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
   },
@@ -564,17 +609,13 @@ export type UserSubscription = typeof UserSubscription.$inferSelect;
 
 // ---------------------------------------------------------------------------
 // Demo Links
-// Shareable sales/demo links that guide prospects through a chrome://system
-// extension paste, show a threat report, and prompt them to book a call.
-// Raw token is "aibp_demo_<base64url>", only the SHA-256 hash is stored.
 // ---------------------------------------------------------------------------
 
 export const DemoLink = createTable(
   "demo_link",
   {
-    // URL-safe slug derived from the label, e.g. "techcorp-outreach"
     slug: text().notNull().unique(),
-    label: text().notNull(), // e.g. "TechCorp outreach May 2025"
+    label: text().notNull(),
     createdBy: text("created_by").references(() => user.id, {
       onDelete: "set null",
     }),
@@ -589,7 +630,6 @@ export type DemoLink = typeof DemoLink.$inferSelect;
 
 // ---------------------------------------------------------------------------
 // Demo Scan
-// Records each extension paste submission for follow-up analytics.
 // ---------------------------------------------------------------------------
 
 export const DemoScan = createTable(
@@ -599,7 +639,6 @@ export const DemoScan = createTable(
       onDelete: "cascade",
     }).notNull(),
     extensionCount: integer().notNull(),
-    // e.g. { clean: 5, low: 2, medium: 1, high: 0, critical: 0, unscanned: 3 }
     riskCounts: jsonb()
       .$type<Record<string, number>>()
       .notNull()
@@ -686,6 +725,9 @@ export const ExtensionVersionRelations = relations(
       references: [Extension.id],
     }),
     scans: many(ExtensionScan),
+    analysisReports: many(ExtensionAnalysisReport),
+    staticAnalyses: many(ExtensionStaticAnalysis),
+    vtResults: many(ExtensionVtResult),
   }),
 );
 
@@ -695,6 +737,36 @@ export const ExtensionScanRelations = relations(ExtensionScan, ({ one }) => ({
     references: [ExtensionVersion.id],
   }),
 }));
+
+export const ExtensionAnalysisReportRelations = relations(
+  ExtensionAnalysisReport,
+  ({ one }) => ({
+    extensionVersion: one(ExtensionVersion, {
+      fields: [ExtensionAnalysisReport.extensionVersionId],
+      references: [ExtensionVersion.id],
+    }),
+  }),
+);
+
+export const ExtensionStaticAnalysisRelations = relations(
+  ExtensionStaticAnalysis,
+  ({ one }) => ({
+    extensionVersion: one(ExtensionVersion, {
+      fields: [ExtensionStaticAnalysis.extensionVersionId],
+      references: [ExtensionVersion.id],
+    }),
+  }),
+);
+
+export const ExtensionVtResultRelations = relations(
+  ExtensionVtResult,
+  ({ one }) => ({
+    extensionVersion: one(ExtensionVersion, {
+      fields: [ExtensionVtResult.extensionVersionId],
+      references: [ExtensionVersion.id],
+    }),
+  }),
+);
 
 export const UserExtensionRelations = relations(
   UserExtension,
@@ -783,4 +855,3 @@ export const CreateUserExtensionSchema = createInsertSchema(UserExtension).omit(
 // ---------------------------------------------------------------------------
 
 export * from "./auth-schema";
-

@@ -45,6 +45,7 @@ import { Skeleton } from "@amibeingpwned/ui/skeleton";
 import { toast } from "@amibeingpwned/ui/toast";
 
 import { useTRPC } from "~/lib/trpc";
+import { RiskBadge } from "./fleet-shared";
 import { timeAgo } from "./fleet-types";
 
 type QueueStatus = "pending" | "approved" | "blocked";
@@ -165,12 +166,12 @@ function PolicySettingsCard({ onBlocked }: { onBlocked: () => void }) {
 
   const { data: policy, isLoading } = useQuery(trpc.org.getPolicy.queryOptions());
 
-  const [maxRiskScore, setMaxRiskScore] = useState<string>("");
+  const [maxRiskLevel, setMaxRiskLevel] = useState<string>("");
   const [blockUnknown, setBlockUnknown] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
   if (policy && !initialized) {
-    setMaxRiskScore(policy.maxRiskScore != null ? String(policy.maxRiskScore) : "");
+    setMaxRiskLevel(policy.maxRiskLevel ?? "");
     setBlockUnknown(policy.blockUnknown ?? false);
     setInitialized(true);
   }
@@ -186,12 +187,10 @@ function PolicySettingsCard({ onBlocked }: { onBlocked: () => void }) {
   );
 
   function handleSave() {
-    const parsedScore = maxRiskScore === "" ? null : parseInt(maxRiskScore, 10);
-    if (maxRiskScore !== "" && (isNaN(parsedScore!) || parsedScore! < 0 || parsedScore! > 100)) {
-      toast.error("Risk score must be between 0 and 100");
-      return;
-    }
-    saveMutation.mutate({ maxRiskScore: parsedScore, blockUnknown });
+    saveMutation.mutate({
+      maxRiskLevel: (maxRiskLevel || null) as "unknown" | "clean" | "low" | "medium" | "high" | "critical" | null,
+      blockUnknown,
+    });
   }
 
   const blockedCount = policy?.blockedExtensionIds?.length ?? 0;
@@ -252,27 +251,29 @@ function PolicySettingsCard({ onBlocked }: { onBlocked: () => void }) {
             <Switch checked={blockUnknown} onCheckedChange={setBlockUnknown} />
           </div>
 
-          {/* Max risk score */}
+          {/* Max risk level */}
           <div className="flex items-center justify-between gap-6 py-4">
             <div className="min-w-0">
-              <label className="text-sm font-medium" htmlFor="max-risk-score">
-                Max risk score threshold
+              <label className="text-sm font-medium" htmlFor="max-risk-level">
+                Max risk level threshold
               </label>
               <p className="text-muted-foreground mt-0.5 text-xs">
-                Auto-disable extensions with a risk score at or above this
-                value (0-100). Leave empty to disable this rule.
+                Auto-disable extensions at or above this risk level. Leave
+                empty to disable this rule.
               </p>
             </div>
-            <Input
-              id="max-risk-score"
-              type="number"
-              min={0}
-              max={100}
-              placeholder="e.g. 70"
-              value={maxRiskScore}
-              onChange={(e) => setMaxRiskScore(e.target.value)}
-              className="w-24 shrink-0 text-center"
-            />
+            <select
+              id="max-risk-level"
+              value={maxRiskLevel}
+              onChange={(e) => setMaxRiskLevel(e.target.value)}
+              className="border-input bg-background text-foreground focus:ring-ring h-9 w-32 shrink-0 rounded-md border px-3 text-sm focus:outline-none focus:ring-2"
+            >
+              <option value="">None</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
           </div>
 
           {/* Manual blocklist */}
@@ -407,7 +408,7 @@ type QueueItem = {
   extensionName: string | null;
   reason: string;
   status: string;
-  riskScore: number | null;
+  riskLevel: string | null;
   createdAt: Date;
 };
 
@@ -594,18 +595,8 @@ function ReviewQueueCard({
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {item.riskScore != null ? (
-                        <span
-                          className={`text-sm font-medium ${
-                            item.riskScore >= 70
-                              ? "text-destructive"
-                              : item.riskScore >= 40
-                                ? "text-orange-500"
-                                : "text-muted-foreground"
-                          }`}
-                        >
-                          {item.riskScore}
-                        </span>
+                      {item.riskLevel ? (
+                        <RiskBadge level={item.riskLevel} />
                       ) : (
                         <span className="text-muted-foreground text-sm">-</span>
                       )}

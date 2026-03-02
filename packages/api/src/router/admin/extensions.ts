@@ -1,9 +1,10 @@
 import { TRPCError } from "@trpc/server";
-import { and, count, desc, eq, gte, ilike, inArray, or } from "drizzle-orm";
+import { and, count, desc, eq, ilike, inArray, or } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import {
   Extension,
+  ExtensionAnalysisReport,
   ExtensionScan,
   ExtensionVersion,
   eqi,
@@ -16,13 +17,26 @@ const PaginationSchema = z.object({
   limit: z.number().int().min(1).max(100).default(20),
 });
 
+const RISK_LEVELS = ["unknown", "clean", "low", "medium", "high", "critical"] as const;
+type RiskLevel = (typeof RISK_LEVELS)[number];
+
+// Extensions at or above the given risk level (inclusive)
+const RISK_LEVEL_AND_ABOVE: Record<RiskLevel, RiskLevel[]> = {
+  unknown: ["unknown", "clean", "low", "medium", "high", "critical"],
+  clean:   ["clean", "low", "medium", "high", "critical"],
+  low:     ["low", "medium", "high", "critical"],
+  medium:  ["medium", "high", "critical"],
+  high:    ["high", "critical"],
+  critical: ["critical"],
+};
+
 export const adminExtensionsRouter = createTRPCRouter({
   list: adminProcedure
     .input(
       PaginationSchema.extend({
         search: z.string().optional(),
         isFlagged: z.boolean().optional(),
-        minRiskScore: z.number().int().min(0).max(100).optional(),
+        minRiskLevel: z.enum(RISK_LEVELS).optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -39,8 +53,8 @@ export const adminExtensionsRouter = createTRPCRouter({
         input.isFlagged !== undefined
           ? eq(Extension.isFlagged, input.isFlagged)
           : undefined,
-        input.minRiskScore !== undefined
-          ? gte(Extension.riskScore, input.minRiskScore)
+        input.minRiskLevel !== undefined
+          ? inArray(Extension.riskLevel, RISK_LEVEL_AND_ABOVE[input.minRiskLevel])
           : undefined,
       );
 
@@ -49,7 +63,7 @@ export const adminExtensionsRouter = createTRPCRouter({
           .select()
           .from(Extension)
           .where(where)
-          .orderBy(desc(Extension.riskScore), desc(Extension.lastUpdatedAt))
+          .orderBy(desc(Extension.riskLevel), desc(Extension.lastUpdatedAt))
           .limit(input.limit)
           .offset(offset),
         ctx.db.select({ total: count() }).from(Extension).where(where),
@@ -80,9 +94,9 @@ export const adminExtensionsRouter = createTRPCRouter({
         .where(eqi(ExtensionVersion.extensionId, extension.id))
         .orderBy(desc(ExtensionVersion.detectedAt));
 
-      const scans =
+      const [scans, analysisReports] = await Promise.all([
         versions.length > 0
-          ? await ctx.db
+          ? ctx.db
               .select()
               .from(ExtensionScan)
               .where(
@@ -92,9 +106,22 @@ export const adminExtensionsRouter = createTRPCRouter({
                 ),
               )
               .orderBy(desc(ExtensionScan.completedAt))
-          : [];
+          : [],
+        versions.length > 0
+          ? ctx.db
+              .select()
+              .from(ExtensionAnalysisReport)
+              .where(
+                inArray(
+                  ExtensionAnalysisReport.extensionVersionId,
+                  versions.map((v) => v.id),
+                ),
+              )
+              .orderBy(desc(ExtensionAnalysisReport.analyzedAt))
+          : [],
+      ]);
 
-      return { extension, versions, scans };
+      return { extension, versions, scans, analysisReports };
     }),
 
   flag: adminProcedure
@@ -102,7 +129,7 @@ export const adminExtensionsRouter = createTRPCRouter({
       z.object({
         extensionId: z.string(),
         reason: z.string().min(1),
-        riskScore: z.number().int().min(0).max(100).optional(),
+        riskLevel: z.enum(RISK_LEVELS).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -111,7 +138,7 @@ export const adminExtensionsRouter = createTRPCRouter({
         .set({
           isFlagged: true,
           flaggedReason: input.reason,
-          ...(input.riskScore !== undefined ? { riskScore: input.riskScore } : {}),
+          ...(input.riskLevel !== undefined ? { riskLevel: input.riskLevel } : {}),
           lastUpdatedAt: new Date(),
         })
         .where(eqi(Extension.id, input.extensionId));
@@ -130,17 +157,17 @@ export const adminExtensionsRouter = createTRPCRouter({
         .where(eqi(Extension.id, input.extensionId));
     }),
 
-  setRiskScore: adminProcedure
+  setRiskLevel: adminProcedure
     .input(
       z.object({
         extensionId: z.string(),
-        riskScore: z.number().int().min(0).max(100),
+        riskLevel: z.enum(RISK_LEVELS),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       await ctx.db
         .update(Extension)
-        .set({ riskScore: input.riskScore, lastUpdatedAt: new Date() })
+        .set({ riskLevel: input.riskLevel, lastUpdatedAt: new Date() })
         .where(eqi(Extension.id, input.extensionId));
     }),
 
@@ -161,7 +188,7 @@ export const adminExtensionsRouter = createTRPCRouter({
       if (existing) {
         await ctx.db
           .update(ExtensionScan)
-          .set({ status: "pending", startedAt: null, completedAt: null, findings: null })
+          .set({ status: "pending", startedAt: null, completedAt: null })
           .where(eqi(ExtensionScan.id, existing.id));
       } else {
         await ctx.db
@@ -172,7 +199,8 @@ export const adminExtensionsRouter = createTRPCRouter({
 
   /**
    * Called by the scanner worker to write results back.
-   * Updates both the scan row and the parent ExtensionVersion verdict/riskScore.
+   * Writes the LLM analysis report to ExtensionAnalysisReport, updates the
+   * ExtensionVersion risk level/summary, and rolls up to Extension.riskLevel.
    *
    * TODO: replace adminProcedure with a dedicated scannerProcedure authenticated
    * by a scanner service API key rather than an admin session.
@@ -182,10 +210,17 @@ export const adminExtensionsRouter = createTRPCRouter({
       z.object({
         scanId: z.string(),
         status: z.enum(["completed", "failed"]),
-        verdict: z.enum(["safe", "suspicious", "malicious", "unknown"]).optional(),
-        riskScore: z.number().int().min(0).max(100).optional(),
-        findings: z.record(z.string(), z.unknown()).optional(),
         scanner: z.string().optional(),
+        riskLevel: z.enum(RISK_LEVELS).optional(),
+        summary: z.string().optional(),
+        flagCategories: z.array(z.string()).optional(),
+        vulnCountLow: z.number().int().min(0).optional(),
+        vulnCountMedium: z.number().int().min(0).optional(),
+        vulnCountHigh: z.number().int().min(0).optional(),
+        vulnCountCritical: z.number().int().min(0).optional(),
+        endpoints: z.array(z.string()).optional(),
+        reportContent: z.string().optional(),
+        canPublish: z.boolean().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -203,21 +238,76 @@ export const adminExtensionsRouter = createTRPCRouter({
         .update(ExtensionScan)
         .set({
           status: input.status,
-          findings: input.findings ?? null,
           scanner: input.scanner ?? null,
           completedAt: now,
         })
         .where(eqi(ExtensionScan.id, scan.id));
 
-      if (input.status === "completed" && input.verdict !== undefined) {
+      if (input.status === "completed" && input.riskLevel !== undefined) {
+        // Update ExtensionVersion with normalized risk level + summary
         await ctx.db
           .update(ExtensionVersion)
           .set({
-            verdict: input.verdict,
-            riskScore: input.riskScore ?? 0,
+            riskLevel: input.riskLevel,
+            summary: input.summary ?? null,
+            flagCategories: input.flagCategories ?? [],
             analyzedAt: now,
           })
           .where(eqi(ExtensionVersion.id, scan.extensionVersionId));
+
+        // Write the LLM analysis report if content was provided
+        if (input.reportContent) {
+          await ctx.db
+            .insert(ExtensionAnalysisReport)
+            .values({
+              extensionVersionId: scan.extensionVersionId,
+              reportType: "llm_analysis",
+              content: input.reportContent,
+              summary: input.summary ?? null,
+              riskLevel: input.riskLevel,
+              flagCategories: input.flagCategories ?? [],
+              vulnCountLow: input.vulnCountLow ?? 0,
+              vulnCountMedium: input.vulnCountMedium ?? 0,
+              vulnCountHigh: input.vulnCountHigh ?? 0,
+              vulnCountCritical: input.vulnCountCritical ?? 0,
+              endpoints: input.endpoints ?? [],
+              canPublish: input.canPublish ?? true,
+              analyzedAt: now,
+            })
+            .onConflictDoUpdate({
+              target: [
+                ExtensionAnalysisReport.extensionVersionId,
+                ExtensionAnalysisReport.reportType,
+              ],
+              set: {
+                content: input.reportContent,
+                summary: input.summary ?? null,
+                riskLevel: input.riskLevel,
+                flagCategories: input.flagCategories ?? [],
+                vulnCountLow: input.vulnCountLow ?? 0,
+                vulnCountMedium: input.vulnCountMedium ?? 0,
+                vulnCountHigh: input.vulnCountHigh ?? 0,
+                vulnCountCritical: input.vulnCountCritical ?? 0,
+                endpoints: input.endpoints ?? [],
+                canPublish: input.canPublish ?? true,
+                analyzedAt: now,
+              },
+            });
+        }
+
+        // Roll up riskLevel to the parent Extension row
+        const [version] = await ctx.db
+          .select({ extensionId: ExtensionVersion.extensionId })
+          .from(ExtensionVersion)
+          .where(eqi(ExtensionVersion.id, scan.extensionVersionId))
+          .limit(1);
+
+        if (version) {
+          await ctx.db
+            .update(Extension)
+            .set({ riskLevel: input.riskLevel, lastUpdatedAt: now })
+            .where(eqi(Extension.id, version.extensionId));
+        }
       }
     }),
 });

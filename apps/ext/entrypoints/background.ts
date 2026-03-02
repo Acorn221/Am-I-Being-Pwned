@@ -357,7 +357,8 @@ export default defineBackground(() => {
     // In DB - check risk score against policy threshold
     const risk = report.risk.toLowerCase() as RiskLevel;
     const severity = RISK_SEVERITY[risk];
-    if (orgPolicy.maxRiskScore !== null && severity >= orgPolicy.maxRiskScore) {
+    const maxSeverity = orgPolicy.maxRiskLevel !== null ? (RISK_SEVERITY[orgPolicy.maxRiskLevel as RiskLevel] ?? -1) : null;
+    if (maxSeverity !== null && severity >= maxSeverity) {
       void chrome.notifications.create(`aibp-policy-risk-${ext.id}`, {
         type: "basic",
         iconUrl: chrome.runtime.getURL("icon/128.png"),

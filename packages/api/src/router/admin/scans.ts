@@ -82,7 +82,7 @@ export const adminScansRouter = createTRPCRouter({
 
       await ctx.db
         .update(ExtensionScan)
-        .set({ status: "pending", startedAt: null, completedAt: null, findings: null })
+        .set({ status: "pending", startedAt: null, completedAt: null })
         .where(and(eqi(ExtensionScan.id, scan.id), eq(ExtensionScan.status, "failed")));
     }),
 });

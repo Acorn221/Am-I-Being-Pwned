@@ -13,7 +13,7 @@ export interface ExtensionBlockedProps {
   appUrl: string;
   extensionName: string;
   chromeExtensionId: string;
-  riskScore: number;
+  riskLevel: string;
   reason: string;
   deviceCount: number;
 }
@@ -23,7 +23,7 @@ export function ExtensionBlockedEmail({
   appUrl,
   extensionName,
   chromeExtensionId,
-  riskScore,
+  riskLevel,
   reason,
   deviceCount,
 }: ExtensionBlockedProps) {
@@ -61,9 +61,9 @@ export function ExtensionBlockedEmail({
           {chromeExtensionId}
         </Text>
 
-        <Text className="text-white/50 text-[12px] m-0 mb-[2px]">Risk score</Text>
-        <Text className="text-orange-400 text-[14px] font-semibold m-0 mb-[12px]">
-          {riskScore}/100
+        <Text className="text-white/50 text-[12px] m-0 mb-[2px]">Risk level</Text>
+        <Text className="text-orange-400 text-[14px] font-semibold capitalize m-0 mb-[12px]">
+          {riskLevel}
         </Text>
 
         <Text className="text-white/50 text-[12px] m-0 mb-[2px]">Reason</Text>

@@ -14,7 +14,7 @@ export interface ThreatDetectedProps {
   threats: Array<{
     extensionName: string;
     chromeExtensionId: string;
-    riskScore: number;
+    riskLevel: string;
     flaggedReason: string | null;
     deviceCount: number;
   }>;
@@ -58,7 +58,7 @@ export function ThreatDetectedEmail({ orgName, appUrl, threats }: ThreatDetected
             {threat.flaggedReason ?? "Flagged as malicious by threat intelligence."}
           </Text>
           <Text className="text-white/50 text-[12px] m-0">
-            Risk score: <span className="text-red-400 font-semibold">{threat.riskScore}/100</span>
+            Risk level: <span className="text-red-400 font-semibold capitalize">{threat.riskLevel}</span>
             {" · "}
             Detected on <span className="text-white/70">{threat.deviceCount}</span> device{threat.deviceCount !== 1 ? "s" : ""}
           </Text>

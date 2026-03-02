@@ -236,7 +236,7 @@ export interface SyncExtension {
 // ---------------------------------------------------------------------------
 
 export interface CachedOrgPolicy {
-  maxRiskScore: number | null;
+  maxRiskLevel: string | null;
   blockUnknown: boolean;
   blockedExtensionIds: string[];
 }

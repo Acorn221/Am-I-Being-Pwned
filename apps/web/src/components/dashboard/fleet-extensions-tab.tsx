@@ -60,7 +60,7 @@ import { toast } from "@amibeingpwned/ui/toast";
 
 import { useTRPC } from "~/lib/trpc";
 import { WorkspaceSetupCard } from "./fleet-alerts-tab";
-import { RiskScore } from "./fleet-shared";
+import { RiskBadge } from "./fleet-shared";
 import { timeAgo } from "./fleet-types";
 
 // Types
@@ -70,7 +70,7 @@ interface ExtRow {
   displayName: string | null;
   installType: string | null | undefined;
   flaggedReason: string | null | undefined;
-  riskScore: number | null;
+  riskLevel: string | null;
   isFlagged: boolean | null;
   deviceCount: number;
   enabledCount?: number;
@@ -102,13 +102,13 @@ function SortableHeader({
   );
 }
 
-type SortBy = "name" | "riskScore" | "deviceCount";
-type RiskLevel = "all" | "low" | "medium" | "high";
+type SortBy = "name" | "riskLevel" | "deviceCount";
+type RiskFilter = "all" | "low" | "medium" | "high";
 
 // Maps TanStack column IDs to the sortBy param the server expects
 const COLUMN_TO_SORT: Record<string, SortBy> = {
   displayName: "name",
-  riskScore: "riskScore",
+  riskLevel: "riskLevel",
   deviceCount: "deviceCount",
 };
 
@@ -152,10 +152,10 @@ function ExtensionsDataTable({
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [sortBy, setSortBy] = useState<SortBy>("riskScore");
+  const [sortBy, setSortBy] = useState<SortBy>("riskLevel");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [showFlaggedOnly, setShowFlaggedOnly] = useState(false);
-  const [riskFilter, setRiskFilter] = useState<RiskLevel>("all");
+  const [riskFilter, setRiskFilter] = useState<RiskFilter>("all");
   const [installTypeFilter, setInstallTypeFilter] = useState("");
   const [onlyEnabled, setOnlyEnabled] = useState(false);
 
@@ -213,7 +213,7 @@ function ExtensionsDataTable({
         displayName: r.name,
         installType: undefined,
         flaggedReason: undefined,
-        riskScore: r.riskScore,
+        riskLevel: r.riskLevel,
         isFlagged: r.isFlagged,
         deviceCount: r.deviceCount,
         enabledCount: r.enabledCount,
@@ -224,7 +224,7 @@ function ExtensionsDataTable({
       displayName: r.displayName,
       installType: r.installType,
       flaggedReason: r.flaggedReason,
-      riskScore: r.riskScore,
+      riskLevel: r.riskLevel,
       isFlagged: r.isFlagged,
       deviceCount: r.browserDeviceCount,
     }));
@@ -273,9 +273,9 @@ function ExtensionsDataTable({
           ]
         : []),
       {
-        accessorKey: "riskScore",
+        accessorKey: "riskLevel",
         header: ({ column }) => <SortableHeader column={column} label="Risk" />,
-        cell: ({ row }) => <RiskScore score={row.original.riskScore ?? 0} />,
+        cell: ({ row }) => <RiskBadge level={row.original.riskLevel} />,
       },
       {
         accessorKey: "deviceCount",

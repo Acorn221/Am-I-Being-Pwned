@@ -9,17 +9,16 @@ import { publicClient } from "../../lib/trpc";
 
 type RiskBucket = "critical" | "high" | "medium" | "low" | "clean" | "unknown";
 
-function bucketFromScore(
-  riskScore: number | null,
+function bucketFromLevel(
+  riskLevel: string | null | undefined,
   isFlagged: boolean | null,
 ): RiskBucket {
   if (isFlagged) return "critical";
-  if (riskScore === null) return "unknown";
-  if (riskScore >= 80) return "critical";
-  if (riskScore >= 60) return "high";
-  if (riskScore >= 40) return "medium";
-  if (riskScore >= 20) return "low";
-  return "clean";
+  const level = riskLevel ?? "unknown";
+  if (level === "critical" || level === "high" || level === "medium" || level === "low" || level === "clean") {
+    return level as RiskBucket;
+  }
+  return "unknown";
 }
 
 const BUCKET_SCORE: Record<RiskBucket, number> = {
@@ -102,7 +101,7 @@ export default function App() {
             continue;
           const data = riskMap.get(ext.id);
           const bucket = data
-            ? bucketFromScore(data.riskScore, data.isFlagged)
+            ? bucketFromLevel(data.riskLevel, data.isFlagged)
             : "unknown";
           buckets[bucket]++;
           count++;

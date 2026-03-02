@@ -47,7 +47,7 @@ type Step =
 interface ExtensionResult {
   id: string;
   name: string | null;
-  riskScore: number | null;
+  riskLevel: string | null;
   risk: string;
   isFlagged: boolean;
 }
@@ -215,11 +215,6 @@ function ExtensionRow({ ext }: { ext: ExtensionResult }) {
         )}
       </div>
       <div className="flex shrink-0 items-center gap-2">
-        {ext.riskScore !== null && (
-          <span className="text-muted-foreground w-6 text-right text-xs tabular-nums">
-            {ext.riskScore}
-          </span>
-        )}
         <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${r.pill}`}>
           {r.label}
         </span>

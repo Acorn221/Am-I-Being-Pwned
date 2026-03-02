@@ -118,7 +118,7 @@ export const orgRouter = createTRPCRouter({
 
     return row ?? {
       blockedExtensionIds: [] as string[],
-      maxRiskScore: null as number | null,
+      maxRiskLevel: null as string | null,
       blockUnknown: false,
     };
   }),
@@ -133,7 +133,7 @@ export const orgRouter = createTRPCRouter({
         blockedExtensionIds: z.array(z.string().regex(/^[a-p]{32}$/, {
           message: "Each entry must be a valid 32-character Chrome extension ID",
         })).optional(),
-        maxRiskScore: z.number().int().min(0).max(100).nullable().optional(),
+        maxRiskLevel: z.enum(["unknown", "clean", "low", "medium", "high", "critical"]).nullable().optional(),
         blockUnknown: z.boolean().optional(),
       }),
     )
@@ -151,8 +151,8 @@ export const orgRouter = createTRPCRouter({
             ...(input.blockedExtensionIds !== undefined && {
               blockedExtensionIds: input.blockedExtensionIds,
             }),
-            ...(input.maxRiskScore !== undefined && {
-              maxRiskScore: input.maxRiskScore,
+            ...(input.maxRiskLevel !== undefined && {
+              maxRiskLevel: input.maxRiskLevel,
             }),
             ...(input.blockUnknown !== undefined && {
               blockUnknown: input.blockUnknown,
@@ -164,7 +164,7 @@ export const orgRouter = createTRPCRouter({
         await ctx.db.insert(OrgExtensionPolicy).values({
           orgId: ctx.org.id,
           blockedExtensionIds: input.blockedExtensionIds ?? [],
-          maxRiskScore: input.maxRiskScore ?? null,
+          maxRiskLevel: input.maxRiskLevel ?? null,
           blockUnknown: input.blockUnknown ?? false,
           updatedBy: ctx.session.user.id,
         });

@@ -21,7 +21,7 @@ export interface WeeklyDigestProps {
   };
   newThreats: Array<{
     extensionName: string;
-    riskScore: number;
+    riskLevel: string;
     deviceCount: number;
   }>;
 }
@@ -105,7 +105,7 @@ export function WeeklyDigestEmail({
                 {threat.extensionName}
               </Text>
               <Text className="text-white/50 text-[12px] m-0">
-                Risk <span className="text-red-400 font-semibold">{threat.riskScore}</span>
+                Risk <span className="text-red-400 font-semibold capitalize">{threat.riskLevel}</span>
                 {" · "}
                 {threat.deviceCount} device{threat.deviceCount !== 1 ? "s" : ""}
               </Text>

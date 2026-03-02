@@ -336,7 +336,7 @@ export const devicesRouter = createTRPCRouter({
         .select({
           chromeExtensionId: UserExtension.chromeExtensionId,
           name: Extension.name,
-          riskScore: Extension.riskScore,
+          riskLevel: Extension.riskLevel,
           isFlagged: Extension.isFlagged,
           enabled: UserExtension.enabled,
         })
@@ -365,7 +365,7 @@ export const devicesRouter = createTRPCRouter({
     const rows = await ctx.db
       .select({
         chromeExtensionId: UserExtension.chromeExtensionId,
-        riskScore: Extension.riskScore,
+        riskLevel: Extension.riskLevel,
         isFlagged: Extension.isFlagged,
       })
       .from(UserExtension)
@@ -409,7 +409,7 @@ export const devicesRouter = createTRPCRouter({
       let orgPolicy: {
         blockedExtensionIds: string[];
         allowedExtensionIds: string[];
-        maxRiskScore: number | null;
+        maxRiskLevel: string | null;
         blockUnknown: boolean;
       } | null = null;
 
@@ -425,7 +425,7 @@ export const devicesRouter = createTRPCRouter({
           .select({
             blockedExtensionIds: OrgExtensionPolicy.blockedExtensionIds,
             allowedExtensionIds: OrgExtensionPolicy.allowedExtensionIds,
-            maxRiskScore: OrgExtensionPolicy.maxRiskScore,
+            maxRiskLevel: OrgExtensionPolicy.maxRiskLevel,
             blockUnknown: OrgExtensionPolicy.blockUnknown,
           })
           .from(OrgExtensionPolicy)
@@ -632,18 +632,23 @@ export const devicesRouter = createTRPCRouter({
         const orgId = device.orgId;
         const reportedSet = new Set(reportedIds);
 
-        // Build a lookup of riskScore for each reported extension
-        let riskScoreMap: Map<string, number> = new Map();
-        if (orgPolicy.maxRiskScore !== null && reportedIds.length > 0) {
+        // Numeric ordering for risk level enum comparison
+        const RISK_ORDER: Record<string, number> = {
+          unknown: 0, clean: 1, low: 2, medium: 3, high: 4, critical: 5,
+        };
+
+        // Build a lookup of riskLevel for each reported extension
+        let riskLevelMap: Map<string, string> = new Map();
+        if (orgPolicy.maxRiskLevel !== null && reportedIds.length > 0) {
           const riskRows = await ctx.db
             .select({
               chromeExtensionId: Extension.chromeExtensionId,
-              riskScore: Extension.riskScore,
+              riskLevel: Extension.riskLevel,
             })
             .from(Extension)
             .where(inArray(Extension.chromeExtensionId, reportedIds));
           for (const row of riskRows) {
-            riskScoreMap.set(row.chromeExtensionId, row.riskScore);
+            riskLevelMap.set(row.chromeExtensionId, row.riskLevel);
           }
         }
 
@@ -665,7 +670,7 @@ export const devicesRouter = createTRPCRouter({
           orgId: string;
           chromeExtensionId: string;
           reason: "blocklisted" | "risk_threshold" | "unknown";
-          riskScore?: number;
+          riskLevel?: string;
         }[] = [];
 
         const allowedSet = new Set(orgPolicy.allowedExtensionIds);
@@ -681,16 +686,16 @@ export const devicesRouter = createTRPCRouter({
           // Skip automatic rules for explicitly allowed (overridden) extensions
           if (allowedSet.has(extId)) continue;
 
-          // Risk score threshold
-          if (orgPolicy.maxRiskScore !== null) {
-            const score = riskScoreMap.get(extId) ?? 0;
-            if (score >= orgPolicy.maxRiskScore) {
+          // Risk level threshold
+          if (orgPolicy.maxRiskLevel !== null) {
+            const level = riskLevelMap.get(extId) ?? "unknown";
+            if ((RISK_ORDER[level] ?? 0) >= (RISK_ORDER[orgPolicy.maxRiskLevel] ?? 1)) {
               if (!disableList.includes(extId)) policyDisable.push(extId);
               queueEntries.push({
                 orgId,
                 chromeExtensionId: extId,
                 reason: "risk_threshold",
-                riskScore: score,
+                riskLevel: level,
               });
               continue;
             }
@@ -732,7 +737,7 @@ export const devicesRouter = createTRPCRouter({
               orgId: entry.orgId,
               chromeExtensionId: entry.chromeExtensionId,
               reason: entry.reason,
-              riskScore: entry.riskScore ?? null,
+              riskLevel: (entry.riskLevel ?? null) as "unknown" | "clean" | "low" | "medium" | "high" | "critical" | null,
             })
             .onConflictDoNothing();
         }
@@ -769,7 +774,7 @@ export const devicesRouter = createTRPCRouter({
         // new installs (block-first, verify against local DB, re-enable if safe).
         orgPolicy: orgPolicy
           ? {
-              maxRiskScore: orgPolicy.maxRiskScore,
+              maxRiskLevel: orgPolicy.maxRiskLevel,
               blockUnknown: orgPolicy.blockUnknown,
               blockedExtensionIds: orgPolicy.blockedExtensionIds,
             }

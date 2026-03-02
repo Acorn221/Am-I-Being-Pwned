@@ -20,14 +20,13 @@ const WEB_SESSION_KEY = "aibp_web_session";
 
 type RiskBucket = "critical" | "high" | "medium" | "low" | "clean" | "unknown";
 
-function bucketFromScore(riskScore: number | null, isFlagged: boolean | null): RiskBucket {
+function bucketFromLevel(riskLevel: string | null | undefined, isFlagged: boolean | null): RiskBucket {
   if (isFlagged) return "critical";
-  if (riskScore === null) return "unknown";
-  if (riskScore >= 80) return "critical";
-  if (riskScore >= 60) return "high";
-  if (riskScore >= 40) return "medium";
-  if (riskScore >= 20) return "low";
-  return "clean";
+  const level = riskLevel ?? "unknown";
+  if (level === "critical" || level === "high" || level === "medium" || level === "low" || level === "clean") {
+    return level as RiskBucket;
+  }
+  return "unknown";
 }
 
 const BUCKET_SCORE: Record<RiskBucket, number> = {
@@ -125,7 +124,7 @@ export function DeviceDashboard({ token }: DeviceDashboardProps) {
     critical: 0, high: 0, medium: 0, low: 0, clean: 0, unknown: 0,
   };
   for (const ext of extensions) {
-    buckets[bucketFromScore(ext.riskScore, ext.isFlagged)]++;
+    buckets[bucketFromLevel(ext.riskLevel, ext.isFlagged)]++;
   }
   const score = calcScore(buckets, extensions.length);
   const hasIssues = buckets.critical > 0 || buckets.high > 0 || buckets.medium > 0;
@@ -235,12 +234,12 @@ export function DeviceDashboard({ token }: DeviceDashboardProps) {
                     .sort((a, b) => {
                       const order: RiskBucket[] = ["critical", "high", "medium", "low", "clean", "unknown"];
                       return (
-                        order.indexOf(bucketFromScore(a.riskScore, a.isFlagged)) -
-                        order.indexOf(bucketFromScore(b.riskScore, b.isFlagged))
+                        order.indexOf(bucketFromLevel(a.riskLevel, a.isFlagged)) -
+                        order.indexOf(bucketFromLevel(b.riskLevel, b.isFlagged))
                       );
                     })
                     .map((ext) => {
-                      const bucket = bucketFromScore(ext.riskScore, ext.isFlagged);
+                      const bucket = bucketFromLevel(ext.riskLevel, ext.isFlagged);
                       return (
                         <TableRow
                           key={ext.chromeExtensionId}

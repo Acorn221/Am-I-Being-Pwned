@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, gte, ilike, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import { Extension, WorkspaceApp, WorkspaceDevice, eqi } from "@amibeingpwned/db";
@@ -111,7 +111,7 @@ export const workspaceRouter = createTRPCRouter({
         page: z.number().int().min(1).default(1),
         limit: z.number().int().min(1).max(100).default(25),
         search: z.string().optional(),
-        sortBy: z.enum(["name", "riskScore", "deviceCount"]).default("deviceCount"),
+        sortBy: z.enum(["name", "riskLevel", "deviceCount"]).default("deviceCount"),
         sortDir: z.enum(["asc", "desc"]).default("desc"),
         isFlagged: z.boolean().optional(),
         riskLevel: z.enum(["low", "medium", "high"]).optional(),
@@ -134,11 +134,11 @@ export const workspaceRouter = createTRPCRouter({
           ? eq(Extension.isFlagged, input.isFlagged)
           : undefined,
         input.riskLevel === "low"
-          ? gte(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 1)
+          ? inArray(Extension.riskLevel, ["low", "medium", "high", "critical"])
           : input.riskLevel === "medium"
-            ? gte(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 40)
+            ? inArray(Extension.riskLevel, ["medium", "high", "critical"])
             : input.riskLevel === "high"
-              ? gte(sql<number>`COALESCE(${Extension.riskScore}, 0)`, 70)
+              ? inArray(Extension.riskLevel, ["high", "critical"])
               : undefined,
         input.installType ? eq(WorkspaceApp.installType, input.installType) : undefined,
       );
@@ -150,10 +150,10 @@ export const workspaceRouter = createTRPCRouter({
             return d === "asc"
               ? sql`${WorkspaceApp.displayName} ASC NULLS LAST`
               : sql`${WorkspaceApp.displayName} DESC NULLS LAST`;
-          case "riskScore":
+          case "riskLevel":
             return d === "asc"
-              ? sql`${Extension.riskScore} ASC NULLS LAST`
-              : sql`${Extension.riskScore} DESC NULLS LAST`;
+              ? asc(Extension.riskLevel)
+              : desc(Extension.riskLevel);
           default:
             return d === "asc"
               ? asc(WorkspaceApp.browserDeviceCount)
@@ -170,7 +170,7 @@ export const workspaceRouter = createTRPCRouter({
             browserDeviceCount: WorkspaceApp.browserDeviceCount,
             osUserCount: WorkspaceApp.osUserCount,
             iconUrl: WorkspaceApp.iconUrl,
-            riskScore: Extension.riskScore,
+            riskLevel: Extension.riskLevel,
             isFlagged: Extension.isFlagged,
             flaggedReason: Extension.flaggedReason,
           })

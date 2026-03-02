@@ -1,4 +1,4 @@
-import { and, asc, count, countDistinct, desc, eq, gte, ilike, isNull, or, sql } from "drizzle-orm";
+import { and, asc, count, countDistinct, desc, eq, ilike, inArray, isNull, or, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 
 import {
@@ -204,7 +204,7 @@ export const fleetRouter = createTRPCRouter({
         lastSeenAt: Device.lastSeenAt,
         extensionName: Extension.name,
         chromeExtensionId: Extension.chromeExtensionId,
-        riskScore: Extension.riskScore,
+        riskLevel: Extension.riskLevel,
         flaggedReason: Extension.flaggedReason,
       })
       .from(Device)
@@ -230,7 +230,7 @@ export const fleetRouter = createTRPCRouter({
       threats: {
         extensionName: string | null;
         chromeExtensionId: string;
-        riskScore: number;
+        riskLevel: string;
         flaggedReason: string | null;
       }[];
     }>();
@@ -247,7 +247,7 @@ export const fleetRouter = createTRPCRouter({
       deviceMap.get(row.deviceId)?.threats.push({
         extensionName: row.extensionName,
         chromeExtensionId: row.chromeExtensionId,
-        riskScore: row.riskScore,
+        riskLevel: row.riskLevel,
         flaggedReason: row.flaggedReason,
       });
     }
@@ -345,7 +345,7 @@ export const fleetRouter = createTRPCRouter({
         page: z.number().int().min(1).default(1),
         limit: z.number().int().min(1).max(100).default(25),
         search: z.string().optional(),
-        sortBy: z.enum(["name", "riskScore", "deviceCount"]).default("deviceCount"),
+        sortBy: z.enum(["name", "riskLevel", "deviceCount"]).default("deviceCount"),
         sortDir: z.enum(["asc", "desc"]).default("desc"),
         isFlagged: z.boolean().optional(),
         riskLevel: z.enum(["low", "medium", "high"]).optional(),
@@ -371,11 +371,11 @@ export const fleetRouter = createTRPCRouter({
           ? eq(Extension.isFlagged, input.isFlagged)
           : undefined,
         input.riskLevel === "low"
-          ? gte(Extension.riskScore, 1)
+          ? inArray(Extension.riskLevel, ["low", "medium", "high", "critical"])
           : input.riskLevel === "medium"
-            ? gte(Extension.riskScore, 40)
+            ? inArray(Extension.riskLevel, ["medium", "high", "critical"])
             : input.riskLevel === "high"
-              ? gte(Extension.riskScore, 70)
+              ? inArray(Extension.riskLevel, ["high", "critical"])
               : undefined,
       );
 
@@ -386,10 +386,10 @@ export const fleetRouter = createTRPCRouter({
             return d === "asc"
               ? sql<unknown>`${Extension.name} ASC NULLS LAST`
               : sql<unknown>`${Extension.name} DESC NULLS LAST`;
-          case "riskScore":
+          case "riskLevel":
             return d === "asc"
-              ? sql<unknown>`${Extension.riskScore} ASC NULLS LAST`
-              : sql<unknown>`${Extension.riskScore} DESC NULLS LAST`;
+              ? asc(Extension.riskLevel)
+              : desc(Extension.riskLevel);
           default:
             return d === "asc"
               ? asc(countDistinct(UserExtension.deviceId))
@@ -402,7 +402,7 @@ export const fleetRouter = createTRPCRouter({
           .select({
             chromeExtensionId: UserExtension.chromeExtensionId,
             name: Extension.name,
-            riskScore: Extension.riskScore,
+            riskLevel: Extension.riskLevel,
             isFlagged: Extension.isFlagged,
             deviceCount: countDistinct(UserExtension.deviceId),
             enabledCount: sql<number>`count(DISTINCT ${UserExtension.deviceId}) FILTER (WHERE ${UserExtension.enabled})`,
@@ -414,7 +414,7 @@ export const fleetRouter = createTRPCRouter({
           .groupBy(
             UserExtension.chromeExtensionId,
             Extension.name,
-            Extension.riskScore,
+            Extension.riskLevel,
             Extension.isFlagged,
           )
           .orderBy(orderByExpr)
