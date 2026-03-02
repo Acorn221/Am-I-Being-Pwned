@@ -18,6 +18,18 @@ import {
 import { getNotifiedRisk, setNotifiedRisk } from "../lib/storage";
 
 import { DEV_ORIGINS, PROD_ORIGINS } from "../lib/allowed-origins";
+import {
+  ALARM_DAILY_SCAN,
+  ALARM_POLICY_SYNC,
+  ALARM_REGISTRATION_RETRY,
+  INTERVAL_DAILY_SCAN_MINUTES,
+  INTERVAL_POLICY_SYNC_MINUTES,
+  INTERVAL_REGISTRATION_RETRY_MINUTES,
+  LAST_SYNC_KEY,
+  RATE_LIMIT_REQUESTS,
+  RATE_LIMIT_WINDOW_MS,
+} from "../lib/constants";
+import { enqueueSyncWithApi } from "../lib/sync-queue";
 
 const WEB_URL = API_BASE_URL;
 
@@ -25,10 +37,10 @@ const ALLOWED_ORIGINS: readonly string[] = import.meta.env.DEV ? DEV_ORIGINS : P
 
 
 // ---------------------------------------------------------------------------
-// Rate limiter - sliding window, 10 requests per 60 seconds per origin
+// Rate limiter - sliding window per origin
 // ---------------------------------------------------------------------------
-const RATE_LIMIT = 10;
-const RATE_WINDOW_MS = 60_000;
+const RATE_LIMIT = RATE_LIMIT_REQUESTS;
+const RATE_WINDOW_MS = RATE_LIMIT_WINDOW_MS;
 const requestLog = new Map<string, number[]>();
 
 function isRateLimited(origin: string): boolean {
@@ -150,7 +162,7 @@ export default defineBackground(() => {
       await storeToken(token);
       await chrome.alarms.clear("registration-retry");
       console.log("[AIBP] Device registered");
-      if (syncAfter) await syncWithApi();
+      if (syncAfter) await enqueueSyncWithApi(syncWithApi);
     } catch (err) {
       // For B2C, UNAUTHORIZED just means the user hasn't logged in yet.
       // Don't log it as an error - schedule a quiet retry.
@@ -160,8 +172,8 @@ export default defineBackground(() => {
       if (!isUnauthed) {
         console.warn("[AIBP] Device registration failed:", err);
       }
-      void chrome.alarms.create("registration-retry", {
-        periodInMinutes: 30,
+      void chrome.alarms.create(ALARM_REGISTRATION_RETRY, {
+        periodInMinutes: INTERVAL_REGISTRATION_RETRY_MINUTES,
       });
     }
   }
@@ -260,6 +272,11 @@ export default defineBackground(() => {
           }
         }
       }
+
+      // All enforcement complete - only now mark the sync as successful so
+      // that a SW killed between token rotation and enforcement is correctly
+      // treated as stale by the next alarm wake.
+      await chrome.storage.local.set({ [LAST_SYNC_KEY]: Date.now() });
     } catch (err) {
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -285,19 +302,25 @@ export default defineBackground(() => {
     if (ext.type !== "extension" || ext.id === chrome.runtime.id) return;
     void enforceDisableList();
     void checkAndNotify(ext.id, ext.name);
-    void syncWithApi();
+    void enqueueSyncWithApi(syncWithApi);
   });
 
   // When any extension is uninstalled: sync so server marks it as removed
   chrome.management.onUninstalled.addListener((extId) => {
     if (extId === chrome.runtime.id) return;
-    void syncWithApi();
+    void enqueueSyncWithApi(syncWithApi);
   });
 
   // On first install: scan everything, open web app, register device
   // On update: ensure alarms still exist
   chrome.runtime.onInstalled.addListener((details) => {
-    void chrome.alarms.create("daily-scan", { periodInMinutes: 24 * 60 });
+    void chrome.alarms.create(ALARM_DAILY_SCAN, {
+      periodInMinutes: INTERVAL_DAILY_SCAN_MINUTES,
+    });
+    void chrome.alarms.create(ALARM_POLICY_SYNC, {
+      periodInMinutes: INTERVAL_POLICY_SYNC_MINUTES,
+      delayInMinutes: INTERVAL_POLICY_SYNC_MINUTES,
+    });
 
     if (details.reason === "install") {
       void scanAllExtensions();
@@ -305,19 +328,27 @@ export default defineBackground(() => {
     }
   });
 
-  // On service worker startup (browser launch, extension reload):
-  // enforce immediately from local cache, then sync with API
+  // On service worker startup: enforce from local cache only (offline-safe).
+  // All network sync happens via alarms so we don't hammer the API on every
+  // browser launch - the next policy-sync alarm handles recovery if needed.
   chrome.runtime.onStartup.addListener(() => {
     void enforceDisableList();
-    void syncWithApi();
   });
 
-  // Alarm handler
+  // Alarm handler - single point for all network sync decisions.
+  // On each policy-sync wake, check if the last successful sync is stale
+  // (e.g. SW was killed mid-sync, or a previous alarm misfired) and recover.
   chrome.alarms.onAlarm.addListener((alarm) => {
-    if (alarm.name === "daily-scan") {
+    if (alarm.name === ALARM_DAILY_SCAN) {
       void scanAllExtensions();
-      void syncWithApi();
-    } else if (alarm.name === "registration-retry") {
+      void enqueueSyncWithApi(syncWithApi);
+    } else if (alarm.name === ALARM_POLICY_SYNC) {
+      // Always sync on this alarm - it exists to pick up policy changes promptly.
+      // Also check for a stale lastSyncAt: if the previous cycle was missed
+      // (SW killed mid-sync before the timestamp was written), the enqueue
+      // here already covers recovery so no extra action needed.
+      void enqueueSyncWithApi(syncWithApi);
+    } else if (alarm.name === ALARM_REGISTRATION_RETRY) {
       void tryRegisterDevice();
     }
   });
@@ -412,7 +443,7 @@ export default defineBackground(() => {
             await storeInviteToken(request.token);
             const result = await registerDevice();
             await storeToken(result.deviceToken);
-            void syncWithApi();
+            void enqueueSyncWithApi(syncWithApi);
             if (!result.webSessionToken) {
               sendResponse({
                 type: "ERROR",
